@@ -16,9 +16,12 @@
  * A single logical line of a Therion file
  *
  * This class implements the basic file syntax and represent a single
- * logocal line of such a file.
+ * logical line of such a file.
  * Therion files may be wrapped (a logically signle line can be wrapped into
  * several physical lines); this class helps to deal with that.
+ * 
+ * The exact format is specified in the therion documentation,
+ * please refer to {@link http://therion.speleo.sk/downloads/thbook.pdf}, page 12).
  *
  * @category   file
  * @package    File_Therion
@@ -46,6 +49,14 @@ class File_Therion_Line implements Countable
     protected $_content = array();
     
     /**
+     * Standard output separator for comment
+     * 
+     * @var string
+     */
+    protected $_out_std_commentSep = "\t";
+    
+    
+    /**
     * Create a new therion line object
     *
     * @param string $data    data of the line
@@ -71,16 +82,18 @@ class File_Therion_Line implements Countable
      * @return File_Therion_Line object
      * @throws File_Therion_SyntaxException in case of syntax error
      */
-    protected static function parse($line)
+    public static function parse($line)
     {
+        $line = trim($line, "\r\n".PHP_EOL);  // strip newline symbols
+        
         $matches = array();
-        if (! preg_match("/^(\s*)(.+?)((?:#.*))$/", $line, $matches) ) {
+        if (! preg_match("/^(\s*)(.*?)((?:#.*)?)$/", $line, $matches) ) {
             throw new File_Therion_SyntaxException("line syntax error: '$line'");
         } else {
             // strip comment sign from comment data:
-            $matches[2] = preg_replace("^#", $matches[2], '');
-            
-            return new File_Therion_Line($matches[1], $matches[2], $matches[0]);
+            $matches[3] = preg_replace("/^#/", "", $matches[3], 1);
+            //print "DBG: IN='$line' => File_Therion_Line('$matches[2]', '$matches[3]', '$matches[1]');\n";
+            return new File_Therion_Line($matches[2], $matches[3], $matches[1]);
         }
     }
     
@@ -97,9 +110,13 @@ class File_Therion_Line implements Countable
             $this->addPhysicalLine(File_Therion_Line::parse($line));
             
         } else {
-            foreach ($line->_content as $cl) {
-                $this->addData($cl['indent'], $cl['data'], $cl['comment']);
+            if (!is_a($line, 'File_Therion_Line')) {
+                throw new PEAR_Exception('addPhysicalLine(): Invalid $line type!', new InvalidArgumentException());
             }
+            //foreach ($line->_content as $cl) {
+            //    $this->addData($cl['indent'], $cl['data'], $cl['comment']);
+            //}
+            $this->addData($line->getIndent(), $line->getContent(), $line->getComment());
         }
     }
     
@@ -120,39 +137,56 @@ class File_Therion_Line implements Countable
         *  considered to continue on the next line, as if there was neither
         *  line-break nor backlash."      
         */
-        $dataContinued    = preg_match('/\\$/', $data;
-        $commentContinued = preg_match('/\\$/', $comment;
-        $wrapDetected = ($dataContinued || $commentContinued)
+        $wrapDetected = false;
+        $dataContinued    = preg_match('/\\\$/', $data);
+        $commentContinued = preg_match('/\\\$/', $comment);
+        if ($dataContinued || $commentContinued) {
+            // strip continuation character from data blocks:
+            $data    = preg_replace('/\\\$/', '', $data);
+            $comment = preg_replace('/\\\$/', '', $comment);
+            
+            $wrapDetected = true;
+        }
         
-        // strip continuation character from data blocks:
-        preg_replace('\\$', $data, '');
-        preg_replace('\\$', $comment, '');
+        // see, if $data has trailing whitespace, followed by comment;
+        // if so, set the comment separator to that characters:
+        $matches = array();
+        if ($comment != "" && preg_match('/^(.*?)( +)$/', $data, $matches)) {
+            $data   = $matches[1];
+            $newSep = $matches[2];
+            $this->setCommentSeparator($newSep);
+        }
         
         if (count($this->_content) == 0 || $this->isContinued()) {
         
             // push the line on internal stack
             $this->_content[] = array(
                 'indent'  =>  $indent,
-                'data'    =>  $data,
-                'comment' =>  $comment,
+                'data'    =>  trim($data,    "\r\n"),
+                'comment' =>  trim($comment, "\r\n"),
             );
-            if ($wrapDetected) {
-                $this->expectMoreLines();
-            }
+            ($wrapDetected)? $this->expectMoreLines() : $this->expectMoreLines(false);
             
         } else {
-            throw new File_Therion_SyntaxException('Unexpected continuation added to unwrapped file')
+            throw new File_Therion_SyntaxException('Unexpected continuation added to unwrapped file');
         }
     }
     
     /**
      * Let the Line know that it should expect an additional wrapped line.
      * 
+     * @param boolean $yesno set to false to explicitely revert
      */
-    protected function expectMoreLines()
+    public function expectMoreLines($yesno = true)
     {
-        for ($i=0; $i< count($this->_content); $i++) {
-            $this->_content[$i]['wrapped'] = true;
+        // reset all fields:
+        // only update the alst field
+        $c = count($this->_content);
+        for ($i=0; $i<$c; $i++) {
+            $y = ($c > 1)? true : false;    // all elements...
+            $y = ($i+1 == $c)? $yesno : $y; // ... but the last one
+            
+            $this->_content[$i]['wrapped'] = $y;
         }
     }
     
@@ -185,7 +219,10 @@ class File_Therion_Line implements Countable
     {
         $ar = array();
         foreach ($this->_content as $cl) {
-            $ar[] = $cl['comment'];
+            if (strlen($cl['comment']) > 0) {
+                // ignore empty comments
+                $ar[] = $cl['comment'];
+            }
         }
         return implode($ml_sep, $ar);
     }
@@ -200,7 +237,23 @@ class File_Therion_Line implements Countable
      */
     public function getIndent()
     {
-        return $this->_content[0]['intend'];
+        return $this->_content[0]['indent'];
+    }
+    
+    /**
+     * Returns the whole line as String
+     * 
+     * Comments will be added using a single tabulator by default.
+     * Line ending is the current value of PHP_EOL (NEWLINE on *NIX).
+     * 
+     * @return string
+     */
+    public function toString()
+    {
+        // adjust comment separator "#<comment>" when comment is present
+        $commentSep = (strlen($this->getComment()) > 0)? $this->_out_std_commentSep.'#' : "";
+        //print("DBG: getIndent='".$this->getIndent()."'; getContent='".$this->getContent()."'; SEP='".$commentSep."'; getComment='".$this->getComment()."'\n");
+        return $this->getIndent().$this->getContent().$commentSep.$this->getComment().PHP_EOL;
     }
  
     /**
@@ -226,7 +279,7 @@ class File_Therion_Line implements Countable
     }
     
     /**
-     * Detect if this logocal Line contains wrapped physical data
+     * Detect if this logical Line contains wrapped physical data
      * 
      * @return boolean
      */
@@ -238,13 +291,32 @@ class File_Therion_Line implements Countable
     /**
      * Detect if the line is a continuation of a wrapped one
      * 
-     * @param array    $priorLines array of prior lines
-     * @param string   $line       current line to test
+     * This cannot be derived from the current line. The current line can
+     * be expected to be a continuation in case the preceeding line
+     * expects more content (that it does not contian itself), eg it was
+     * endet with an backslash.
+     * Such lines may be consolidatet into one single Therion_Line object
+     * using {@link addPhysicalLine()} on the prior line with the inspected one
+     * as parameter: '<code>$priorLine->addPhysicalLine($thisOne)</code>'.
+     * 
+     * @param File_Therion_Line|array    $priorLines array of prior lines
+     * @param File_Therion_Line   $line       current line to test
      * @return boolean true in case of continuation
      */
-    protected static function detectWrapContinuation($priorLines, $line)
-    {
-        TODO
+    public function isContinuation($priorLine)
+    { 
+        if (is_array($priorLine) && count($priorLine) > 0) {
+            $preceedingLineObj = $priorLine[count($priorLine)-1];
+        } else {
+            $preceedingLineObj = $priorLine;
+        }
+        
+        if (!is_a($preceedingLineObj, 'File_Therion_Line')) {
+            throw new PEAR_Exception('detectWrapContinuation(): Invalid $priorLine argument!', new InvalidArgumentException("passed type='".gettype($priorLine)."', expected File_Therion_Line")); ;
+        } else {
+            return $preceedingLineObj->isContinued();
+        }
+        
         if (count($priorLines) == 0) {
             // first line cannot be a continuation
             return false;
@@ -256,18 +328,29 @@ class File_Therion_Line implements Countable
     }
     
     
+    /**
+     * Set separator for appending comments to datalines in output ({@link toString()}
+     * 
+     * @param string $separator
+     */
+    public function setCommentSeparator($separator)
+    {
+        $separator = trim($separator, "\r\n");  // strip newlines
+        $this->_out_std_commentSep = $separator;
+    }
+    
     
     /**
-     * Strip comments from single line
+     * Set indenting for output ({@link toString()}
      * 
-     * @param string  $line current line to test
-     * @return string the comment
+     * @param string $indent
      */
-    protected static function extractData($line)
+    public function setIndent($indent)
     {
-        $matches = array();
-        preg_match("/^.+(#.*)$/", $line, $matches);
+        $indent = trim($indent, "\r\n");  // strip newlines
+        $this->_content[0]['indent'] = $indent;  // indenting is stored at first line
     }
+    
     
     /**
      * Count (wrapped) lines in this line (SPL Countable)

@@ -16,9 +16,10 @@
  * Package includes.
  */
 require_once 'PEAR.php';
+require_once 'PEAR/Exception.php';
 require_once 'File/Therion/Exception.php';
 require_once 'File/Therion/Line.php';
-require_once 'File/Therion/Survey.php';
+//require_once 'File/Therion/Survey.php';
 //require_once 'File/Therion/Centreline.php';
 //require_once 'File/Therion/Person.php';
 //require_once 'File/Therion/Explo.php';
@@ -60,7 +61,7 @@ class File_Therion
      * Arrays will be treated like one file line each key.
      * String data will get parsed directly, splitted by PHP_EOL sequences (\n).
      *
-     * @param  string|array|ressource $file string-data, array-data, filename/url or handle
+     * @param  string|array|ressource $file string-data, array-of-strings, filename/url or handle
      * @return File_Therion_Survey    Survey object containing the parsed data
      * @throws PEAR_Exception         with wrapped lower level exception (InvalidArgumentException, etc)
      * @throws File_Therion_SyntaxException if parse errors occur
@@ -68,24 +69,23 @@ class File_Therion
     public static function parseSurvey($file)
     {
         $data = array();
-        // investigate file parameter and try to get data.
-        // Our target is to construct a string array containing unwrapped lines.
+        // investigate file parameter and try to get data out of the source.
         switch (true) {
-            case (is_ressource($file) && get_resource_type($file) == 'stream'):
+            case (is_resource($file) && get_resource_type($file) == 'stream'):
                 // fetch data from handle
                 while (!feof($handle)) {
-                    $line = trim(fgets($file));
+                    $line = fgets($file);
                     $data[] = $line; // push to raw dataset
                 }
-                $data = File_Therion::unwrap($data);
                 break;
 
             case (is_array($file)):
-                // just use it
-                $data = File_Therion::unwrap($file);
+                // just use it: either stringdata or already array of Therion_Line objects
+                $data = $file;
+                break;
 
             case (is_readable($file) || is_string($file) && preg_match('^\w+://', $file)):
-                // open file/url and fetch data
+                // open file/url and fetch data, then repass to factory
                 $fh = fopen ($file, 'r');
                 $survey = File_Therion::parseSurvey($fh);
                 fclose($fh);
@@ -94,7 +94,7 @@ class File_Therion
 
             case (is_string($file)):
                 // split string data by newlines and use that as result
-                $data = File_Therion::unwrap(explode(PHP_EOL, $file));
+                $data = explode(PHP_EOL, $file);
                 break;
 
             default:
@@ -104,12 +104,17 @@ class File_Therion
         }
             
 
-        // OK now we got $data populated with unwrapped data.
+        // OK now we got $data populated with string lines
         // lets iterate over it and try to parse.
         // the ultimate goal is to create an instance of File_Therion_Survey
         $survey = null;
-        foreach ($data as $line) {
-            ... todo ...
+        foreach ($data as $sline) {
+            // parse if not already a Therion_Line
+            $thline = (is_a($sline, 'File_Therion_Line'))
+                ? $sline
+                : File_Therion_Line::parse($sline);
+
+            
         }
 
 
@@ -143,48 +148,6 @@ class File_Therion
 
         // the idea here is to query the objects in correct order and use their
         // toString() method to dump out the contents...
-    }
-
-
-    /**
-     * Parse a (unwrapped) line from a th file
-     *
-     * Takes a line and tries to construct one of the Therion package objects.
-     *
-     * @param  string unwrapped line of therion input file
-     * @param  string mode
-     * @return one of the package classes
-     * @throws File_Therion_Exception in case of parsing errors
-     */
-    public static function parseTHLine($line, $mode)
-    {
-        // try to parse the line. Depending on keywords we try to instantiate a
-        // package subclass. Context will be determined by parent code, so eg
-        // shot flags are associated with the corresponding shot by the
-        // higher level code.
-        // This function here just deals with therions file data format.
-    }
-
-    
-
-    /*
-    * Unwrap an input file data array
-    *
-    * @param  array containing lines
-    * @return array unwrapped lines
-    */
-    protected static function unwrapLines($lines)
-    {
-        $unwrappedData = array();
-        foreach ($lines as $line) {
-            if (File_Therion::detectWrapContinuation($unwrappedData, $line)) {
-                // append to previous line
-                $unwrappedData[count($unwrappedData)-1] .= $line;
-            } else {
-                $unwrappedData[] = $line; // push
-            }
-        }
-        return $unwrappedData;
     }
 
 
