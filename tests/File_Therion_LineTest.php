@@ -85,6 +85,7 @@ class File_Therion_LineTest extends PHPUnit_Framework_TestCase
         
         $sample = new File_Therion_Line("testdata", "with comment", "    "); // with indent
         $this->assertInstanceOf('File_Therion_Line', $sample);
+       
     }
     
     /**
@@ -104,6 +105,31 @@ class File_Therion_LineTest extends PHPUnit_Framework_TestCase
         $sample = File_Therion_Line::parse("    This is a simpe test line   # with comment and indent");
         $this->assertInstanceOf('File_Therion_Line', $sample);
         
+        
+        $sample = File_Therion_Line::parse("#just a comment");
+        $this->assertInstanceOf('File_Therion_Line', $sample);
+        
+        $sample = File_Therion_Line::parse("    #just a comment with indent");
+        $this->assertInstanceOf('File_Therion_Line', $sample);
+        
+        $sample = File_Therion_Line::parse("     ");   //just a blank line
+        $this->assertInstanceOf('File_Therion_Line', $sample);
+        
+    }
+    
+    /**
+     * test comment and indenting
+     */
+    public function testCommentingAndIndentation()
+    {
+        $sample = File_Therion_Line::parse("#just a comment");
+        $this->assertEquals("#just a comment".PHP_EOL, $sample->toString());
+        
+        $sample = File_Therion_Line::parse("    #just a comment with indent");
+        $this->assertEquals("    #just a comment with indent".PHP_EOL, $sample->toString());
+        
+        $sample = File_Therion_Line::parse("     ");   //just a blank line
+        $this->assertEquals("     ".PHP_EOL, $sample->toString());
     }
     
     

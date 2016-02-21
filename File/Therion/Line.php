@@ -251,7 +251,10 @@ class File_Therion_Line implements Countable
     public function toString()
     {
         // adjust comment separator "#<comment>" when comment is present
-        $commentSep = (strlen($this->getComment()) > 0)? $this->_out_std_commentSep.'#' : "";
+        $commentSep = "";
+        if (strlen($this->getComment()) > 0) {
+            $commentSep = (strlen($this->getContent()) > 0)? $this->_out_std_commentSep.'#' : '#';
+        }
         //print("DBG: getIndent='".$this->getIndent()."'; getContent='".$this->getContent()."'; SEP='".$commentSep."'; getComment='".$this->getComment()."'\n");
         return $this->getIndent().$this->getContent().$commentSep.$this->getComment().PHP_EOL;
     }
