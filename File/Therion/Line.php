@@ -33,19 +33,19 @@
 class File_Therion_Line implements Countable
 {
 
-   /**
-    * Line content
-    * 
-    * The internal data structure of the line is an array containing
-    * at least one associative array:
-    *   'intend'  =>  detected intend characters
-    *   'data'    =>  payload of the line
-    *   'comment' =>  comment of the line
-    *   'wrapped' =>  true, if the line expects additional content in the next physical line
-    *
-    * @access protected
-    * @var array of data
-    */
+    /**
+     * Line content
+     * 
+     * The internal data structure of the line is an array containing
+     * at least one associative array:
+     *   'intend'  =>  detected intend characters
+     *   'data'    =>  payload of the line
+     *   'comment' =>  comment of the line
+     *   'wrapped' =>  true, if the line expects additional content in the next physical line
+     *
+     * @access protected
+     * @var array of data
+     */
     protected $_content = array();
     
     /**
@@ -57,13 +57,13 @@ class File_Therion_Line implements Countable
     
     
     /**
-    * Create a new therion line object
-    *
-    * @param string $data    data of the line
-    * @param string $comment comment of the line
-    * @param string $indent  intent characters
-    * @throws PEAR_Exception with wrapped lower level exception
-    */
+     * Create a new therion line object
+     *
+     * @param string $data    data of the line
+     * @param string $comment comment of the line
+     * @param string $indent  intent characters
+     * @throws PEAR_Exception with wrapped lower level exception
+     */
     public function __construct($data, $comment = '', $indent = '')
     {
            if (is_string($data) && is_string($comment) && is_string($indent)) {
