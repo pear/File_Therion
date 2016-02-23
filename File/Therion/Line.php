@@ -376,7 +376,7 @@ class File_Therion_Line implements Countable
     /**
      * Count (wrapped) lines in this line (SPL Countable).
      * 
-     * returns the raw value of files. Ususally 1, however if the line contains
+     * returns the raw value of lines. Ususally 1, however if the line contains
      * wrapped data, it will return the 'true' count of those lines as they
      * would appear in a textual representation.
      * 
