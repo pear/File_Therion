@@ -13,7 +13,7 @@
  */
 
 /**
- * A single logical line of a Therion file
+ * A single logical line of a Therion file.
  *
  * This class implements the basic file syntax and represent a single
  * logical line of such a file.
@@ -34,7 +34,7 @@ class File_Therion_Line implements Countable
 {
 
     /**
-     * Line content
+     * Line content.
      * 
      * The internal data structure of the line is an array containing
      * at least one associative array:
@@ -49,15 +49,20 @@ class File_Therion_Line implements Countable
     protected $_content = array();
     
     /**
-     * Standard output separator for comment
+     * Standard output separator for comment.
      * 
      * @var string
      */
     protected $_out_std_commentSep = "\t";
     
+    /**
+     * Default line ending character
+     */
+     protected $_eol = PHP_EOL;
+    
     
     /**
-     * Create a new therion line object
+     * Create a new therion line object.
      *
      * @param string $data    data of the line
      * @param string $comment comment of the line
@@ -76,7 +81,7 @@ class File_Therion_Line implements Countable
     }
     
     /**
-     * Parse a physical Therion line into its contents
+     * Parse a physical Therion line into its contents.
      * 
      * @param string  $line physical line
      * @return File_Therion_Line object
@@ -84,7 +89,7 @@ class File_Therion_Line implements Countable
      */
     public static function parse($line)
     {
-        $line = trim($line, "\r\n".PHP_EOL);  // strip newline symbols
+        $line = trim($line, "\r\n");  // strip cross-platform newline symbols
         
         $matches = array();
         if (! preg_match("/^(\s*)(.*?)((?:#.*)?)$/", $line, $matches) ) {
@@ -98,7 +103,7 @@ class File_Therion_Line implements Countable
     }
     
     /**
-     * Add a physical Therion line as wrapped into its contents
+     * Add a physical Therion line as wrapped into its contents.
      * 
      * @param string|File_Therion_Line  $line physical line or Line object
      * @throws File_Therion_SyntaxException in case the Line did not expect additional wrapped content
@@ -121,17 +126,30 @@ class File_Therion_Line implements Countable
     }
     
     /**
-     * Add internal data to stack
+     * Add internal data to stack.
      * 
      * @param string  $data    data of the line
      * @param string  $comment comment of the line
      * @param string  $indent  intent characters
      * @param boolean $indent  in case the line expects further data
      * @throws File_Therion_SyntaxException in case the Line did not expect additional wrapped content
-     * @todo syntax checks on parameters?
+     * @throws PEAR_Exception in case of parsmeter errors (with wrapped lower level exception)
      */
     protected function addData($indent, $data, $comment)
     {
+        if (!is_string($indent)) {
+            throw new PEAR_Exception('addData(): Invalid $indent argument!',
+              new InvalidArgumentException("passed type='".gettype($file)."'"));
+        }
+        if (!is_string($data)) {
+            throw new PEAR_Exception('addData(): Invalid $data argument!',
+              new InvalidArgumentException("passed type='".gettype($file)."'"));
+        }
+        if (!is_string($comment)) {
+            throw new PEAR_Exception('addData(): Invalid $comment argument!',
+              new InvalidArgumentException("passed type='".gettype($file)."'"));
+        }
+                 
         // Detect if this line expects further lines...
         /* thbook says on p.12: "each line ending with a backslash (\) is
         *  considered to continue on the next line, as if there was neither
@@ -192,7 +210,7 @@ class File_Therion_Line implements Countable
     
     
     /**
-     * Returns the unwrapped line content as string
+     * Returns the unwrapped line content as string.
      * 
      * Comments and indenting will be stripped
      * 
@@ -208,7 +226,7 @@ class File_Therion_Line implements Countable
     }
     
     /**
-     * Returns the unwrapped comment as string
+     * Returns the unwrapped comment as string.
      * 
      * Comments of wrapped lines will be joined.
      * 
@@ -228,7 +246,7 @@ class File_Therion_Line implements Countable
     }
     
     /**
-     * Returns the indenting characters
+     * Returns the indenting characters.
      * 
      * In case this line contains wrapped content, the indenting of
      * the first physical line will be used.
@@ -241,7 +259,7 @@ class File_Therion_Line implements Countable
     }
     
     /**
-     * Returns the whole line as String
+     * Returns the whole line as String.
      * 
      * Comments will be added using a single tabulator by default.
      * Line ending is the current value of PHP_EOL (NEWLINE on *NIX).
@@ -250,28 +268,28 @@ class File_Therion_Line implements Countable
      */
     public function toString()
     {
-        // adjust comment separator "#<comment>" when comment is present
+        // adjust comment separator "#<comment>" when comment is present.
         $commentSep = "";
         if (strlen($this->getComment()) > 0) {
             $commentSep = (strlen($this->getContent()) > 0)? $this->_out_std_commentSep.'#' : '#';
         }
         //print("DBG: getIndent='".$this->getIndent()."'; getContent='".$this->getContent()."'; SEP='".$commentSep."'; getComment='".$this->getComment()."'\n");
-        return $this->getIndent().$this->getContent().$commentSep.$this->getComment().PHP_EOL;
+        return $this->getIndent().$this->getContent().$commentSep.$this->getComment().$this->_eol;
     }
  
     /**
-     * Say if this is just a comment or empty line
+     * Say if this is just a comment or empty line.
      * 
      * @return boolean
      */
     public function isCommentOnly()
     {
-        // its the case if the datapart is empty
+        // its the case if the datapart is empty.
         return preg_match('/^\s*$/', $this->getContent);
     }
     
     /**
-     * Detect if this Line expects wrapped content in the following physical line
+     * Detect if this Line expects wrapped content in the following physical line.
      * 
      * @return boolean
      */
@@ -282,7 +300,7 @@ class File_Therion_Line implements Countable
     }
     
     /**
-     * Detect if this logical Line contains wrapped physical data
+     * Detect if this logical Line contains wrapped physical data.
      * 
      * @return boolean
      */
@@ -292,7 +310,7 @@ class File_Therion_Line implements Countable
     }
        
     /**
-     * Detect if the line is a continuation of a wrapped one
+     * Detect if the line is a continuation of a wrapped one.
      * 
      * This cannot be derived from the current line. The current line can
      * be expected to be a continuation in case the preceeding line
@@ -332,7 +350,7 @@ class File_Therion_Line implements Countable
     
     
     /**
-     * Set separator for appending comments to datalines in output ({@link toString()}
+     * Set separator for appending comments to datalines in output ({@link toString()}.
      * 
      * @param string $separator
      */
@@ -344,7 +362,7 @@ class File_Therion_Line implements Countable
     
     
     /**
-     * Set indenting for output ({@link toString()}
+     * Set indenting for output ({@link toString()}.
      * 
      * @param string $indent
      */
@@ -356,7 +374,7 @@ class File_Therion_Line implements Countable
     
     
     /**
-     * Count (wrapped) lines in this line (SPL Countable)
+     * Count (wrapped) lines in this line (SPL Countable).
      * 
      * returns the raw value of files. Ususally 1, however if the line contains
      * wrapped data, it will return the 'true' count of those lines as they
@@ -367,7 +385,21 @@ class File_Therion_Line implements Countable
     public function count()
     {
         return count($this->_content);
-    } 
+    }
+    
+    /**
+     * Change default End-of-Line characters of string representation.
+     * 
+     * The default EOL is PHP_EOL, eg. the local platform EOL.
+     * 
+     * Use this to change the EOL character to an platform dependant
+     * char sequence; for example to generate windows files from linux.
+     * 
+     * @param string EOL sequence (be sure to get the escaping right)
+     */
+    public function changeEOL($eol) {
+        $this->_eol = $eol;
+    }
     
 }
     

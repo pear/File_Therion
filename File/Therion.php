@@ -57,7 +57,8 @@ require_once 'File/Therion/Line.php';
  * $th->fetch();                 // Get contents (read)
  * $th->parse();                 // Generate Therion objects to work with
  *
- * // craft therion file out of data model:
+ * // craft a .th Therion file out of data model:
+ * <code>
  * $survey = new File_Therion_Survey(); // ... craft data model
  * $th = new File_Therion($tgt); // Instanciate new data target
  * $th->addObject($survey);      // associate therion data model objects
@@ -82,11 +83,11 @@ class File_Therion implements Countable
      * 
      * @access protected
      */
-     protected $_url = '';
+    protected $_url = '';
 
     /**
      * Lines of this file
-     * 
+         * 
      * will be populated by {@link parse()} or {@link update()}
      * 
      * @access protected
@@ -104,18 +105,35 @@ class File_Therion implements Countable
      */
     protected $_objects = array();
     
+    /**
+     * Wrapping of the file
+     * 
+     * This controls the wrapping column when writing
+     * 
+     * @access protected
+     * @var int column to wrap at (0=no wrapping)
+     */
+    protected $_wrapAt = 0;
     
     /**
      * Create a new therion file object
-     * 
+     *
      * Use this to create a new interface for parsing existing files
      * or writing new ones.
      * 
      * The $url is a pointer to a datasource (or target).
-     * Use {@link parse() if you want to {@link fetch ()} the source contents or
+     * Use {@link parse()} if you want to {@link fetch()} the source contents or
      * {@link write()} to write the current content to the target.
      * 
-     * @todo: example documentation
+     * Example:
+     * <code>
+     * $thFile = new File_Therion('foobar.th'); // local file (r/w access)
+     * $thFile = new File_Therion('http://example.com/foo.th'); // web (r/o)
+     * $thFile->fetch();  // get contents
+     * $thFile->parse();  // parse fetched contents
+     * $surveys = $thFile->getObjects('File_Therion_Survey'); // get surveys
+     * $all = $thFile->getObjects(); // get all parsed objects
+     * </code>
      *
      * @param string $url path or URL of the file
      * @throws PEAR_Exception with wrapped lower level exception
@@ -135,7 +153,7 @@ class File_Therion implements Countable
      * 
      * Be aware that this function cleans all references to associated objects.
      *
-     * @throws PEAR_Exception         with wrapped lower level exception (InvalidArgumentException, etc)
+     * @throws PEAR_Exception with wrapped lower level exception (InvalidArgumentException, etc)
      * @throws File_Therion_SyntaxException if parse errors occur
      */
     public function parse()
@@ -169,15 +187,15 @@ class File_Therion implements Countable
      * parsing it into File_Therion_Line objects (and thereby validating syntax)
      * 
      * Be aware that this function clears the internal line buffer, so any
-     * changes made by {@add addLine()} get discarded.
+     * changes made by {@link addLine()} get discarded.
      * 
      * After fetching physical content, you may call {@link parse()} to generate
      * Therion data model objects out of it.
      * 
      * @todo implement me
      */
-     public function fetch()
-     {
+    public function fetch()
+    {
         $this->clearLines(); // clean existing line buffer as we fetch 'em fresh
         
         // read out datasource denoted by $url and call addLine()
@@ -215,11 +233,12 @@ class File_Therion implements Countable
 
             default:
                 // bail out: invalid parameter
-                throw new PEAR_Exception('parseSurvey(): Invalid $file argument!', new InvalidArgumentException("passed type='".gettype($file)."'"));
-                            
+                throw new PEAR_Exception('parseSurvey(): Invalid $file argument!',
+                  new InvalidArgumentException("passed type='".gettype($file)."'"));
+
         }
         
-     }
+    }
     
     /**
      * Update the line contents of this file from contained objects
@@ -228,13 +247,13 @@ class File_Therion implements Countable
      * 
      * @todo implement me
      */
-     public function update()
-     {
+    public function update()
+    {
         $this->_lines = array(); // clean existing line content
         
          // walk trough the associated objects and ask them to generate lines;
          // populate
-     }
+    }
      
      
      /**
@@ -247,23 +266,31 @@ class File_Therion implements Countable
      * Beware that {@link clearLines()} will discard any manual insertions.
      * Also be aware that {@link fetch()} will clean the line buffer too.
      * 
-     * @param $line       File_Therion_Line Line to add
-     * @param $lineNumber At which logical position to add (-1=end)
+     * @param File_Therion_Line $line Line to add
+     * @param int $lineNumber At which logical position to add (-1=end)
      * @todo implement me
      */
-     public function addLine($line, $lineNumber=-1)
-     {
-     }
+    public function addLine($line, $lineNumber=-1)
+    {
+        if (!is_a($line, 'File_Therion_Line')) {
+            throw new PEAR_Exception('addLine(): Invalid $line argument!',
+                  new InvalidArgumentException("passed type='".gettype($line)."'"));
+        }
+        
+        if ($lineNumber != -1) throw new PEAR_Exception('INSERTION FEATURE NOT IMPLEMENTED');
+        
+        $this->_lines[] = $line; // add line to internal buffer
+    }
      
     /**
      * Get internal line buffer
      *
      * @return array of File_Therion_Line objects
      */
-     public function getLines()
-     {
+    public function getLines()
+    {
          return $this->_lines;
-     }
+    }
      
      
      /**
@@ -283,13 +310,13 @@ class File_Therion implements Countable
      * You probably want to call {@link update()} hereafter to also clean the
      * calculated line content.
      */
-     public function clearObjects()
-     {
+    public function clearObjects()
+    {
          $this->_objects = array();
-     }
+    }
      
      /**
-     * Add an object to this file
+     * Add an File_Therion data model object to this file
      * 
      * Associated objects can be written to a file after {@link update()}
      * has been called to update the internal line representation.
@@ -297,63 +324,116 @@ class File_Therion implements Countable
      * Be aware that {@link clearObjects()} will discard any manual changes made
      * so far, and be warned that {@link parse()} will clean them too.
      * 
-     * @param $thObj      File_Therion_* object to add
-     * @todo implement me
+     * @param object $thObj File_Therion_* object to add
+     * @todo implement me better: checks etc
      */
-     public function addObject($thObj)
-     {
+    public function addObject($thObj)
+    {
          $this->_objects[] = $thObj;
-     }
+    }
      
      /**
-     * Get associated objects
+     * Get all associated objects
+     * 
+     * You can optionaly query for specific types using $filter.
+     * 
+     * Example:
+     * <code>
+     * $allObjects = $thFile->getObjects(); // get all
+     * $surveys    = $thFile->getObjects('File_Therion_Survey'); // get surveys
+     * </code>
      *
-     * @return array of File_Therion_* objects
+     * @param string $filter File_Therion_* class name, retrieve only objects of that kind
+     * @return array of File_Therion_* objects (empty array if no such objects)
      */
-     public function getObjects()
-     {
-         return $this->_objects;
-     }
+    public function getObjects($filter = null)
+    {
+         if (is_null($filter)) {
+            return $this->_objects;
+        } else {
+            $supported = "Survey"; // todo: support more types
+            if (!preg_match('^File_Therion_(?:'.$supported.')$', $filter)) {
+                throw new PEAR_Exception('getObjects(): Invalid $filter argument!',
+                 new InvalidArgumentException("unsupported filter='".$filter."'"));
+            }
+            
+            $rv = array();
+            foreach ($this->_objects as $o) {
+                if (get_class($o) == $filter) {
+                    $ret[] = $o;
+                }
+            }
+            return $ret;
+        }
+    }
      
      /**
      * Write this therion file content to the file
      *  
-     * This will overwrite the file denoted with $_url.
-     * 
-     * The files will be generated in the following way:
-     *   - each survey goes into its own file
-     *   - each file is named after its survey name
-     *   - if the survey name contains lashes, folders will be created.
-     *
-     * OPTIONS is an associative array to control output and may contain:
-     *   'filter' => regexp   
-     *       filter by survey name, only write surveys matching the filter.
-     *   'depth'  => number
-     *       only export to the nth level (0=all, 1=first level, ...)
+     * This will overwrite the file denoted with {@link $_url}.
+     * Wrapping will be applied according the setting of {@link setWrapping()}.
      *
      * Will throw an appropriate exception if anything goes wrong.
      *
-     * @param  string|ressource    $survey Therion_Survey object to write
-     * @param  array               $options Options for the writer
-     * @throws Pear_Exception      with wrapped lower level exception (InvalidArgumentException, etc)
+     * @param  string|ressource $survey Therion_Survey object to write
+     * @param  array            $options Options for the writer
+     * @throws Pear_Exception   with wrapped lower level exception (InvalidArgumentException, etc)
      */
-     public function write()
-     {
-         //@todo implement me...
+    public function write()
+    {
+        // go through all $_lines buffer objects and create writable string;
+        $stringContent = $this->toString();
          
-         // go through all $_lines buffer objects and create writable string;
-         //$arrayOfLines = $this->getLines();
+        // open filehandle in case its not already open
+        if (!is_resource($this->_url)) {
+            $fh = fopen ($this->_url, 'w');
+        } else {
+            $fh = $this->_url;
+        }
+        if (!is_writable($f)) {
+           throw new Pear_Exception("'".$this->_url."' is not writable!");
+        }
          
-         // then dump that string to the datasource.
-     }
+        // then dump that string to the datasource:
+        if (!fwrite($fh, $stringContent)) {
+            throw new Pear_Exception("error writing to '".$this->_url."' !");
+        }
+    }
+    
+    /**
+     * Get file lines as string
+     * 
+     * Returns the file line content as string, suitable for writing using
+     * PHPs fwrite().
+     * The line ending used is depending on the current PHP_EOL constant.
+     * 
+     * If wrapping was requested, the file content will be wrapped at the
+     * given column (see {@link setWrapping()}.
+     * 
+     * @return string The file contents as string
+     * @todo Line endings should not depend on Line class implementation
+     */
+    public function toString()
+    {
+        // Iterate over file objects composing a string
+        $ret = "";
+        foreach ($this->_lines as $line) {
+            if ($this->_wrapAt > 0) {
+                // todo: honor wrapping request by user
+                throw new PEAR_Exception('WRAPPING FEATURE NOT IMPLEMENTED');
+            }
+            $ret .= $line->toString();
+        }
+        return $ret;
+    }
      
     /**
-    * Update datasource/target path
-    * 
-    * This will just change the path, no data will be read/written!
-    * 
-    * @param $url string|ressource  filename/url or handle
-    */
+     * Update datasource/target path
+     * 
+     * This will just change the path, no data will be read/written!
+     * 
+     * @param string|ressource $url filename/url or handle
+     */
     public function setURL($url)
     {
         if (!is_string($url) || !is_resource($url)) {
@@ -370,11 +450,28 @@ class File_Therion implements Countable
      * 
      * @return string|ressource  filename/url or handle
      */
-     public function getURL()
-     {
+    public function getURL()
+    {
          return $this->_url;
-     }
+    }
      
+     
+    /**
+     * Set wrapping column when writing.
+     * 
+     * The wrapping will be carried out using therions data format
+     * (eg. ending the line with backslash and continuing it on the next one).
+     * 
+     * @param int $wrapAt wrap at this column, 0=disable
+     */
+    public function setWrapping($wrapAt)
+    {
+        if (!is_int($wrapAt)) {
+            throw new PEAR_Exception('setWrapping(): Invalid $wrapAt argument!',
+                  new InvalidArgumentException("passed type='".gettype($wrapAt)."'"));
+        }
+        $this->_wrapAt = $wrapAt;
+    }
      
      
     /**
@@ -383,7 +480,7 @@ class File_Therion implements Countable
      * returns the count of physical (ie. wrapped) lines in this file.
      * To count logical lines (ie. unwrapped, or line objects), use $logical.
      *
-     * @param $logical boolean If true, return logical (unwrapped) count
+     * @param boolean $logical If true, return logical (unwrapped) count
      * @return int number of raw lines
      */
     public function count($logical=false)
