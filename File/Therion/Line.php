@@ -128,7 +128,7 @@ class File_Therion_Line implements Countable
     /**
      * Add internal data to stack.
      * 
-     * @param string  $data    data of the line
+     * @param string  $data    data string of the line
      * @param string  $comment comment of the line
      * @param string  $indent  intent characters
      * @param boolean $indent  in case the line expects further data
@@ -210,7 +210,7 @@ class File_Therion_Line implements Countable
     
     
     /**
-     * Returns the unwrapped line content as string.
+     * Returns the unwrapped data-content as string.
      * 
      * Comments and indenting will be stripped
      * 
@@ -226,12 +226,97 @@ class File_Therion_Line implements Countable
     }
     
     /**
+     * Returns the data part of the line as array.
+     * 
+     * Each distinct value will form one array index.
+     * 
+     * Unescaping will be performed, so each array entry has only valid data
+     * suitable for proper processing.
+     * 
+     * @see {@link escape()} for escaping rules as per therion book
+     * @return array
+     */
+    public function getDatafields()
+    {
+    }
+    
+    /**
+     * Escapes one or more datafields for proper therion syntax.
+     * 
+     * This will escape and quote datafields properly, so the can be put into
+     * a file for writing.
+     * 
+     * Escaping and quoting rules are described in the therion book at p. 12.
+     * 
+     * When passed an array (like from {@link getDatafields()}, an array
+     * will be returned with each value escaped separately.
+     * 
+     * @param string|array string or array to escape
+     * @return string|array with escaped/quoted values
+     * @todo []-escaping is also used for keywords with spaces; the are not yet supported
+     */
+    public static function escape($value)
+    {
+        if (is_array($value)) {
+            $r = array();
+            foreach ($value as $v) {
+                $r[] = File_Therion_Line::escape($v);
+            }
+            return $r;
+        } else {
+            // Escape double-quotes: duplicate them
+            $value = preg_replace('/"/', '""', $value);
+            
+            if (stristr($value, ' ') || $value == "") {
+                // if space is contained, quote entire field
+                // TODO: support keywords as well
+                if (preg_match('/^[\d\s.]+$/', $value)) {
+                    $value = '['.$value.']'; // put numeric value or keyword in []
+                } else {
+                    $value = '"'.$value.'"'; // put string value in ""
+                }
+            }
+            
+            return $value;
+        }
+    }
+    
+    /**
+     * Unescapes one or more datafields for proper processing in PHP.
+     * 
+     * This will undo the escaping and quoting performed by {@link escape()}.
+     * 
+     * @param string|array string or array to unescape
+     * @return string|array with unescaped/unquoted values
+     * @todo []-escaping is also used for keywords with spaces; the are not yet supported
+     */
+    public static function unescape($value)
+    {
+        if (is_array($value)) {
+            $r = array();
+            foreach ($value as $v) {
+                $r[] = File_Therion_Line::unescape($v);
+            }
+            return $r;
+        } else {
+            
+            // remove quote sign from start and end of string
+            $value = preg_replace('/^["\[]|["\]]$/', '', $value);
+            
+            // Escaped double-quotes: strip one of them
+            $value = preg_replace('/""/', '"', $value);
+            
+            return $value;
+        }
+    }
+    
+    /**
      * Returns the unwrapped comment as string.
      * 
      * Comments of wrapped lines will be joined.
      * 
      * @param string $ml_sep Separator used for joining multiline
-     * @return string data part of the unwrapped line
+     * @return string comment part of the unwrapped line
      */
     public function getComment($ml_sep = '; ')
     {

@@ -365,6 +365,39 @@ class File_Therion_LineTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(3, count($sample));   // SPL interface
         
     }
+    
+    
+    /**
+     * Test escaping and unescaping
+     */
+    public function testEscapingUnescaping()
+    {
+        // test normal strings without special chars
+        $this->assertEquals("foo",  File_Therion_Line::escape("foo"));
+        $this->assertEquals("foo",  File_Therion_Line::unescape("foo"));
+        $this->assertEquals("1.23", File_Therion_Line::escape("1.23"));
+        $this->assertEquals("1.23", File_Therion_Line::unescape("1.23"));
+        $this->assertEquals(1.23,   File_Therion_Line::escape(1.23));   // int
+        $this->assertEquals(1.23,   File_Therion_Line::unescape(1.23)); // int
+        $this->assertEquals('""',   File_Therion_Line::escape("")); // empty
+        $this->assertEquals('',     File_Therion_Line::unescape('""')); // empty
+        
+        // test array interface
+        $this->assertEquals(array("foo", "bar", "1.23"),
+            File_Therion_Line::escape(array("foo", "bar", "1.23")));
+        $this->assertEquals(array("foo", "bar", "1.23"),
+            File_Therion_Line::unescape(array("foo", "bar", "1.23")));
+            
+        // test white space
+        $this->assertEquals("\"foo bar\"", File_Therion_Line::escape("foo bar"));
+        $this->assertEquals("[1. 23]", File_Therion_Line::escape("1. 23"));
+        $this->assertEquals("foo bar", File_Therion_Line::unescape("\"foo bar\""));
+        $this->assertEquals("1. 23", File_Therion_Line::unescape("[1. 23]"));
+       
+        // keywords currently not supported
+        // $this->assertEquals("[key word]", File_Therion_Line::escape("key word"));
+        // $this->assertEquals("key word", File_Therion_Line::escape("[key word]"));
+    }
 
 
 }
