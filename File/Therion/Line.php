@@ -288,7 +288,6 @@ class File_Therion_Line implements Countable
      * 
      * @param string|array string or array to unescape
      * @return string|array with unescaped/unquoted values
-     * @todo []-escaping is also used for keywords with spaces; the are not yet supported
      */
     public static function unescape($value)
     {
