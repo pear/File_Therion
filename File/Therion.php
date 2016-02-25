@@ -184,6 +184,8 @@ class File_Therion implements Countable
      */
     public function parse()
     {
+        $this->checkSyntax();
+        
         $this->clearObjects();  // clean references
         
         // walk all lines and try to parse them in this context.
@@ -207,8 +209,8 @@ class File_Therion implements Countable
             
         }
 
-
-        return $survey;
+        // syntax check; if there is still 
+        // TODO
     }
     
     
@@ -602,6 +604,31 @@ class File_Therion implements Countable
     public function setEncodign($codeset)
     {
         $this->_encoding = $codeset;
+    }
+    
+    
+    /**
+     * Check basic syntax of internal line buffer
+     * 
+     * This validates basic syntax of internal file buffer.
+     * The following checks will be performed:
+     *   - last line should not expect additional data
+     *   - matching multiline commands
+     * 
+     * @throws File_Therion_SyntaxException if syntax errors occur
+     * @todo implement me
+     */
+    public function checkSyntax()
+    {
+        $lines =& $this->_lines;
+        
+        if ($lines[count($lines-1)]->isContinued()) {
+            throw new File_Therion_SyntaxException(
+                "Data incomplete: last line still expects another physical line!"
+                );
+        }
+        
+        // TODO search matching multiline for survey / scrap / centreline
     }
 }
 
