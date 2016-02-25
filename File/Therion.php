@@ -465,7 +465,7 @@ class File_Therion implements Countable
         } else {
             $fh = $this->_url;
         }
-        if (!is_writable($f)) {
+        if (!is_writable($fh)) {
            throw new Pear_Exception("'".$this->_url."' is not writable!");
         }
          
