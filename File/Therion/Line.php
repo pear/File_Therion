@@ -63,21 +63,36 @@ class File_Therion_Line implements Countable
     
     /**
      * Create a new therion line object.
+     * 
+     * Data may be given in two forms:
+     *   - string: line data will be used as given (like from file)
+     *   - array:  interpreted as array returned by {@link getDatafields()}
      *
-     * @param string $data    data of the line
+     * Be sure to escape values in string mode properly.
+     * 
+     * @param string|array $data    data of the line
      * @param string $comment comment of the line
      * @param string $indent  intent characters
      * @throws PEAR_Exception with wrapped lower level exception
      */
     public function __construct($data, $comment = '', $indent = '')
     {
-           if (is_string($data) && is_string($comment) && is_string($indent)) {
-                // add internal data format        
-                $this->addData($indent, $data, $comment);
-              
-           } else {               
-                throw new PEAR_Exception('parseSurvey(): Invalid $line type!', new InvalidArgumentException());
-           }    
+        if (is_string($data) && is_string($comment) && is_string($indent)) {      
+            $this->addData($indent, $data, $comment);
+            
+        } elseif (is_array($data) && is_string($comment) && is_string($indent)) { 
+            // escape values and concatenate them
+            $dataEscaped = File_Therion_Line::escape($data);
+            $stringData = implode(' ', $dataEscaped);
+           // var_dump(array('DBG:escp'=>$dataEscaped,'DBG:strd'=>$stringData));
+            
+            $this->addData($indent, $stringData, $comment);
+          
+        } else {               
+            throw new PEAR_Exception(
+                'cannot construct new Line: Invalid data type!',
+                new InvalidArgumentException());
+        }    
     }
     
     /**
@@ -183,6 +198,9 @@ class File_Therion_Line implements Countable
                 'data'    =>  trim($data,    "\r\n"),
                 'comment' =>  trim($comment, "\r\n"),
             );
+            
+            $this->getDatafields(); // syntax check of lines, will throw exception
+            
             ($wrapDetected)? $this->expectMoreLines() : $this->expectMoreLines(false);
             
         } else {
@@ -229,15 +247,103 @@ class File_Therion_Line implements Countable
      * Returns the data part of the line as array.
      * 
      * Each distinct value will form one array index.
+     * With single line therion commands the command will be naturally at i=0,
+     * whereas with multiline commands there will usually just be data.
      * 
      * Unescaping will be performed, so each array entry has only valid data
      * suitable for proper processing.
      * 
      * @see {@link escape()} for escaping rules as per therion book
      * @return array
+     * @throws File_Therion_SyntaxException in case of quoting errors of this Line
      */
     public function getDatafields()
     {
+        // TODO: this could most probably be achieved easier/more elegantly.
+        //       I'm too tired now to think about it...
+print "DBG: line='".$this->getContent()."\n";
+        
+        // get raw splitted values
+        if ($this->getContent() == "") return array();  // go home if empty
+        $tokens = preg_split('/\s+/', $this->getContent());
+        
+        // walk the values and compile the result (that is, honor escaping at
+        // the outermost level and concat values as necessary); all inner
+        // brackets/quotes are interpreted to belong to the first lvl.
+        // When detecting the outermost start char, we must only decrease
+        // the level when encountering the corresponding end char.
+        $r = array();
+        $lastVal  = array(); // stores compiled value in append mode
+        $lvl      = 0;       // lvl to detect nesting
+        $lvl_chs  = "";      // outermost quote char (start)
+        $lvl_che  = "";      // outermost quote char (end)
+        for ($i=0; $i<count($tokens); $i++) {
+print " [seen: i=".$i."; token='".$tokens[$i]."]";
+            $matches = array();
+            if ($lvl == 0 && preg_match('/^(["\[])/', $tokens[$i], $matches)) {
+                // begin append mode
+                $lvl_chs = $matches[1];  // get sequence start char
+                $lvl_che = ($matches[1]=="[")? "]" : $lvl_chs; // matching end
+                
+                $lastVal[] = $tokens[$i];
+                $lvl++;
+                
+print " [begin APPEND]";
+                
+            } elseif ($lvl == 1 && preg_match('/'.preg_quote($lvl_che).'$/', $tokens[$i], $matches)) {
+                // end append mode
+                $lastVal[] = $tokens[$i];
+                
+                $strVal = implode(" ", $lastVal);
+                $r[] = File_Therion_Line::unescape($strVal); // add buffer to result
+                
+                $lastVal = array(); // clean buffer
+                $lvl--;
+                
+print " [end APPEND]";
+                
+            } else {
+                // in between: append or add new value
+                if ($lvl > 0) {
+                    // buffer the value
+                    $lastVal[] = $tokens[$i];
+                    
+                    // adjust nesting level: count occurences of chars
+                    $m = array();
+                    $re = '/^('.preg_quote($lvl_chs).'+)/';
+                    if (preg_match($re, $tokens[$i], $m)) {
+                        $lvl = $lvl + strlen($m[1]);
+print " [LVL + ".strlen($m[1])."; re='$re']";
+                    }
+                    $m = array();
+                    $re = '/('.preg_quote($lvl_che).'+)$/';
+                    if (preg_match($re, $tokens[$i], $m)) {
+                        $lvl = $lvl - strlen($m[1]);
+print " [LVL - ".strlen($m[1])."; re='$re']";
+                    }
+print " [buffer add]";
+                } else {
+                    // just create new value
+                    $r[] = File_Therion_Line::unescape($tokens[$i]);
+                    
+print " [fresh add]";
+                }
+            }
+            
+            
+            
+print " [LVL=".$lvl."; s='".$lvl_chs."'; e='".$lvl_che."'] \n";
+            
+        }
+        
+        if ($lvl > 0) {
+            // Still in append mode? closing sign was not detected!
+            throw new File_Therion_SyntaxException(
+                "Line syntax error: '".$this->getContent()."'");
+        }
+print "\n";
+        
+        return $r;
     }
     
     /**

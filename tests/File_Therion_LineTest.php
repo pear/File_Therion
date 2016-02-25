@@ -53,11 +53,10 @@ class File_Therion_LineTest extends PHPUnit_Framework_TestCase
     /**
      * dummy test
      */
-    public function testDummy()
+    public function _testDummy()
     {
         //$this->markTestSkipped('Skipped Test.');
         //$this->markTestIncomplete("This test has not been implemented yet.");
-    
         //$this->assertInstanceOf('File_Therion', $testSubject);
         //$this->assertTrue($false);
         //$this->assertEquals($expected, $actual, 'Failed!');
@@ -389,10 +388,16 @@ class File_Therion_LineTest extends PHPUnit_Framework_TestCase
             File_Therion_Line::unescape(array("foo", "bar", "1.23")));
             
         // test white space
-        $this->assertEquals("\"foo bar\"", File_Therion_Line::escape("foo bar"));
+        $this->assertEquals('"foo bar"', File_Therion_Line::escape("foo bar"));
         $this->assertEquals("[1. 23]", File_Therion_Line::escape("1. 23"));
-        $this->assertEquals("foo bar", File_Therion_Line::unescape("\"foo bar\""));
+        $this->assertEquals("foo bar", File_Therion_Line::unescape('"foo bar"'));
         $this->assertEquals("1. 23", File_Therion_Line::unescape("[1. 23]"));
+        
+        // test nested escaping
+        $this->assertEquals('"""foo bar"""', File_Therion_Line::escape('"foo bar"'));
+        $this->assertEquals('"foo bar"', File_Therion_Line::unescape('"""foo bar"""'));
+        $this->assertEquals('"foo ""baz"" bar"', File_Therion_Line::escape('foo "baz" bar'));
+        $this->assertEquals('"foo bar"', File_Therion_Line::unescape('""foo bar""'));
        
         // keywords currently not supported
         // $this->assertEquals("[key word]", File_Therion_Line::escape("key word"));
@@ -400,5 +405,82 @@ class File_Therion_LineTest extends PHPUnit_Framework_TestCase
     }
 
 
+    /**
+     * Test data fields functionality
+     */
+    public function testDataFields()
+    {
+        // Basic testing of datafields
+        $sample = new File_Therion_Line("");
+        $this->assertInstanceOf('File_Therion_Line', $sample);
+        $this->assertEquals(array(), $sample->getDatafields());
+        
+        $sample = new File_Therion_Line("one two three");
+        $this->assertEquals(array("one", "two", "three"),
+            $sample->getDatafields());
+            
+        $sample = new File_Therion_Line("one two three\\"); // \\-> is not data!
+        $this->assertEquals(array("one", "two", "three"),
+            $sample->getDatafields());
+        
+        $sample = File_Therion_Line::parse("one two three");
+        $this->assertEquals(array("one", "two", "three"),
+            $sample->getDatafields());
+            
+        // testing with simple escaped/quoted sequences
+        $sample = File_Therion_Line::parse('one "foo bar"');
+        $this->assertEquals(array("one", "foo bar"), $sample->getDatafields());
+        
+        $sample = File_Therion_Line::parse('one "foo ""bar baz"" bar" end');
+        $this->assertEquals(
+            array("one", 'foo "bar baz" bar', "end"),
+            $sample->getDatafields());
+            
+        $sample = new File_Therion_Line('one "foo bar"');
+        $this->assertEquals(array("one", "foo bar"), $sample->getDatafields());
+        
+        $sample = new File_Therion_Line('one "foo ""bar baz"" bar" end');
+        $this->assertEquals(
+            array("one", 'foo "bar baz" bar', "end"),
+            $sample->getDatafields());
+            
+        $sample = new File_Therion_Line('one [1. 23] baz');
+        $this->assertEquals(array("one", "1. 23", "baz"), $sample->getDatafields());
+        
+        $sample = new File_Therion_Line('one "foo says: 1.23" baz');
+        $this->assertEquals(array("one", "foo says: 1.23", "baz"), $sample->getDatafields());
+        
+        $sample = new File_Therion_Line('one "foo says: ""1.23""" baz');
+        $this->assertEquals(array("one", 'foo says: "1.23"', "baz"), $sample->getDatafields());
+        
+        $sample = new File_Therion_Line('one "foo says: [1. 23]" baz');
+        $this->assertEquals(array("one", "foo says: [1. 23]", "baz"), $sample->getDatafields());
+        
+        $sample = new File_Therion_Line('one "foo says: ""[1. 23]""" baz');
+        $this->assertEquals(array("one", 'foo says: "[1. 23]"', "baz"), $sample->getDatafields());
+    }
+    
+    /**
+     * Test basic instantiation using datafields
+     */
+    public function testBasicInstantiationWithDatafields()
+    {
+        $sample = new File_Therion_Line(array());
+        $this->assertInstanceOf('File_Therion_Line', $sample);
+        $this->assertEquals(array(), $sample->getDatafields());
+                
+        $sample = new File_Therion_Line(array("testdata"));
+        $this->assertInstanceOf('File_Therion_Line', $sample);
+        $this->assertEquals(array("testdata"), $sample->getDatafields());
+        
+        $sample = new File_Therion_Line(array("foo", "bar", "baz"));
+        $this->assertInstanceOf('File_Therion_Line', $sample);
+        $this->assertEquals(array("foo", "bar", "baz"), $sample->getDatafields());
+        
+        $sample = new File_Therion_Line(array("foo", 'bar test', "baz"));
+        $this->assertInstanceOf('File_Therion_Line', $sample);
+        $this->assertEquals(array("foo", 'bar test', "baz"), $sample->getDatafields());
+       
+    }
 }
 ?>
