@@ -77,16 +77,23 @@ class File_Therion implements Countable
 {
 
     /**
-     * Datasource/target of this file
+     * Datasource/target of this file.
      * 
      * This represents the real physical adress of the content
      * 
      * @access protected
      */
     protected $_url = '';
+    
+    /**
+     * Encoding of this file.
+     * 
+     * @var string
+     */
+    protected $_encoding = 'UTF-8';
 
     /**
-     * Lines of this file
+     * Lines of this file.
          * 
      * will be populated by {@link parse()} or {@link update()}
      * 
@@ -96,7 +103,7 @@ class File_Therion implements Countable
     protected $_lines = array();
     
     /**
-     * objects of this file
+     * objects of this file.
      * 
      * will be populated by {@link parse()} or {@link update()}
      * 
@@ -106,7 +113,7 @@ class File_Therion implements Countable
     protected $_objects = array();
     
     /**
-     * Wrapping of the file
+     * Wrapping of the file.
      * 
      * This controls the wrapping column when writing
      * 
@@ -116,7 +123,18 @@ class File_Therion implements Countable
     protected $_wrapAt = 0;
     
     /**
-     * Create a new therion file object
+     * Allows/Disables parsing of 'input' command.
+     *
+     * @see {@link parse()}
+     * @see {@link enableInputCommand()}
+     * @var boolean
+     */
+    protected $_allowImport = true;
+    
+    
+    
+    /**
+     * Create a new therion file object.
      *
      * Use this to create a new interface for parsing existing files
      * or writing new ones.
@@ -145,22 +163,36 @@ class File_Therion implements Countable
 
 
     /**
-     * Parses the internal line buffer to associated Therion objects
+     * Parses the internal line buffer to associated Therion objects.
      * 
      * You may use {@link fetch()} to update the internal line buffer with
      * real physical content from the datasource.
      * Alternatively you can craft the file yourself using {@link addLine()}.
      * 
+     * Therions 'import' statement will include the remote file content
+     * at the place of the import command. With remote files the function tries
+     * to guess the remote place. (see {@link enableInputCommand()}). This may
+     * fail with an exception (esp. if $url was initially a filehandle).
+     * 
      * Be aware that this function cleans all references to associated objects.
      *
+     * @todo implement "import" command of therion to include other files
      * @throws PEAR_Exception with wrapped lower level exception (InvalidArgumentException, etc)
      * @throws File_Therion_SyntaxException if parse errors occur
+     * @throws TODO_FILE_NOT_THERE_Exception in case 'input' failed.
+     * @see {@link enableInputCommand()}
      */
     public function parse()
     {
         $this->clearObjects();  // clean references
         
-        // TODO implement me: call addLine()
+        // walk all lines and try to parse them in this context.
+        // we delegate as much as possible
+
+
+
+
+
 
         // OK now we got $data populated with string lines
         // lets iterate over it and try to parse.
@@ -181,10 +213,10 @@ class File_Therion implements Countable
     
     
     /**
-     * Update the internal line representation of this file from datsource
+     * Update the internal line representation of this file from datsource.
      * 
      * This will open the connection to the $url and read out its contents;
-     * parsing it into File_Therion_Line objects (and thereby validating syntax)
+     * parsing it to File_Therion_Line objects (and thereby validating syntax).
      * 
      * Be aware that this function clears the internal line buffer, so any
      * changes made by {@link addLine()} get discarded.
@@ -192,17 +224,13 @@ class File_Therion implements Countable
      * After fetching physical content, you may call {@link parse()} to generate
      * Therion data model objects out of it.
      * 
-     * @todo implement me
      */
     public function fetch()
     {
         $this->clearLines(); // clean existing line buffer as we fetch 'em fresh
         
-        // read out datasource denoted by $url and call addLine()
-        //   .... tbi ...
-        
-        $data = array();
-        // investigate file parameter and try to get data out of the source.
+        // read out datasource denoted by $url and call addLine()  
+        $data = array(); // raw file data      
         $file = $this->_url;
         switch (true) {
             case (is_resource($file) && get_resource_type($file) == 'stream'):
@@ -219,11 +247,14 @@ class File_Therion implements Countable
                 break;
 
             case (is_readable($file) || is_string($file) && preg_match('^\w+://', $file)):
-                // open file/url and fetch data, then repass to factory
+                // open file/url and fetch data
                 $fh = fopen ($file, 'r');
-                $survey = File_Therion::parse($fh);  // TODO
+                while (!feof($handle)) {
+                    $line = fgets($file);
+                    $data[] = $line; // push to raw dataset
+                }
                 fclose($fh);
-                return $survey;
+                return;
                 break;
 
             case (is_string($file)):
@@ -238,10 +269,49 @@ class File_Therion implements Countable
 
         }
         
+        
+        
+        // raw $data is now populated, lets parse it into proper line therion 
+        // objects, thereby set encoding if such a command arises.
+        foreach ($data as $dl) {
+            // parse raw line
+            $line = (!is_a('File_Therion_Line', $dl))
+                ? File_Therion_Line::parse($dl)  // parse raw data string
+                : $dl;                           // use Line object as-is
+            
+            // handle continuations:
+            // if this is the first line, pack it on the stack, otherwise see
+            // if the most current line expects additional content; append to it
+            // if that's the case, otherwise add as fresh line to the stack.
+            if (count($this) == 0) {
+                $this->addLine($line);
+            } else {
+                $priorLine =& $this->_lines[count($this->_lines-1)];
+                if ($line->isContinuation($priorLine)) {
+                    $priorLine->addPhysicalLine($line);
+                } else {
+                    $this->addLine($line);
+                }
+            }
+            
+            
+            // If the last line on the stack is complete now, we can
+            // investigate the line a little further
+            $mostCurrentLine =& $this->_lines[count($this->_lines-1)];
+            $mostCurrentLineData = $mostCurrentLine->getDatafields();
+            
+            // set encoding if specified
+            if ($mostCurrentLineData[0] == 'encoding') {
+                $this->setEncodign($mostCurrentLineData[1]);
+            }
+            
+            
+        }
+        
     }
     
     /**
-     * Update the line contents of this file from contained objects
+     * Update the line contents of this file from contained objects.
      * 
      * This will generate therion file lines out of the associated objects.
      * 
@@ -257,7 +327,7 @@ class File_Therion implements Countable
      
      
      /**
-     * Add a line to this file
+     * Add a line to this file.
      * 
      * The optional lineNumber parameter allows to adjust the insertion point;
      * the lie will be inserted at the index, pushing already present content
@@ -265,6 +335,9 @@ class File_Therion implements Countable
      * 
      * Beware that {@link clearLines()} will discard any manual insertions.
      * Also be aware that {@link fetch()} will clean the line buffer too.
+     * 
+     * Note that addLine() will not take care of wrapping; make sure
+     * that the line content remains consistent.
      * 
      * @param File_Therion_Line $line Line to add
      * @param int $lineNumber At which logical position to add (-1=end)
@@ -283,7 +356,7 @@ class File_Therion implements Countable
     }
      
     /**
-     * Get internal line buffer
+     * Get internal line buffer.
      *
      * @return array of File_Therion_Line objects
      */
@@ -294,7 +367,7 @@ class File_Therion implements Countable
      
      
      /**
-     * Clear associated lines
+     * Clear associated lines.
      * 
      * This will wipe out the internal line buffer.
      */
@@ -304,7 +377,7 @@ class File_Therion implements Countable
      }
      
      /**
-     * Clear associated objects
+     * Clear associated objects.
      * 
      * This will unassociate all registered objects.
      * You probably want to call {@link update()} hereafter to also clean the
@@ -333,7 +406,7 @@ class File_Therion implements Countable
     }
      
      /**
-     * Get all associated objects
+     * Get all associated objects.
      * 
      * You can optionaly query for specific types using $filter.
      * 
@@ -368,7 +441,7 @@ class File_Therion implements Countable
     }
      
      /**
-     * Write this therion file content to the file
+     * Write this therion file content to the file.
      *  
      * This will overwrite the file denoted with {@link $_url}.
      * Wrapping will be applied according the setting of {@link setWrapping()}.
@@ -401,7 +474,7 @@ class File_Therion implements Countable
     }
     
     /**
-     * Get file lines as string
+     * Get file lines as string.
      * 
      * Returns the file line content as string, suitable for writing using
      * PHPs fwrite().
@@ -428,7 +501,7 @@ class File_Therion implements Countable
     }
      
     /**
-     * Update datasource/target path
+     * Update datasource/target path.
      * 
      * This will just change the path, no data will be read/written!
      * 
@@ -446,7 +519,7 @@ class File_Therion implements Countable
     }
       
     /**
-     * Get currently set datasource/target location
+     * Get currently set datasource/target location.
      * 
      * @return string|ressource  filename/url or handle
      */
@@ -475,7 +548,7 @@ class File_Therion implements Countable
      
      
     /**
-     * Count (wrapped) lines in this file (SPL Countable)
+     * Count (wrapped) lines in this file (SPL Countable).
      * 
      * returns the count of physical (ie. wrapped) lines in this file.
      * To count logical lines (ie. unwrapped, or line objects), use $logical.
@@ -497,6 +570,39 @@ class File_Therion implements Countable
     } 
     
 
+    /**
+     * Allow/Disable parsing of 'input' command.
+     * 
+     * Therion files may contain an 'input <filepath>' command.
+     * This tells therion to include the referenced file at the place of the
+     * command.
+     * {@link parse()} by default performs this lookup, but you may turn this
+     * behavior off.
+     * 
+     * @param boolean $allow
+     */
+    public function enableInputCommand($allow)
+    {
+        $this->_allowImport = $allow;
+    }
+    
+    /**
+     * Set encoding of input/output files.
+     * 
+     * This will tell what encoding to use.
+     * The default assumed encoding is utf8.
+     * 
+     * When {@link fetch()}ing a file, there is usually a 'encoding' therion
+     * command telling the encoding of the following code, so when reading in
+     * file data there is usually no need to call this explicitely.
+     * 
+     * @param string $codeset
+     * @todo currently not supported - does nothing
+     */
+    public function setEncodign($codeset)
+    {
+        $this->_encoding = $codeset;
+    }
 }
 
 
