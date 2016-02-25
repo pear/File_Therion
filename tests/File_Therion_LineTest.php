@@ -368,6 +368,8 @@ class File_Therion_LineTest extends PHPUnit_Framework_TestCase
     
     /**
      * Test escaping and unescaping
+     * 
+     * @todo Complete escaping of lonly " characters
      */
     public function testEscapingUnescaping()
     {
@@ -398,10 +400,21 @@ class File_Therion_LineTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('"foo bar"', File_Therion_Line::unescape('"""foo bar"""'));
         $this->assertEquals('"foo ""baz"" bar"', File_Therion_Line::escape('foo "baz" bar'));
         $this->assertEquals('"foo bar"', File_Therion_Line::unescape('""foo bar""'));
+        
+        // @todo test uncommon cases
+        // (i'm not entirely sure this is the correct syntax!
+        //  it could probably also be '""' =esc> '""""""';
+        //  which means the quotes must live inside single quotes themselves.
+        //  currently i think """" is enough to denote two quotes)
+        //$this->assertEquals('""""', File_Therion_Line::escape('""'));
+        //$this->assertEquals('""', File_Therion_Line::unescape('""""'));
+        $this->markTestIncomplete("some corner cases not tested yet!");
+
        
         // keywords currently not supported
         // $this->assertEquals("[key word]", File_Therion_Line::escape("key word"));
         // $this->assertEquals("key word", File_Therion_Line::escape("[key word]"));
+        $this->markTestIncomplete("keyword escaping not tested yet!");
     }
 
 
@@ -458,6 +471,15 @@ class File_Therion_LineTest extends PHPUnit_Framework_TestCase
         
         $sample = new File_Therion_Line('one "foo says: ""[1. 23]""" baz');
         $this->assertEquals(array("one", 'foo says: "[1. 23]"', "baz"), $sample->getDatafields());
+        
+        $sample = new File_Therion_Line('"foo bar"');
+        $this->assertEquals(array('foo bar'), $sample->getDatafields());
+        
+        $sample = new File_Therion_Line('"""foo bar"""');
+        $this->assertEquals(array('"foo bar"'), $sample->getDatafields());
+        
+        $sample = new File_Therion_Line('"""foobar"""');
+        $this->assertEquals(array('"foobar"'), $sample->getDatafields());
     }
     
     /**

@@ -256,94 +256,26 @@ class File_Therion_Line implements Countable
      * @see {@link escape()} for escaping rules as per therion book
      * @return array
      * @throws File_Therion_SyntaxException in case of quoting errors of this Line
+     * @todo support corner cases such as ""foo"" (which is valid='"foo"')
      */
     public function getDatafields()
     {
-        // TODO: this could most probably be achieved easier/more elegantly.
-        //       I'm too tired now to think about it...
-print "DBG: line='".$this->getContent()."\n";
-        
-        // get raw splitted values
-        if ($this->getContent() == "") return array();  // go home if empty
-        $tokens = preg_split('/\s+/', $this->getContent());
-        
-        // walk the values and compile the result (that is, honor escaping at
-        // the outermost level and concat values as necessary); all inner
-        // brackets/quotes are interpreted to belong to the first lvl.
-        // When detecting the outermost start char, we must only decrease
-        // the level when encountering the corresponding end char.
         $r = array();
-        $lastVal  = array(); // stores compiled value in append mode
-        $lvl      = 0;       // lvl to detect nesting
-        $lvl_chs  = "";      // outermost quote char (start)
-        $lvl_che  = "";      // outermost quote char (end)
-        for ($i=0; $i<count($tokens); $i++) {
-print " [seen: i=".$i."; token='".$tokens[$i]."]";
-            $matches = array();
-            if ($lvl == 0 && preg_match('/^(["\[])/', $tokens[$i], $matches)) {
-                // begin append mode
-                $lvl_chs = $matches[1];  // get sequence start char
-                $lvl_che = ($matches[1]=="[")? "]" : $lvl_chs; // matching end
-                
-                $lastVal[] = $tokens[$i];
-                $lvl++;
-                
-print " [begin APPEND]";
-                
-            } elseif ($lvl == 1 && preg_match('/'.preg_quote($lvl_che).'$/', $tokens[$i], $matches)) {
-                // end append mode
-                $lastVal[] = $tokens[$i];
-                
-                $strVal = implode(" ", $lastVal);
-                $r[] = File_Therion_Line::unescape($strVal); // add buffer to result
-                
-                $lastVal = array(); // clean buffer
-                $lvl--;
-                
-print " [end APPEND]";
-                
-            } else {
-                // in between: append or add new value
-                if ($lvl > 0) {
-                    // buffer the value
-                    $lastVal[] = $tokens[$i];
-                    
-                    // adjust nesting level: count occurences of chars
-                    $m = array();
-                    $re = '/^('.preg_quote($lvl_chs).'+)/';
-                    if (preg_match($re, $tokens[$i], $m)) {
-                        $lvl = $lvl + strlen($m[1]);
-print " [LVL + ".strlen($m[1])."; re='$re']";
-                    }
-                    $m = array();
-                    $re = '/('.preg_quote($lvl_che).'+)$/';
-                    if (preg_match($re, $tokens[$i], $m)) {
-                        $lvl = $lvl - strlen($m[1]);
-print " [LVL - ".strlen($m[1])."; re='$re']";
-                    }
-print " [buffer add]";
-                } else {
-                    // just create new value
-                    $r[] = File_Therion_Line::unescape($tokens[$i]);
-                    
-print " [fresh add]";
-                }
-            }
-            
-            
-            
-print " [LVL=".$lvl."; s='".$lvl_chs."'; e='".$lvl_che."'] \n";
-            
-        }
+        $c = $this->getContent();
         
-        if ($lvl > 0) {
-            // Still in append mode? closing sign was not detected!
-            throw new File_Therion_SyntaxException(
-                "Line syntax error: '".$this->getContent()."'");
-        }
-print "\n";
-        
-        return $r;
+        // this pattern tries to grep all possible non-quoted and quoted
+        // string tokens.
+        // this pattern is still insufficient as it will not get ""foo"" etc,
+        // however it should already grep most of the possible combinations.
+        $p ='((?:\[[\s\w\d.]+\])|(?:"(?:""|[\s\w.:-_])+")|(?:[\d\w.:-_]+))';
+        $pr = preg_match_all($p, $c, $r);
+        if ($pr === false) throw new File_Therion_SyntaxException(
+            "error parsing datafields (could not grep tokens)");
+ 
+        // apply unescaping to all tokens
+        $rv = array_map('File_Therion_Line::unescape', $r[0]);
+    
+        return $rv;
     }
     
     /**
