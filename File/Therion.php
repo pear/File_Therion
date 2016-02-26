@@ -19,7 +19,7 @@ require_once 'PEAR.php';
 require_once 'PEAR/Exception.php';
 require_once 'File/Therion/Exception.php';
 require_once 'File/Therion/Line.php';
-//require_once 'File/Therion/Survey.php';
+require_once 'File/Therion/Survey.php';
 //require_once 'File/Therion/Centreline.php';
 //require_once 'File/Therion/Person.php';
 //require_once 'File/Therion/Explo.php';
@@ -188,29 +188,84 @@ class File_Therion implements Countable
         
         $this->clearObjects();  // clean references
         
-        // walk all lines and try to parse them in this context.
-        // we delegate as much as possible
-
-
-
-
-
-
-        // OK now we got $data populated with string lines
-        // lets iterate over it and try to parse.
-        // the ultimate goal is to create an instance of File_Therion_Survey
-        $survey = null;
-        foreach ($data as $sline) {
-            // parse if not already a Therion_Line
-            $thline = (is_a($sline, 'File_Therion_Line'))
-                ? $sline
-                : File_Therion_Line::parse($sline);
-
+        $this->evalInputCMD(); // resolve input commands 
+        
+        
+        // Walk all lines and try to parse them in this context.
+        // we delegate as much as possible, so we just honor commands
+        // the file level knows about.
+        // Other lines will be collected and given to a suitable parser.
+        $curLineLogical  = 0;
+        $curLinePhysical = 0;
+        $currentCTX      = null; // current context object
+        $ctxCollection   = array();
+        foreach ($this->getLines() as $line) {
+            // rise line statistics
+            $curLineLogical++;
+            $curLinePhysical = $curLinePhysical + count($line);
             
+            if (!$line->isCommentOnly()) {
+                $lineData = $line->getDatafields();
+                switch (strtolower($lineData[0])) {
+                    case 'encoding':
+                        $this->setEncodign($lineData[1]);
+                    break;
+                    
+                    case 'survey':
+                        // start of a survey context; begin to collect lines
+                        if ($currentCTX != null) {
+                            // subsurveys must be parsed from the survey class,
+                            // its also the topmost data structure.
+                            throw new File_Therion_SyntaxException(
+                            "survey start block but previous context still open!");
+                        }
+                        $currentCTX = new File_Therion_Survey();
+                        $ctxCollection[] = $line;
+                    break;
+                    
+                    case 'endsurvey':
+                        // end of a survey context; parse collected ctxCollection
+                        if ($currentCTX == null
+                            || !is_a('File_Therion_Survey', $currentCTX)) {
+                            throw new File_Therion_SyntaxException(
+                            "survey end block but wrong context!");
+                        }
+                        
+                        // let context parse
+                        $ctxCollection[] = $line;
+                        $currentCTX->parse($ctxCollection);
+                        
+                        $this->addObject($currentCTX); // associate object
+                        
+                        // cleanup context
+                        $currentCTX = null;
+                        $ctxCollection = array();
+                        
+                    break;
+                    
+                    default:
+                        // if we have an currently active context, this is
+                        // most probably a line that should go there.
+                        if ($currentCTX) {
+                            $ctxCollection[] = $line;
+                            
+                        } else {
+                            // Otherwise: ignore unsupported commands silently.
+                            // todo: Once we are supporting most commands and reach
+                            // version 1.0, we should rise a suiting exception here.
+                            //throw new File_Therion_UnsupportedFeatureException(...);
+                        }
+                }
+                
+                
+            } else {
+                // ignore empty or only comment lines
+            }
         }
+        
+        // TODO: Parsing done! Investigate: can we check some errors now?
 
-        // syntax check; if there is still 
-        // TODO
+
     }
     
     
@@ -225,7 +280,7 @@ class File_Therion implements Countable
      * 
      * After fetching physical content, you may call {@link parse()} to generate
      * Therion data model objects out of it.
-     * 
+     *
      */
     public function fetch()
     {
@@ -307,7 +362,6 @@ class File_Therion implements Countable
                 $this->setEncodign($mostCurrentLineData[1]);
             }
             
-            
         }
         
     }
@@ -353,6 +407,7 @@ class File_Therion implements Countable
         }
         
         if ($lineNumber != -1) throw new PEAR_Exception('INSERTION FEATURE NOT IMPLEMENTED');
+        
         
         $this->_lines[] = $line; // add line to internal buffer
     }
@@ -508,6 +563,7 @@ class File_Therion implements Countable
      * This will just change the path, no data will be read/written!
      * 
      * @param string|ressource $url filename/url or handle
+     * @todo set $this->enableInputCommand(false), when URL does not support it
      */
     public function setURL($url)
     {
@@ -569,7 +625,7 @@ class File_Therion implements Countable
             }
             return $r;
         }
-    } 
+    }
     
 
     /**
@@ -629,6 +685,57 @@ class File_Therion implements Countable
         }
         
         // TODO search matching multiline for survey / scrap / centreline
+    }
+    
+    
+    /**
+     * Scan local filebuffer for 'input' commands and execute them.
+     * 
+     * This will try to interpret the given filepath in local context;
+     * the input-parameter is always a filepath in a filesystem.
+     *   URL: When we have fetched the current file from a web-url,
+     *        then most probably the denoted filepath is also a web url
+     *        and must be transferred.
+     *  FILE: We can treat the url as file path relative to the current path.
+     * OTHER: Filehandles, string/array data or handcrafted objects cannot
+     *        be automatically resolved.
+     * 
+     * Execution is depending on the current allowance setting.
+     * 
+     * @todo introduce maxlevel parameter. Currently level is endless!
+     * @throws PEAR_Exception with wrapped subexception in case of resolution error
+     */
+    protected function evalInputCMD() {
+        if (!$_allowImport) return;  // do nothing if it isn't allowed
+        
+        // scan all local files and search for 'input' commands
+        for ($i=0; $i<=count($this->_lines); $i++) {
+            $lineData = $this->_lines[$i]->getDatafields();
+            if ($lineData[0] == 'input') {
+                // TODO: try to guess datasource relative to
+                //   - url:    path is relative to local url
+                //   - string: path is either absolute or relative to current file
+                //   - other:  unable to handle -> exception
+                $url = $lineData[1];
+                //throw new PEAR_Exception('Invalid $line type!', new InvalidArgumentException());
+                
+                // setup new File-object with same options
+                $tmpFile = new File_Therion($url);
+                $tmpFile->setEncodign($this->_encoding);
+                $tmpFile->enableInputCommand($this->_allowImport);
+                
+                // fetch datasource and eval input commands there
+                $tmpFile->fetch();
+                $tmpFile->evalInputCMD();
+                
+                // add retrieved file lines to local buffer in place of $i
+                // (this has to replace the orginating input command)
+                $subLines = array_reverse($tmpFile->getLines());
+                foreach ($subLines as $subLine) {
+                    $this->addLine($subLine, $i); // pushing content down
+                }
+            }
+        }
     }
 }
 
