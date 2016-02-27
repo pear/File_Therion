@@ -131,6 +131,38 @@ class File_Therion_LineTest extends PHPUnit_Framework_TestCase
         $this->assertEquals("     ".PHP_EOL, $sample->toString());
     }
     
+    /**
+     * test recognition of "only comment lines"
+     */
+    public function testDetectCommentRecognition()
+    {
+        $sample = new File_Therion_Line("");
+        $this->assertTrue($sample->isCommentOnly());
+        $sample = new File_Therion_Line("", "", "   ");
+        $this->assertTrue($sample->isCommentOnly());
+        $sample = new File_Therion_Line("", "    ", "   ");
+        $this->assertTrue($sample->isCommentOnly());
+        $sample = new File_Therion_Line("    ", "    ", "   ");
+        $this->assertTrue($sample->isCommentOnly());
+        $sample = new File_Therion_Line("    ", "   ", "");
+        $this->assertTrue($sample->isCommentOnly());
+        $sample = new File_Therion_Line("    ", "", "");
+        $this->assertTrue($sample->isCommentOnly());
+        
+        $sample = File_Therion_Line::parse("");
+        $this->assertTrue($sample->isCommentOnly());
+        $sample = File_Therion_Line::parse("    ");
+        $this->assertTrue($sample->isCommentOnly());
+        $sample = File_Therion_Line::parse("#");
+        $this->assertTrue($sample->isCommentOnly());
+        $sample = File_Therion_Line::parse("# foo");
+        $this->assertTrue($sample->isCommentOnly());
+        $sample = File_Therion_Line::parse("    #");
+        $this->assertTrue($sample->isCommentOnly());
+        $sample = File_Therion_Line::parse("    # foo   ");
+        $this->assertTrue($sample->isCommentOnly());
+    }
+    
     
     /**
      * test instantiation/parsing and output

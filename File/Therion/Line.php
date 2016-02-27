@@ -412,8 +412,10 @@ class File_Therion_Line implements Countable
      */
     public function isCommentOnly()
     {
-        // its the case if the datapart is empty.
-        return preg_match('/^\s*$/', $this->getContent());
+        // Its the case if the datapart is empty
+        // (it does not matter if there is indenting or an additional comment)
+        return (preg_match('/^\s*$/', $this->getContent()))
+            ? true : false; // preg match returns int, not bool
     }
     
     /**
