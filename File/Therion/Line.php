@@ -267,7 +267,7 @@ class File_Therion_Line implements Countable
         // string tokens.
         // this pattern is still insufficient as it will not get ""foo"" etc,
         // however it should already grep most of the possible combinations.
-        $p ='((?:\[[\s\w\d.]+\])|(?:"(?:""|[\s\w.:-_])+")|(?:[\d\w.:-_]+))';
+        $p ='((?:\[[\s\w\d.]+\])|(?:"(?:""|[\s\w.:-_])+")|(?:[\d\w.:\-_]+))';
         $pr = preg_match_all($p, $c, $r);
         if ($pr === false) throw new File_Therion_SyntaxException(
             "error parsing datafields (could not grep tokens)");
@@ -407,7 +407,7 @@ class File_Therion_Line implements Countable
     public function isCommentOnly()
     {
         // its the case if the datapart is empty.
-        return preg_match('/^\s*$/', $this->getContent);
+        return preg_match('/^\s*$/', $this->getContent());
     }
     
     /**

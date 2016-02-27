@@ -401,6 +401,10 @@ class File_Therion_LineTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('"foo ""baz"" bar"', File_Therion_Line::escape('foo "baz" bar'));
         $this->assertEquals('"foo bar"', File_Therion_Line::unescape('""foo bar""'));
         
+        // test encoding data
+        $this->assertEquals('iso8859-2', File_Therion_Line::escape('iso8859-2'));
+        $this->assertEquals('iso8859-2', File_Therion_Line::unescape('iso8859-2'));
+        
         // @todo test uncommon cases
         // (i'm not entirely sure this is the correct syntax!
         //  it could probably also be '""' =esc> '""""""';
@@ -480,6 +484,13 @@ class File_Therion_LineTest extends PHPUnit_Framework_TestCase
         
         $sample = new File_Therion_Line('"""foobar"""');
         $this->assertEquals(array('"foobar"'), $sample->getDatafields());
+        
+        
+        // test encoding data
+        $sample = new File_Therion_Line("encoding  iso8859-2".PHP_EOL);
+        $this->assertEquals(array('encoding', 'iso8859-2'), $sample->getDatafields());
+        $sample = File_Therion_Line::parse("encoding  iso8859-2".PHP_EOL);
+        $this->assertEquals(array('encoding', 'iso8859-2'), $sample->getDatafields());
     }
     
     /**
