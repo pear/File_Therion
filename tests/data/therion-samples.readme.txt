@@ -1,0 +1,10 @@
+== Therion sample files ==
+The 'samples_therion' folder contains the example files that come with therion.
+They are sourced from the debian package version 5.3.15-2+b1.
+The original files are licensed with GPL.
+
+
+== supplying own data ==
+The symlink 'samples' points to this folder.
+Unittests use this location for getting test files.
+In case you have more current test samples you can simply switch the symlink.
