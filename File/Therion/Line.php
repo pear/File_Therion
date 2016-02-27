@@ -260,7 +260,6 @@ class File_Therion_Line implements Countable
      */
     public function getDatafields()
     {
-        $r = array();
         $c = $this->getContent();
         
         // this pattern tries to grep all possible non-quoted and quoted
@@ -268,12 +267,19 @@ class File_Therion_Line implements Countable
         // this pattern is still insufficient as it will not get ""foo"" etc,
         // however it should already grep most of the possible combinations.
         $p ='((?:\[[\s\w\d.]+\])|(?:"(?:""|[\s\w.:-_])+")|(?:[\d\w.:\-_]+))';
+        $r = array();
         $pr = preg_match_all($p, $c, $r);
         if ($pr === false) throw new File_Therion_SyntaxException(
             "error parsing datafields (could not grep tokens)");
  
         // apply unescaping to all tokens
-        $rv = array_map('File_Therion_Line::unescape', $r[0]);
+        if (isset($r[0]) && is_array($r[0])) {
+            $rv = array_map('File_Therion_Line::unescape', $r[0]);
+            
+        } else {
+            // empty result at getting tokens or something like that
+            $rv = array();
+        }
     
         return $rv;
     }

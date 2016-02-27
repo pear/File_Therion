@@ -64,6 +64,7 @@ require_once 'File/Therion/Survey.php';
  * $th->addObject($survey);      // associate therion data model objects
  * $th->update();                // update internal line buffer out of objects
  * $th->write();                 // physically write to data target
+ * $th->toString();              // altenatively: fetch  data as string
  * </code>
  *
  * @category   file
@@ -231,7 +232,7 @@ class File_Therion implements Countable
                             "survey end block but wrong context!");
                         }
                         
-                        // let context parse
+                        // let context parse lines collected so far
                         $ctxCollection[] = $line;
                         $currentCTX->parse($ctxCollection);
                         
@@ -245,7 +246,8 @@ class File_Therion implements Countable
                     
                     default:
                         // if we have an currently active context, this is
-                        // most probably a line that should go there.
+                        // most probably a line that should go there, so
+                        // we just collect it here.
                         if ($currentCTX) {
                             $ctxCollection[] = $line;
                             
@@ -288,44 +290,60 @@ class File_Therion implements Countable
         
         // read out datasource denoted by $url and call addLine()  
         $data = array(); // raw file data      
-        $file = $this->_url;
         switch (true) {
-            case (is_resource($file) && get_resource_type($file) == 'stream'):
+            case (is_resource($this->_url) && get_resource_type($this->_url) == 'stream'):
                 // fetch data from handle
                 while (!feof($handle)) {
-                    $line = fgets($file);
+                    $line = fgets($this->_url);
                     $data[] = $line; // push to raw dataset
                 }
                 break;
 
-            case (is_array($file)):
+            case (is_array($this->_url)):
                 // just use it: either stringdata or already array of Therion_Line objects
-                $data = $file;
+                // TODO better checks needed!
+                $data = $this->_url;
                 break;
 
-            case (is_readable($file) || is_string($file) && preg_match('^\w+://', $file)):
-                // open file/url and fetch data
-                $fh = fopen ($file, 'r');
-                while (!feof($handle)) {
-                    $line = fgets($file);
-                    $data[] = $line; // push to raw dataset
+            case (is_string($this->_url)):
+                // check if the string is a filepath
+                if (preg_match('?^\w+://?', $this->_url)) {
+                    // its a real URL ('http://...' or 'file://...')
+                    $fh = fopen ($this->_url, 'r');
+                    while (!feof($fh)) {
+                        $data[] = fgets($fh); // push to raw dataset
+                    }
+                    fclose($fh);
+                    
+                } else {
+                    // its not a real URL - see if there is such a file
+                    if (file_exists($this->_url)) {
+                        if (!is_readable($this->_url)) {
+                            throw new PEAR_Exception("File '".$this->_url."' is not readable!");
+                        }
+                        
+                        // open and read out
+                        $fh = fopen ($this->_url, 'r');
+                        while (!feof($fh)) {
+                            $data[] = fgets($fh); // push to raw dataset
+                        }
+                        fclose($fh);
+                        
+                    } else {
+                        // its just raw string data (probably read out manually)
+                        // -> split by newline character and use it directly
+                        $data = explode(PHP_EOL, $this->_url);
+                    }
                 }
-                fclose($fh);
-                return;
                 break;
-
-            case (is_string($file)):
-                // split string data by newlines and use that as result
-                $data = explode(PHP_EOL, $file);
-                break;
+            
 
             default:
                 // bail out: invalid parameter
-                throw new PEAR_Exception('parseSurvey(): Invalid $file argument!',
+                throw new PEAR_Exception('parse(): unsupported $url type!',
                   new InvalidArgumentException("passed type='".gettype($file)."'"));
 
         }
-        
         
         
         // raw $data is now populated, lets parse it into proper line therion 
@@ -343,7 +361,7 @@ class File_Therion implements Countable
             if (count($this) == 0) {
                 $this->addLine($line);
             } else {
-                $priorLine =& $this->_lines[count($this->_lines-1)];
+                $priorLine =& $this->_lines[count($this->_lines)-1];
                 if ($line->isContinuation($priorLine)) {
                     $priorLine->addPhysicalLine($line);
                 } else {
@@ -354,11 +372,13 @@ class File_Therion implements Countable
             
             // If the last line on the stack is complete now, we can
             // investigate the line a little further
-            $mostCurrentLine =& $this->_lines[count($this->_lines-1)];
-            $mostCurrentLineData = $mostCurrentLine->getDatafields();
+            $mostCurrentLine     =& $this->_lines[count($this->_lines)-1];
+            $mostCurrentLineData =  $mostCurrentLine->getDatafields();
+            
             
             // set encoding if specified
-            if ($mostCurrentLineData[0] == 'encoding') {
+            if (isset($mostCurrentLineData[0])
+                && strtolower($mostCurrentLineData[0]) == 'encoding') {
                 $this->setEncodign($mostCurrentLineData[1]);
             }
             
@@ -567,9 +587,9 @@ class File_Therion implements Countable
      */
     public function setURL($url)
     {
-        if (!is_string($url) || !is_resource($url)) {
+        if (!is_string($url) && !is_resource($url)) {
             throw new PEAR_Exception(
-                'Invalid datasource/target type supplied ('.get_type($url).')!',
+                'Invalid datasource/target type supplied ('.gettype($url).')!',
                 new InvalidArgumentException()
             );
         }
@@ -678,7 +698,7 @@ class File_Therion implements Countable
     {
         $lines =& $this->_lines;
         
-        if ($lines[count($lines-1)]->isContinued()) {
+        if ($lines[count($lines)-1]->isContinued()) {
             throw new File_Therion_SyntaxException(
                 "Data incomplete: last line still expects another physical line!"
                 );
@@ -706,10 +726,10 @@ class File_Therion implements Countable
      * @throws PEAR_Exception with wrapped subexception in case of resolution error
      */
     protected function evalInputCMD() {
-        if (!$_allowImport) return;  // do nothing if it isn't allowed
+        if (!$this->_allowImport) return;  // do nothing if it isn't allowed
         
         // scan all local files and search for 'input' commands
-        for ($i=0; $i<=count($this->_lines); $i++) {
+        for ($i=0; $i<count($this->_lines); $i++) {
             $lineData = $this->_lines[$i]->getDatafields();
             if ($lineData[0] == 'input') {
                 // TODO: try to guess datasource relative to

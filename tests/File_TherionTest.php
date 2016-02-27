@@ -19,11 +19,20 @@ require_once 'File/Therion.php';  //includepath is loaded by phpUnit from phpuni
 class File_TherionTest extends PHPUnit_Framework_TestCase {
 
     /**
+     * Base location of test data (therion distirbution)
+     * 
+     * @var string
+     */
+    protected $testdata_base = __DIR__.'/data/samples/';
+    
+    
+    /**
      * setup test case, called before a  test is executed.
      *
      * @access protected
      */
-    protected function setUp() {
+    protected function setUp()
+    {
     }
 
     /**
@@ -32,7 +41,8 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
      *
      * @access protected
      */
-    protected function tearDown() {
+    protected function tearDown()
+    {
     }
 
 
@@ -44,7 +54,8 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
     /**
      * dummy test
      */
-    public function testDummy() {
+    public function testDummy()
+    {
         //$this->markTestSkipped('Skipped Test.');
         //$this->markTestIncomplete("This test has not been implemented yet.");
     
@@ -54,6 +65,19 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
         //$this->assertNotEquals($expected, $actual, 'Failed!');
         //$this->assertThat(1, $this->greaterThanOrEqual(2));
 
+    }
+    
+    
+    
+    /**
+     * Test simple parsing of a th file
+     */
+    public function testSimpleParsing_TH()
+    {
+        $th = new File_Therion($this->testdata_base.'/basics/rabbit.th');
+        $th->fetch();
+        $this->assertEquals(73, count($th), "parsed line number does not match sample");
+        $th->parse();
     }
 
 
