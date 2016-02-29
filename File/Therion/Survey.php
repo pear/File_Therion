@@ -53,6 +53,9 @@ class File_Therion_Survey implements Countable
     public function parse(&$lines)
     {
         // walk lines and parse
+        foreach ($lines as $line) {
+            print("DBG: SURVEY CONTEXT PARSED: ".$line->toString());
+        }
     }
     
     /**
