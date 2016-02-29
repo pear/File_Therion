@@ -227,7 +227,7 @@ class File_Therion implements Countable
                     case 'endsurvey':
                         // end of a survey context; parse collected ctxCollection
                         if ($currentCTX == null
-                            || !is_a('File_Therion_Survey', $currentCTX)) {
+                            || !is_a($currentCTX, 'File_Therion_Survey')) {
                             throw new File_Therion_SyntaxException(
                             "survey end block but wrong context!");
                         }
@@ -350,7 +350,7 @@ class File_Therion implements Countable
         // objects, thereby set encoding if such a command arises.
         foreach ($data as $dl) {
             // parse raw line
-            $line = (!is_a('File_Therion_Line', $dl))
+            $line = (!is_a($dl, 'File_Therion_Line'))
                 ? File_Therion_Line::parse($dl)  // parse raw data string
                 : $dl;                           // use Line object as-is
             
