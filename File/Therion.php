@@ -405,9 +405,17 @@ class File_Therion implements Countable
      /**
      * Add a line to this file.
      * 
-     * The optional lineNumber parameter allows to adjust the insertion point;
-     * the lie will be inserted at the index, pushing already present content
-     * one line down (-1=end, 0=start, ...).
+     * The optional lineNumber parameter allows to adjust the insertion
+     * point; the line will be inserted at the index, pushing already
+     * present content one line down (-1=end, 0=start, ...).
+     * When replacing, the selected index will be replaced; here 0 will
+     * be treated as 1 (replacing the first line). When there is no such
+     * line, it will be added instead.
+     * 
+     * Instead of $lineNumber 0 and -1 you can use the strings 'start'/'end',
+     * this will make your code more readable.
+     * Using <code>addLine(..., $lln - 1)</code> will use logical line number
+     * instead of the index (logical = index+1).
      * 
      * Beware that {@link clearLines()} will discard any manual insertions.
      * Also be aware that {@link fetch()} will clean the line buffer too.
@@ -415,22 +423,65 @@ class File_Therion implements Countable
      * Note that addLine() will not take care of wrapping; make sure
      * that the line content remains consistent.
      * 
+     * Example:
+     * <code>
+     * // add a simple line (implicitely to the end):
+     * $th->addLine(new File_Therion_Line("somecontent"));
+     * 
+     * // add a line to the start, pushing previous line one down:
+     * $th->addLine(new File_Therion_Line("startline"), 0);
+     * // result: line-0="startline", line-1="somecontent"
+     * 
+     * // add another simple line (explicitely to the end):
+     * $th->addLine(new File_Therion_Line("final"));
+     * // result: line-0="startline", line-1="somecontent", line-3="final"
+     * 
+     * // replace line-1:
+     * $th->addLine(new File_Therion_Line("othercontent"), 1, true);
+     * // result: line-0="startline", line-1="othercontent", line-3="final"
+     * 
+     * </code>
+     * 
      * @param File_Therion_Line $line Line to add
-     * @param int $lineNumber At which logical position to add (-1=end)
-     * @todo implement me
+     * @param int  $lineNumber At which logical position to add (-1=end, 0=first line, ...)
+     * @param bool $replace when true, the target line will be overwritten
+     * @throws PEAR_Exception with wrapped lower level exception
      */
-    public function addLine($line, $lineNumber=-1)
+    public function addLine($line, $lineNumber=-1, $replace=false)
     {
         if (!is_a($line, 'File_Therion_Line')) {
             throw new PEAR_Exception('addLine(): Invalid $line argument!',
                   new InvalidArgumentException("passed type='".gettype($line)."'"));
         }
         
-        if ($lineNumber != -1) throw new PEAR_Exception('INSERTION FEATURE NOT IMPLEMENTED');
+        // synonyms+checks for lineNumber
+        if (is_string($lineNumber) && strtolower($lineNumber) == "start") {
+            $lineNumber = 0;
+        } elseif (is_string($lineNumber) && strtolower($lineNumber) == "end") {
+            $lineNumber = -1;
+        } else {
+            if (!is_int($lineNumber)) {
+                throw new PEAR_Exception('addLine(): Invalid $lineNumber argument!',
+                 new InvalidArgumentException("int expected, or string 'start' or 'end'"));
+            }
+        }
         
-        
-        $this->_lines[] = $line; // add line to internal buffer
+        if ($lineNumber != -1 && count($this->_lines) > 0) {
+            // append/replace somewhere in the middle
+            if ($lineNumber == 0) $lineNumber++; // correct index
+            $insertion = ($replace)? array($line) : array($line, $this->_lines[$lineNumber-1]);
+            array_splice($this->_lines, $lineNumber-1, 1, $insertion);
+                    
+        } else {
+            // append/replace at end
+            if ($replace && count($this->_lines) > 0) {
+                $this->_lines[count($this->_lines)-1] = $line; // replace last entry
+            } else {
+                $this->_lines[] = $line; // add line to internal buffer
+            }
+        }
     }
+     
      
     /**
      * Get internal line buffer.
@@ -731,7 +782,7 @@ class File_Therion implements Countable
         // scan all local files and search for 'input' commands
         for ($i=0; $i<count($this->_lines); $i++) {
             $lineData = $this->_lines[$i]->getDatafields();
-            if ($lineData[0] == 'input') {
+            if (isset($lineData[0]) && $lineData[0] == 'input') {
                 // TODO: try to guess datasource relative to
                 //   - url:    path is relative to local url
                 //   - string: path is either absolute or relative to current file
@@ -752,7 +803,7 @@ class File_Therion implements Countable
                 // (this has to replace the orginating input command)
                 $subLines = array_reverse($tmpFile->getLines());
                 foreach ($subLines as $subLine) {
-                    $this->addLine($subLine, $i); // pushing content down
+                    $this->addLine($subLine, $i+1); // pushing content down
                 }
             }
         }
