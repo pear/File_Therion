@@ -264,6 +264,7 @@ class File_Therion implements Countable
      * After fetching physical content, you may call {@link parse()} to generate
      * Therion data model objects out of it.
      *
+     * @todo Honor input encoding
      */
     public function fetch()
     {
@@ -330,6 +331,9 @@ class File_Therion implements Countable
         // raw $data is now populated, lets parse it into proper line therion 
         // objects, thereby set encoding if such a command arises.
         foreach ($data as $dl) {
+            // Encoding: transfer raw dataline to internal utf8 representation
+            // todo implement me
+            
             // parse raw line
             $line = (!is_a($dl, 'File_Therion_Line'))
                 ? File_Therion_Line::parse($dl)  // parse raw data string
@@ -560,11 +564,15 @@ class File_Therion implements Countable
      * @param  string|ressource $survey Therion_Survey object to write
      * @param  array            $options Options for the writer
      * @throws Pear_Exception   with wrapped lower level exception (InvalidArgumentException, etc)
+     * @todo write to target encoding
      */
     public function write()
     {
         // go through all $_lines buffer objects and create writable string;
         $stringContent = $this->toString();
+        
+        // convert stringContent from internal utf8 data to tgt encoding
+        // todo implement me
          
         // open filehandle in case its not already open
         if (!is_resource($this->_url)) {
