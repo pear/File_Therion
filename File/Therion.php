@@ -95,7 +95,7 @@ class File_Therion implements Countable
 
     /**
      * Lines of this file.
-         * 
+     * 
      * will be populated by {@link parse()} or {@link update()}
      * 
      * @access protected
