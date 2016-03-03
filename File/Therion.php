@@ -783,7 +783,7 @@ class File_Therion implements Countable
                 
                 // setup new File-object with same options
                 $tmpFile = new File_Therion($url);
-                $tmpFile->setEncodign($this->_encoding);
+                $tmpFile->setEncoding($this->_encoding);
                 
                 // fetch datasource and eval input commands there
                 $tmpFile->fetch();
