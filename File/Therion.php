@@ -288,7 +288,7 @@ class File_Therion implements Countable
                 break;
 
             case (is_string($this->_url)):
-                // check if the string is a filepath
+                // check if the string is a filepath or URL
                 if (preg_match('?^\w+://?', $this->_url)) {
                     // its a real URL ('http://...' or 'file://...')
                     $fh = fopen ($this->_url, 'r');
@@ -312,9 +312,10 @@ class File_Therion implements Countable
                         fclose($fh);
                         
                     } else {
-                        // its just raw string data (probably read out manually)
-                        // -> split by newline character and use it directly
-                        $data = explode(PHP_EOL, $this->_url);
+                        // bail out: invalid parameter
+                        throw new PEAR_Exception(
+                          'fetch(): $url \''.$this->_url.'\' not readable nor a valid URL!',
+                          new InvalidArgumentException("passed type='".gettype($this->_url)."'"));
                     }
                 }
                 break;
@@ -322,8 +323,8 @@ class File_Therion implements Countable
 
             default:
                 // bail out: invalid parameter
-                throw new PEAR_Exception('parse(): unsupported $url type!',
-                  new InvalidArgumentException("passed type='".gettype($file)."'"));
+                throw new PEAR_Exception('fetch(): unsupported $url type!',
+                  new InvalidArgumentException("passed type='".gettype($this->_url)."'"));
 
         }
         
