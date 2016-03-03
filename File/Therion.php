@@ -190,7 +190,7 @@ class File_Therion implements Countable
                 $lineData = $line->getDatafields();
                 switch (strtolower($lineData[0])) {
                     case 'encoding':
-                        $this->setEncodign($lineData[1]);
+                        $this->setEncoding($lineData[1]);
                     break;
                     
                     case 'survey':
@@ -364,7 +364,7 @@ class File_Therion implements Countable
             // set encoding if specified
             if (isset($mostCurrentLineData[0])
                 && strtolower($mostCurrentLineData[0]) == 'encoding') {
-                $this->setEncodign($mostCurrentLineData[1]);
+                $this->setEncoding($mostCurrentLineData[1]);
             }
             
         }
@@ -560,6 +560,9 @@ class File_Therion implements Countable
      * Wrapping will be applied according the setting of {@link setWrapping()}.
      *
      * Will throw an appropriate exception if anything goes wrong.
+     * 
+     * The content will be converted to the current active encoding which
+     * corresponds to the encoding command of the file.
      *
      * @param  string|ressource $survey Therion_Survey object to write
      * @param  array            $options Options for the writer
@@ -600,7 +603,13 @@ class File_Therion implements Countable
      * If wrapping was requested, the file content will be wrapped at the
      * given column (see {@link setWrapping()}.
      * 
+     * If no encoding is contained in internal line data, a suitable
+     * encoding line will be added with the current active encoding setting.
+     * The string however will be returned in UTF-8 regardless of any encoding
+     * commands.
+     * 
      * @return string The file contents as string
+     * @see {@link setEncoding()}
      * @todo Line endings should not depend on Line class implementation
      */
     public function toString()
@@ -700,7 +709,7 @@ class File_Therion implements Countable
      * @param string $codeset
      * @todo currently not supported - does nothing
      */
-    public function setEncodign($codeset)
+    public function setEncoding($codeset)
     {
         $this->_encoding = $codeset;
     }
