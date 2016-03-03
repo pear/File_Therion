@@ -264,6 +264,7 @@ class File_Therion implements Countable
      * After fetching physical content, you may call {@link parse()} to generate
      * Therion data model objects out of it.
      *
+     * @throws PEAR_Exception with wrapped lower level exception
      * @todo Honor input encoding
      */
     public function fetch()
@@ -764,7 +765,8 @@ class File_Therion implements Countable
      * @todo introduce maxlevel parameter. Currently level is endless!
      * @throws PEAR_Exception with wrapped subexception in case of resolution error
      */
-    protected function evalInputCMD() {
+    public function evalInputCMD() {
+        print "DBG evalInputCMD(): CALLED on ".count($this->_lines)." lines\n";
         // scan all local files and search for 'input' commands
         for ($i=0; $i<count($this->_lines); $i++) {
             $curline  =& $this->_lines[$i];
@@ -774,30 +776,50 @@ class File_Therion implements Countable
                 //   - url:    path is relative to local url
                 //   - string: path is either absolute or relative to current file
                 //   - other:  unable to handle -> exception
-                $url = $lineData[1];
-                //throw new PEAR_Exception('Invalid $line type!', new InvalidArgumentException());
-                
-                // when $url basename has no filename extension, append ".th".
-                if (!preg_match('/\.\w+$/', $url)) {
-                    $url .= '.th';
+                $remotePath = $lineData[1];
+                $localURL = $this->_url;
+                if (is_string($localURL) && preg_match('?^\w+://?', $localURL)) {
+                    // real URL: TODO
+                    throw new PEAR_Exception("evalInputCMD(): unsupported feature: input type URL");
+                } elseif (is_string($localURL)) {
+                    // its a plain string (file path)
+                    $remotePath = dirname($localURL).'/'.$remotePath;
+                    
+                } else {
+                    // other: we cant guess it
+                    throw new PEAR_Exception(
+                        'evalInputCMD() Invalid $url type!',
+                        new InvalidArgumentException());
                 }
                 
+                // when $url basename has no filename extension, append ".th".
+                if (!preg_match('/\.\w+$/', $remotePath)) {
+                    $remotePath .= '.th';
+                }
+                
+                print "DBG evalInputCMD(".$remotePath.")@$i -> ".$curline->getContent()."\n";
+                
                 // setup new File-object with same options
-                $tmpFile = new File_Therion($url);
+                $tmpFile = new File_Therion($remotePath);
                 $tmpFile->setEncoding($this->_encoding);
                 
                 // fetch datasource and eval input commands there
                 $tmpFile->fetch();
+                print "   INPUT fetched ".count($tmpFile)." lines from $localURL\n";
                 $tmpFile->evalInputCMD();
                 
                 // add retrieved file lines to local buffer in place of $i
                 // (this has to replace the orginating input command,
                 //  which gets replaced with a commented out original)
-                $commtdOri = new File_Therion_Line("", $curline->getContent());
-                $this->addLine($commtdOri, $i, true);
+                $commtdOri = new File_Therion_Line("", // empty content
+                    $curline->getContent(), // old content as comment
+                    $curline->getIndent()); // preserve indenting
+                $this->_lines[$i] = $commtdOri;
+                print "   REPLACED: ".$i." with ". $commtdOri->toString();
                 $subLines = array_reverse($tmpFile->getLines());
                 foreach ($subLines as $subLine) {
-                    $this->addLine($subLine, $i+1); // pushing content down
+                  // TODO: This does not work so far. Why?
+                 //   $this->addLine($subLine, $i+1); // pushing content down
                 }
             }
         }

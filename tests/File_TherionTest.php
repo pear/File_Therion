@@ -240,6 +240,21 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals(74, count($th), "parsed line number does not match sample");
         $th->parse();
     }
+    
+    /**
+     * Test simple recursively parsing of a th file
+     */
+    public function testSimpleParsing_TH_recurse()
+    {
+        $th = new File_Therion($this->testdata_base.'/basics/rabbit.th');
+        $th->fetch();
+        $th->evalInputCMD(); // interpret input commands (rabbit.th2)
+        foreach ($th->getLines() as $s) {
+            print "  content: ".$s->toString();
+        }
+        $this->assertEquals(74+936, count($th), "parsed line number does not match sample");
+        //$th->parse();
+    }
 
 
 }
