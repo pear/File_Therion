@@ -236,7 +236,6 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
     public function testSimpleParsing_TH()
     {
         $th = new File_Therion($this->testdata_base.'/basics/rabbit.th');
-        $th->enableInputCommand(false);
         $th->fetch();
         $this->assertEquals(74, count($th), "parsed line number does not match sample");
         $th->parse();

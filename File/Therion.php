@@ -55,6 +55,7 @@ require_once 'File/Therion/Survey.php';
  * // read and parse to objects:
  * $th = new File_Therion($src); // Instanciate new datasource
  * $th->fetch();                 // Get contents (read)
+ * $th->evalInputCMD();          // evaluate 'input' commands recursively
  * $th->parse();                 // Generate Therion objects to work with
  *
  * // craft a .th Therion file out of data model:
@@ -123,16 +124,6 @@ class File_Therion implements Countable
      */
     protected $_wrapAt = 0;
     
-    /**
-     * Allows/Disables parsing of 'input' command.
-     *
-     * @see {@link parse()}
-     * @see {@link enableInputCommand()}
-     * @var boolean
-     */
-    protected $_allowImport = true;
-    
-    
     
     /**
      * Create a new therion file object.
@@ -170,26 +161,16 @@ class File_Therion implements Countable
      * real physical content from the datasource.
      * Alternatively you can craft the file yourself using {@link addLine()}.
      * 
-     * Therions 'import' statement will include the remote file content
-     * at the place of the import command. With remote files the function tries
-     * to guess the remote place. (see {@link enableInputCommand()}). This may
-     * fail with an exception (esp. if $url was initially a filehandle).
-     * 
      * Be aware that this function cleans all references to associated objects.
      *
-     * @todo implement "import" command of therion to include other files
      * @throws PEAR_Exception with wrapped lower level exception (InvalidArgumentException, etc)
      * @throws File_Therion_SyntaxException if parse errors occur
-     * @throws TODO_FILE_NOT_THERE_Exception in case 'input' failed.
-     * @see {@link enableInputCommand()}
      */
     public function parse()
     {
         $this->checkSyntax();
         
         $this->clearObjects();  // clean references
-        
-        $this->evalInputCMD(); // resolve input commands 
         
         
         // Walk all lines and try to parse them in this context.
@@ -634,7 +615,6 @@ class File_Therion implements Countable
      * This will just change the path, no data will be read/written!
      * 
      * @param string|ressource $url filename/url or handle
-     * @todo set $this->enableInputCommand(false), when URL does not support it
      */
     public function setURL($url)
     {
@@ -698,22 +678,6 @@ class File_Therion implements Countable
         }
     }
     
-
-    /**
-     * Allow/Disable parsing of 'input' command.
-     * 
-     * Therion files may contain an 'input <filepath>' command.
-     * This tells therion to include the referenced file at the place of the
-     * command.
-     * {@link parse()} by default performs this lookup, but you may turn this
-     * behavior off.
-     * 
-     * @param boolean $allow
-     */
-    public function enableInputCommand($allow)
-    {
-        $this->_allowImport = $allow;
-    }
     
     /**
      * Set encoding of input/output files.
@@ -762,26 +726,31 @@ class File_Therion implements Countable
     /**
      * Scan local filebuffer for 'input' commands and execute them.
      * 
+     * Therions 'input' statement will include the remote file content
+     * at the place of the input command. With remote files the function tries
+     * to guess the remote place. (see {@link enableInputCommand()}). This may
+     * fail with an exception (esp. if $url was initially a filehandle).
+     * 
      * This will try to interpret the given filepath in local context;
      * the input-parameter is always a filepath in a filesystem.
-     *   URL: When we have fetched the current file from a web-url,
-     *        then most probably the denoted filepath is also a web url
-     *        and must be transferred.
+     * When the filename has no extension, ".th" is assumed.
+     * 
+     * The argument to the input command will be treaten differently depending
+     * on the type of the File_Therions $url:
      *  FILE: We can treat the url as file path relative to the current path.
+     *   URL: When we have fetched the current file from a web-url,
+     *        then most probably the denoted filepath is also a web url.
      * OTHER: Filehandles, string/array data or handcrafted objects cannot
      *        be automatically resolved.
-     * 
-     * Execution is depending on the current allowance setting.
      * 
      * @todo introduce maxlevel parameter. Currently level is endless!
      * @throws PEAR_Exception with wrapped subexception in case of resolution error
      */
     protected function evalInputCMD() {
-        if (!$this->_allowImport) return;  // do nothing if it isn't allowed
-        
         // scan all local files and search for 'input' commands
         for ($i=0; $i<count($this->_lines); $i++) {
-            $lineData = $this->_lines[$i]->getDatafields();
+            $curline  =& $this->_lines[$i];
+            $lineData = $curline->getDatafields();
             if (isset($lineData[0]) && $lineData[0] == 'input') {
                 // TODO: try to guess datasource relative to
                 //   - url:    path is relative to local url
@@ -790,17 +759,24 @@ class File_Therion implements Countable
                 $url = $lineData[1];
                 //throw new PEAR_Exception('Invalid $line type!', new InvalidArgumentException());
                 
+                // when $url basename has no filename extension, append ".th".
+                if (!preg_match('/\.\w+$/', $url)) {
+                    $url .= '.th';
+                }
+                
                 // setup new File-object with same options
                 $tmpFile = new File_Therion($url);
                 $tmpFile->setEncodign($this->_encoding);
-                $tmpFile->enableInputCommand($this->_allowImport);
                 
                 // fetch datasource and eval input commands there
                 $tmpFile->fetch();
                 $tmpFile->evalInputCMD();
                 
                 // add retrieved file lines to local buffer in place of $i
-                // (this has to replace the orginating input command)
+                // (this has to replace the orginating input command,
+                //  which gets replaced with a commented out original)
+                $commtdOri = new File_Therion_Line("", $curline->getContent());
+                $this->addLine($commtdOri, $i, true);
                 $subLines = array_reverse($tmpFile->getLines());
                 foreach ($subLines as $subLine) {
                     $this->addLine($subLine, $i+1); // pushing content down
