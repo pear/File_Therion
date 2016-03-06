@@ -233,7 +233,7 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
     /**
      * Test simple parsing of a th file
      */
-    public function testSimpleParsing_TH()
+    public function testSimpleFetching()
     {
         $th = new File_Therion($this->testdata_base.'/basics/rabbit.th');
         $th->fetch();
@@ -244,7 +244,7 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
     /**
      * Test simple recursively parsing of a th file
      */
-    public function testSimpleParsing_TH_recurse()
+    public function testSimpleFetching_recurse()
     {
         $th = new File_Therion($this->testdata_base.'/basics/rabbit.th');
         $th->fetch();
