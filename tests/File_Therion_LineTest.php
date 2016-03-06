@@ -547,5 +547,46 @@ class File_Therion_LineTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(array("foo", 'bar test', "baz"), $sample->getDatafields());
        
     }
+    
+    
+    /**
+     * Test options parsing
+     */
+    public function testOptionsParsing()
+    {
+        // no options
+        $sample = $sample = new File_Therion_Line('');
+        $this->assertEquals(array(), $sample->extractOptions());
+        
+        $sample = $sample = new File_Therion_Line('survey foo');
+        $this->assertEquals(array(), $sample->extractOptions());
+        
+        $sample = $sample = new File_Therion_Line('blafaz foo bar baz');
+        $this->assertEquals(array(), $sample->extractOptions());
+        
+        // one option
+        $sample = $sample = new File_Therion_Line(
+            'survey foo -title "bar foo passage"');
+        $this->assertEquals(array('title'=> 'bar foo passage'),
+            $sample->extractOptions());
+        
+        // multiple options
+        $sample = $sample = new File_Therion_Line(
+            'survey foo -title "bar foo passage" -animal cats -catch rats');
+        $this->assertEquals(array(
+                'title'  => 'bar foo passage',
+                'animal' => 'cats',
+                'catch'  => 'rats'),
+            $sample->extractOptions());
+        
+        // multiple options mixed with nonoptions
+        $sample = $sample = new File_Therion_Line(
+            'survey foo -title "bar passage" -animal cats brown -catch rats');
+        $this->assertEquals(array(
+                'title'  => 'bar passage',
+                'animal' => 'cats',
+                'catch'  => 'rats'),
+            $sample->extractOptions());
+ }
 }
 ?>

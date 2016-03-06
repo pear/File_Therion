@@ -285,6 +285,37 @@ class File_Therion_Line implements Countable
     }
     
     /**
+     * Extract options given to a command in this line.
+     * 
+     * Returns associative array of set options.
+     * 
+     * Example:
+     * <code>
+     * //Line = 'survey foo -title "bar foo passage"'
+     * $options = $line->extractOptions();
+     * print $options['title']; // -> "bar foo passage"
+     * </code>
+     * 
+     * @return array
+     */
+    public function extractOptions()
+    {
+        $r = array();
+        $data = $this->getDatafields();
+        $lastSeenOption = "";
+        for ($i=0; $i<count($data); $i++) {
+            $m = array();
+            if (preg_match('/^-(.+)/', $data[$i], $m)) {
+                // this data field is an option
+                $r[$m[1]] = $data[$i+1];
+            }
+        }
+        
+        return $r;
+    }
+    
+    
+    /**
      * Escapes one or more datafields for proper therion syntax.
      * 
      * This will escape and quote datafields properly, so the can be put into
