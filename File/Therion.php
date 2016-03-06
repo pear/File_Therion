@@ -195,6 +195,9 @@ class File_Therion implements Countable
                     
                     case 'survey':
                         // start of a survey context; begin to collect lines
+                        // @todo: we may expect a scrap contect here too;
+                        //        so we should generalize this code so taht it
+                        //        can handle both subtypes
                         if ($currentCTX != null) {
                             // subsurveys must be parsed from the survey class,
                             // its also the topmost data structure.

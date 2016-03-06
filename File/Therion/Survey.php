@@ -34,6 +34,15 @@ class File_Therion_Survey implements Countable
     protected $_surveys = array();
     
     /**
+     * Associated centrelines
+     * 
+     * @var array
+     */
+    protected $_centrelines = array();
+    
+    
+    
+    /**
      * Create a new therion survey object.
      *
      * @todo implement me please
@@ -65,15 +74,7 @@ class File_Therion_Survey implements Countable
      */
     public function count()
     {
-        if ($logical) {
-            return count($this->_lines);  // count line objects
-        } else {
-            $r = 0;
-            foreach ($this->_lines as $l) {
-                $r += count($l); // count wrapped lines
-            }
-            return $r;
-        }
+        return count($this->_surveys);
     }
     
     
