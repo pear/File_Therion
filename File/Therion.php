@@ -20,7 +20,7 @@ require_once 'PEAR/Exception.php';
 require_once 'File/Therion/Exception.php';
 require_once 'File/Therion/Line.php';
 require_once 'File/Therion/Survey.php';
-//require_once 'File/Therion/Centreline.php';
+require_once 'File/Therion/Centreline.php';
 //require_once 'File/Therion/Person.php';
 //require_once 'File/Therion/Explo.php';
 //require_once 'File/Therion/Topo.php';
@@ -198,8 +198,7 @@ class File_Therion implements Countable
                 case 'survey':
                     // walk each line collection and parse it using subparser
                     foreach ($data as $ctxLines) {
-                        $ctxObj = new File_Therion_Survey();
-                        $ctxObj->parse($ctxLines);
+                        $ctxObj = File_Therion_Survey::parse($ctxLines);
                         $this->addObject($ctxObj);
                     }
                 break;
@@ -849,9 +848,18 @@ class File_Therion implements Countable
         // setup known multiline commands with start- and endtags
         $knownCTX = array(
             //ctx-name => array(starttag-regexp, endtag-regexp, curLVL),
+            
+            // therion data format
             'survey'     => array('/^survey/', '/^endsurvey/', 0),
             'centreline' => array('/^cent(re|er)line/', '/^endcent(re|er)line/', 0),
+            'map'        => array('/^map/', '/^endmap/', 0),
+            'surface'    => array('/^surface/', '/^endsurface/', 0),
+            
+            // therion scrap format
             'scrap'      => array('/^scrap/', '/^endscrap/', 0),
+            'line'       => array('/^line/', '/^endline/', 0),
+            'area'       => array('/^area/', '/^endarea/', 0),
+            
             // @todo: more? (see thbook)
         );
         

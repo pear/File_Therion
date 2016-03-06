@@ -1,6 +1,6 @@
 <?php
 /**
- * Therion cave survey object class.
+ * Therion cave centreline object class.
  *
  * PHP version 5
  *
@@ -13,7 +13,9 @@
  */
 
 /**
- * Class representing a therion survey object.
+ * Class representing a therion centreline object.
+ * 
+ * The centreline contains the shots of the survey.
  *
  * @category   file
  * @package    File_Therion
@@ -22,79 +24,28 @@
  * @license    http://www.gnu.org/licenses/lgpl-3.0.txt LGPLv3
  * @link       http://pear.php.net/package/File_Therion/
  */
-class File_Therion_Survey implements Countable
+class File_Therion_Centreline implements Countable
 {
     
-    
     /**
-     * Associated subsurvey structures
-     * 
-     * @var array
-     */
-    protected $_surveys = array();
-    
-    /**
-     * Associated centrelines
-     * 
-     * @var array
-     */
-    protected $_centrelines = array();
-    
-    /**
-     * Associated scrap joins
-     * 
-     * @var array
-     */
-    protected $_joins = array();
-    
-    /**
-     * Associated equate definitions
-     * 
-     * @var array of equal-station-arrays ($x[n]=array(1, 2, 3, ...))
-     */
-    protected $_equates = array();
-    
-    /**
-     * Associated stations
-     * 
-     * @var array of station objects
-     */
-    protected $_stations = array();
-    
-    /**
-     * Associated maps
-     * 
-     * @var array of map objects
-     */
-    protected $_maps = array();
-    
-    /**
-     * survey name (ID)
-     * 
-     * @var array
-     */
-    protected $_name = null;
-    
-    /**
-     * Survey options (title, ...)
+     * Survey options (id, ...)
      * 
      * @var array assoc array
      */
     protected $_options = array(
-        'title' => "",
+        'id' => "",
     );
     
     
     
     /**
-     * Create a new therion survey object.
+     * Create a new therion centreline object.
      *
      * @param string $id Name of the survey
      * @todo Restrict naming convention, not all characters are allowed!
      */
-    public function __construct($id, $options = array())
+    public function __construct($options = array())
     {
-        $this->_name = $id;
         $this->setOptions($options);
     }
     
@@ -131,36 +82,37 @@ class File_Therion_Survey implements Countable
     /**
      * Parses given Therion_Line-objects into internal data structures.
      * 
-     * @param array $lines array of File_Therion_Line objects containing a survey
-     * @return File_Therion_Survey Survey object
+     * @param array $lines File_Therion_Line objects forming a centreline
+     * @return File_Therion_Centreline Centreline object
      * @throws PEAR_Exception with wrapped lower level exception
      * @todo implement me
      */
     public static function parse($lines)
-    {        
+    {
         if (!is_array($lines)) {
             throw new PEAR_Exception(
-            'parse(): Invalid $lines argument (expected array)');
+                'parse(): Invalid $lines argument (expected array, seen:'
+                .gettype($lines).')'
+            );
         }
         
-        $survey = null; // survey constructed
+        $centreline = null; // centreline constructed
         
         /*
          * Preparations
          */
         
-        // get first line and construct survey hull object
+        // get first line and construct centreline hull object
         $firstLine = array_shift($lines);
         if (is_a($firstLine, 'File_Therion_Line')) {
             $flData = $firstLine->getDatafields();
-            if (strtolower($flData[0]) == "survey") {
-                $survey = new File_Therion_Survey(
-                    $flData[1],
+            if (preg_match('/^cent(re|er)line/i', $flData[0])) {
+                $survey = new File_Therion_Centreline(
                     $firstLine->extractOptions()
                 );
             } else {
                 throw new File_Therion_SyntaxException(
-                    "First survey line is expected to contain survey definition"
+                 "First centreline line is expected to contain valid definition"
                 );
             }
                 
@@ -173,9 +125,9 @@ class File_Therion_Survey implements Countable
         $lastLine  = array_pop($lines);
         if (is_a($lastLine, 'File_Therion_Line')) {
             $flData = $firstLine->getDatafields();
-            if (!strtolower($flData[0]) == "endsurvey") {
+            if (!strtolower($flData[0]) == "endcentreline") {
                 throw new File_Therion_SyntaxException(
-                    "Last survey line is expected to contain endsurvey definition"
+                  "Last centreline line is expected to contain valid definition"
                 );
             }
             
@@ -197,6 +149,7 @@ class File_Therion_Survey implements Countable
         // We delegate as much as possible, so we just honor commands
         // the local level knows about.
         // Other lines will be collected and given to a suitable parser.
+        $mode = "normal"; // data mode: parse shot data and flags etc
         foreach ($orderedData as $type => $data) {
             switch ($type) {
                 case 'LOCAL':
@@ -210,57 +163,99 @@ class File_Therion_Survey implements Countable
                                 case 'input':
                                     // ignore silently because this should be 
                                     // handled at the file level
+                                    $dataMode = false;
                                 break;
                                 
-                                case 'join':
-                                    // Scrapjoins: add the remaining data fields
-                                    $survey->_joins[] = $lineData;
+                                case 'copyright':
+                                   // todo
+                                   $dataMode = false;
                                 break;
                                 
-                                case 'equate':
-                                    // Equates: add the remaining data fields
-                                    $survey->_equates[] = $lineData;
+                                case 'author':
+                                   // todo
+                                   $dataMode = false;
                                 break;
+                                
+                                case 'date':
+                                   // todo
+                                   $dataMode = false;
+                                break;
+                                
+                                case 'team':
+                                   // todo
+                                   $dataMode = false;
+                                break;
+                                
+                                case 'explo-date':
+                                   // todo
+                                   $dataMode = false;
+                                break;
+                                
+                                case 'explo-team':
+                                   // todo
+                                   $dataMode = false;
+                                break;
+                                
+                                case 'station':
+                                   // todo
+                                   $dataMode = false;
+                                break;
+                                
+                                case 'units':
+                                   // todo
+                                   $dataMode = false;
+                                break;
+                                
+                                case 'declination':
+                                   // todo
+                                   $dataMode = false;
+                                break;
+                                
+                                case 'station-names':
+                                   // todo
+                                   $dataMode = false;
+                                break;
+                                
+                                
+                                case 'data':
+                                    //data format for following shot data
+                                   // todo
+                                   $dataMode = true;
+                                break;
+                                
+                                
                                 
                                 default:
+                                    // not a valid command; see if in data mode.
+                                    if ($dataMode) {
+                                
+                                        if ($command == 'flags') {
+                                           // todo
+                                           
+                                        } elseif ($command == 'fix') {
+                                           // todo
+                                           
+                                        } elseif ($command == 'extend') {
+                                           // todo
+                                           // ignore for now; will be an issue when
+                                           // writing parsed data
+                                           
+                                        } else {
+                                            // line data, as long as the count of fields
+                                            // correspond to the definition
+                                            
+                                            // todo: parse shot
+                                            // $centreline->_shots[] =
+                                            //  new File_Therion_Shot(...);
+                                        }
+                                
+                                } else {
+                                    // not in data mode: rise exception
                                     throw new PEAR_Exception(
                                      "parse(): unsupported command '$command'");
+                                 }
                             }
                         }
-                    }
-                break;
-                
-                case 'survey':
-                    // Parse line collection using subparser
-                    foreach ($data as $ctxLines) {
-                        $ctxObj = File_Therion_Survey::parse($ctxLines);
-                        $survey->_surveys[] = $ctxObj;
-                    }
-                break;
-                
-                case 'centreline':
-                    // Parse line collection using subparser
-                    foreach ($data as $ctxLines) {
-                        $ctxObj = File_Therion_Centreline::parse($ctxLines);
-                        $centrelines->_surveys[] = $ctxObj;
-                    }
-                break;
-                
-                case 'map':
-                    // Parse line collection using subparser
-                    // TODO
-                    //foreach ($data as $ctxLines) {
-                    //    $ctxObj = File_Therion_Map::parse($ctxLines);
-                    //    $survey->_maps[] = $ctxObj;
-                    //}
-                break;
-                
-                case 'surface':
-                    // Parse line collection using subparser
-                    foreach ($data as $ctxLines) {
-                        // TODO
-                        //$ctxObj = File_Therion_Surface::parse($ctxLines);
-                        //$survey->_surface[] = $ctxObj;
                     }
                 break;
                 
@@ -269,7 +264,7 @@ class File_Therion_Survey implements Countable
             }
         } 
         
-        return $survey;
+        
         
     }
     
