@@ -834,6 +834,144 @@ class File_Therion implements Countable
             }
         }
     }
+    
+    
+    /**
+     * Build structure of local-scope multiline commands with associated lines.
+     * 
+     * This will order the lines passed into a nested array sorting the
+     * lines belonging together into subarrays collected under a common tag.
+     * 
+     * The first level contains all "seen" tags like surveys.
+     * There all survey lines will be collected and ordered into their own array.
+     * The special 'LOCAL' array kay holds all lines that where not enclosed
+     * into their own contect and are therefore considered "local".
+     * 
+     * Nested structures (like they are ancountered with surveys) need to be
+     * resolved with consecutive calls to this method. The structure holds all
+     * the lines of the first levels, so eg. in case of nested structures there
+     * will be all lines of the outermost survey command
+     * 
+     * The structure will look like this:
+     * <code>
+     * array(
+     *      'LOCAL'  => array(local lines without own context)
+     *      'survey' => array(
+     *                      array(lines-of-survey-1),
+     *                      array(lines-of-survey-2),
+     *      'centreline' => array(
+     *                          array(lines-of-centreline-1),
+     *                          array(lines-of-centreline-2),
+     *      ...
+     * </code>
+     * 
+     * @todo: deal with nested structures: each call to extract... should deal with just one level
+     * @param array $lines array of File_Therion_Line objects
+     * @return array with ordered lines
+     */
+    public static function extractMultilineCMD($lines)
+    {
+        // setup known multiline commands with start- and endtags
+        $knownCTX = array(
+            //ctx-name => array(starttag-regexp, endtag-regexp, curLVL),
+            'survey'     => array('/^survey/', '/^endsurvey/', 0),
+            'centreline' => array('/^cent(re|er)line/', '/^endcent(re|er)line/', 0),
+            'scrap'      => array('/^scrap/', '/^endscrap/', 0),
+            // @todo: more? (see thbook)
+        );
+        
+        // setup return structure
+        $orderedLines = array('LOCAL' => array());
+        foreach ($knownCTX as $ctx_name => $ctx_cfg) {
+            $orderedLines[$ctx_name] = array();
+        }
+        
+        
+        // Order lines:
+        // iterate over the lines and try to sort them in
+        $baseCTX = 'LOCAL';
+        $curCTX  = $baseCTX;
+        foreach ($lines as $line) {
+            if (!is_a($line, 'File_Therion_Line')) {
+                 throw new PEAR_Exception(
+                        'extractMultilineCMD() Invalid $line type!',
+                        new InvalidArgumentException());
+            }
+                 
+            // investigate command type of line and determine context
+            $lineData = $line->getDatafields(); //i=0 holds command type
+            if ($curCTX == $baseCTX) {
+                // LOCAL MODE:
+                // see if new context opens, or if line belongs to LOCAL.
+                
+                // test command against all known context start tags
+                foreach ($knownCTX as $ctx_name => $ctx_cfg) {
+                    if (!$line->isCommentOnly()
+                        && preg_match($ctx_cfg[0], $lineData[0])) {
+                            
+
+                        // start a new context and add line to it
+                        $curCTX = $ctx_name;
+                        $knownCTX[$ctx_name][2]++;  // increase lvl counter
+                        $next_ctxIdx = count($orderedLines[$curCTX]);
+                        $orderedLines[$curCTX][$next_ctxIdx] = array();
+                        $orderedLines[$curCTX][$next_ctxIdx][] = $line;
+                        continue 2; // on to the next line
+                    }
+                }
+                
+                // still no starting context found: add line to local
+                $orderedLines[$baseCTX][] = $line;
+                
+                
+            } else {
+                // CONTEXT-MODE:
+                // see if active context is closed, otherwise add
+                // line to most recent line array of the active type
+                
+                // in any case, we need to add the line to cur_ctx
+                $cur_ctxIdx = count($orderedLines[$curCTX]) -1;
+                $orderedLines[$curCTX][$cur_ctxIdx][] = $line;
+                
+                // handle nesting of structures:
+                // test command against this context start tag
+                if (!$line->isCommentOnly()
+                    && preg_match($knownCTX[$curCTX][0], $lineData[0])) {
+                    $knownCTX[$curCTX][2]++;  // increase lvl counter
+                    continue; // on to the next line
+                }
+                
+                // test command against current active context end tag
+                if (!$line->isCommentOnly()
+                    && preg_match($knownCTX[$curCTX][1], $lineData[0])) {
+                    // end current context; but only if we are at the base
+                    // level (support nested structures)
+                    $knownCTX[$curCTX][2]--;  // decrease lvl counter
+                    
+                    if ($knownCTX[$ctx_name][2] == 0) {
+                        // we reached the base level: this was the last
+                        // nested context level, so we are back to LOCAL
+                        $curCTX = $baseCTX;
+                    }
+                    continue; // on to the next line
+                }
+
+            }
+                
+        }
+        
+        
+        // clean up structure: remove types not seen so far from result
+        foreach ($orderedLines as $type=>$lns) {
+            if (count($lns) == 0) {
+                unset($orderedLines[$type]);
+            }
+        }
+        
+        
+        return $orderedLines;
+
+    }
 }
 
 

@@ -231,7 +231,140 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
     
     
     /**
-     * Test simple parsing of a th file
+     * Test for extracting multiline commands
+     */
+    public function testExtractMultilineCMD()
+    {
+        // empty setup structure
+        $sf = File_Therion::extractMultilineCMD(array());
+        $this->assertFalse(array_key_exists('LOCAL', $sf));
+        $this->assertFalse(array_key_exists('survey', $sf));
+        $this->assertFalse(array_key_exists('centreline', $sf));
+        $this->assertFalse(array_key_exists('scrap', $sf));
+        
+        // only LOCAL context
+        $sampleLines = array(
+            File_Therion_Line::parse('encoding UTF-8'),
+            File_Therion_Line::parse('# some comment'),
+        );
+        $sf = File_Therion::extractMultilineCMD($sampleLines);
+        $this->assertTrue(array_key_exists('LOCAL', $sf));
+        $this->assertEquals(2, count($sf['LOCAL']));
+        $this->assertFalse(array_key_exists('survey', $sf));
+        $this->assertFalse(array_key_exists('centreline', $sf));
+        $this->assertFalse(array_key_exists('scrap', $sf));
+        
+ 
+        // LOCAL+survey context
+        $sampleLines = array(
+            File_Therion_Line::parse('encoding UTF-8'),
+            File_Therion_Line::parse('# some comment'),
+            File_Therion_Line::parse('survey test'),
+            File_Therion_Line::parse('  join ew1:0 ew2:end'),
+            File_Therion_Line::parse('  # some othercomment'),
+            File_Therion_Line::parse('endsurvey'),
+        );
+        $sf = File_Therion::extractMultilineCMD($sampleLines);
+        $this->assertTrue(array_key_exists('LOCAL', $sf));
+        $this->assertTrue(array_key_exists('survey', $sf));
+        $this->assertEquals(2, count($sf['LOCAL']));
+        $this->assertEquals(1, count($sf['survey']));     // one survey...
+        $this->assertEquals(4, count($sf['survey'][0]));  // ...with 4 lines
+        $this->assertFalse(array_key_exists('centreline', $sf));
+        $this->assertFalse(array_key_exists('scrap', $sf));
+        
+        // LOCAL+survey context with trailing local data
+        $sampleLines = array(
+            File_Therion_Line::parse('encoding UTF-8'),
+            File_Therion_Line::parse('# some comment'),
+            File_Therion_Line::parse('survey test'),
+            File_Therion_Line::parse('  join ew1:0 ew2:end'),
+            File_Therion_Line::parse('  # some othercomment'),
+            File_Therion_Line::parse('endsurvey'),
+            File_Therion_Line::parse('# local again'),
+        );
+        $sf = File_Therion::extractMultilineCMD($sampleLines);
+        $this->assertTrue(array_key_exists('LOCAL', $sf));
+        $this->assertTrue(array_key_exists('survey', $sf));
+        $this->assertEquals(3, count($sf['LOCAL']));
+        $this->assertEquals(1, count($sf['survey']));     // one survey...
+        $this->assertEquals(4, count($sf['survey'][0]));  // ...with 4 lines
+        $this->assertFalse(array_key_exists('centreline', $sf));
+        $this->assertFalse(array_key_exists('scrap', $sf));
+        
+        // LOCAL+2survey contexts
+        $sampleLines = array(
+            File_Therion_Line::parse('encoding UTF-8'),
+            File_Therion_Line::parse('# some comment'),
+            File_Therion_Line::parse('survey test'),
+            File_Therion_Line::parse('  join ew1:0 ew2:end'),
+            File_Therion_Line::parse('  # some othercomment'),
+            File_Therion_Line::parse('endsurvey'),
+            File_Therion_Line::parse('survey test-two'),
+            File_Therion_Line::parse('  # some nice comment'),
+            File_Therion_Line::parse('endsurvey'),
+        );
+        $sf = File_Therion::extractMultilineCMD($sampleLines);
+        $this->assertTrue(array_key_exists('LOCAL', $sf));
+        $this->assertTrue(array_key_exists('survey', $sf));
+        $this->assertEquals(2, count($sf['LOCAL']));
+        $this->assertEquals(2, count($sf['survey']));     // two survey...
+        $this->assertEquals(4, count($sf['survey'][0]));  // ...1 with 4 lines
+        $this->assertEquals(3, count($sf['survey'][1]));  // ...2 with 3 lines
+        $this->assertFalse(array_key_exists('centreline', $sf));
+        $this->assertFalse(array_key_exists('scrap', $sf));
+ 
+ 
+        // Nested structure: Survey with subsurvey
+        $sampleLines = array(
+            File_Therion_Line::parse('survey test'),
+            File_Therion_Line::parse('  join ew1:0 ew2:end'),
+            File_Therion_Line::parse('  # some othercomment'),
+            File_Therion_Line::parse('  survey subtest'),
+            File_Therion_Line::parse('  endsurvey'),
+            File_Therion_Line::parse('endsurvey'),
+        );
+        $sf = File_Therion::extractMultilineCMD($sampleLines);
+        $this->assertFalse(array_key_exists('LOCAL', $sf));
+        $this->assertTrue(array_key_exists('survey', $sf));
+        $this->assertEquals(1, count($sf['survey']));     // one survey...
+        $this->assertEquals(6, count($sf['survey'][0]));  // ...with 6 lines
+        $this->assertFalse(array_key_exists('centreline', $sf));
+        $this->assertFalse(array_key_exists('scrap', $sf));
+        
+        // Nested structure: Survey with centreline
+        $sampleLines = array(
+            File_Therion_Line::parse('survey test'),
+            File_Therion_Line::parse('  join ew1:0 ew2:end'),
+            File_Therion_Line::parse('  # some othercomment'),
+            File_Therion_Line::parse('  centreline'),
+            File_Therion_Line::parse('    data normal from to tape compass clino'),
+            File_Therion_Line::parse('  endcentreline'),
+            File_Therion_Line::parse('endsurvey'),
+        );
+        $sf = File_Therion::extractMultilineCMD($sampleLines);
+        $this->assertFalse(array_key_exists('LOCAL', $sf));
+        $this->assertTrue(array_key_exists('survey', $sf));
+        $this->assertEquals(1, count($sf['survey']));     // one survey...
+        $this->assertEquals(7, count($sf['survey'][0]));  // ...with 7 lines
+        $this->assertFalse(array_key_exists('centreline', $sf));
+        $this->assertFalse(array_key_exists('scrap', $sf));
+        
+        // Use this data now and investigate centreline.
+        // we need to clip the first and last line (outhermost context)
+        array_shift($sampleLines);
+        array_pop($sampleLines);
+        $sf_centreline = File_Therion::extractMultilineCMD($sampleLines);
+        $this->assertTrue(array_key_exists('LOCAL', $sf_centreline));
+        $this->assertTrue(array_key_exists('centreline', $sf_centreline));
+        $this->assertEquals(2, count($sf_centreline['LOCAL']));
+        $this->assertEquals(1, count($sf_centreline['centreline']));
+        $this->assertEquals(3, count($sf_centreline['centreline'][0]));
+    }
+    
+    
+    /**
+     * Test simple fetching of a th file
      */
     public function testSimpleFetching()
     {
