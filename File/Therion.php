@@ -762,10 +762,22 @@ class File_Therion implements Countable
      * OTHER: Filehandles, string/array data or handcrafted objects cannot
      *        be automatically resolved.
      * 
-     * @todo introduce maxlevel parameter. Currently level is endless!
+     * To limit the number of possible nested levels you may specify the
+     * $lvls parameter (null/default: endless, 0: no input, >0: nested levels).
+     * 
+     * @param  int $lvls remaining levels to input
      * @throws PEAR_Exception with wrapped subexception in case of resolution error
      */
-    public function evalInputCMD() {
+    public function evalInputCMD($lvls = null) {
+        // check nesting limit
+        if (!is_null($lvls)) {
+            if ($lvls <= 0) {
+                return;  // if nesting reached limit, we dont need to go further
+            } else {
+                $lvls--; // otherwise reduce remaining levels by one
+            }
+        }
+        
         // scan all local files and search for 'input' commands
         for ($i=0; $i<count($this->_lines); $i++) {
             $curline  =& $this->_lines[$i];
@@ -803,7 +815,10 @@ class File_Therion implements Countable
                 
                 // fetch datasource and eval input commands there
                 $tmpFile->fetch();
-                $tmpFile->evalInputCMD();
+                
+                // eval nested input commands in those lines;
+                // will do nothing when the nesting reached its limit
+                $tmpFile->evalInputCMD($lvls);
                 
                 // add retrieved file lines to local buffer in place of $i
                 // (this has to replace the orginating input command,
