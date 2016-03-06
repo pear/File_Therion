@@ -172,86 +172,47 @@ class File_Therion implements Countable
         
         $this->clearObjects();  // clean references
         
+        // split file into contextual ordering
+        $orderedData = File_Therion::extractMultilineCMD($this->getLines());
         
-        // Walk all lines and try to parse them in this context.
-        // we delegate as much as possible, so we just honor commands
+        // Walk results and try to parse it in file context.
+        // We delegate as much as possible, so we just honor commands
         // the file level knows about.
         // Other lines will be collected and given to a suitable parser.
-        $curLineLogical  = 0;
-        $curLinePhysical = 0;
-        $currentCTX      = null; // current context object
-        $ctxCollection   = array();
-        foreach ($this->getLines() as $line) {
-            // rise line statistics
-            $curLineLogical++;
-            $curLinePhysical = $curLinePhysical + count($line);
-            
-            if (!$line->isCommentOnly()) {
-                $lineData = $line->getDatafields();
-                switch (strtolower($lineData[0])) {
-                    case 'encoding':
-                        $this->setEncoding($lineData[1]);
-                    break;
-                    
-                    case 'survey':
-                        // start of a survey context; begin to collect lines
-                        // @todo: we may expect a scrap contect here too;
-                        //        so we should generalize this code so taht it
-                        //        can handle both subtypes
-                        if ($currentCTX != null) {
-                            // subsurveys must be parsed from the survey class,
-                            // its also the topmost data structure.
-                            throw new File_Therion_SyntaxException(
-                            "survey start block but previous context still open!");
+        foreach ($orderedData as $type => $data) {
+            switch ($type) {
+                case 'LOCAL':
+                    // walk each local line and parse it
+                    foreach ($data as $line) {
+                        if (!$line->isCommentOnly()) {
+                            $lineData = $line->getDatafields();
+                            switch (strtolower($lineData[0])) {
+                                case 'encoding':
+                                    $this->setEncoding($lineData[1]);
+                                break;
+                            }
                         }
-                        $currentCTX = new File_Therion_Survey();
-                        $ctxCollection[] = $line;
-                    break;
-                    
-                    case 'endsurvey':
-                        // end of a survey context; parse collected ctxCollection
-                        if ($currentCTX == null
-                            || !is_a($currentCTX, 'File_Therion_Survey')) {
-                            throw new File_Therion_SyntaxException(
-                            "survey end block but wrong context!");
-                        }
-                        
-                        // let context parse lines collected so far
-                        $ctxCollection[] = $line;
-                        $currentCTX->parse($ctxCollection);
-                        
-                        $this->addObject($currentCTX); // associate object
-                        
-                        // cleanup context
-                        $currentCTX = null;
-                        $ctxCollection = array();
-                        
-                    break;
-                    
-                    default:
-                        // if we have an currently active context, this is
-                        // most probably a line that should go there, so
-                        // we just collect it here.
-                        if ($currentCTX) {
-                            $ctxCollection[] = $line;
-                            
-                        } else {
-                            // Otherwise: ignore unsupported commands silently.
-                            // todo: Once we are supporting most commands and reach
-                            // version 1.0, we should rise a suiting exception here.
-                            //throw new File_Therion_UnsupportedFeatureException(...);
-                        }
-                }
+                    }
+                break;
                 
+                case 'survey':
+                    // walk each line collection and parse it using subparser
+                    foreach ($data as $ctxLines) {
+                        $ctxObj = new File_Therion_Survey();
+                        $ctxObj->parse($ctxLines);
+                        $this->addObject($ctxObj);
+                    }
+                break;
                 
-            } else {
-                // ignore empty or only comment lines
+                default:
+                    throw new PEAR_Exception("parse(): unsupported type '$type'");
             }
-        }
+        } 
+        
         
         // TODO: Parsing done! Investigate: can we check some errors now?
-
-
+        
+        return; 
     }
     
     
@@ -527,11 +488,13 @@ class File_Therion implements Countable
      * Get all associated objects.
      * 
      * You can optionaly query for specific types using $filter.
+     * You may ommit the prefix 'File_Therion_' from the filter.
      * 
      * Example:
      * <code>
      * $allObjects = $thFile->getObjects(); // get all
      * $surveys    = $thFile->getObjects('File_Therion_Survey'); // get surveys
+     * $surveys    = $thFile->getObjects('Survey'); // get surveys
      * </code>
      *
      * @param string $filter File_Therion_* class name, retrieve only objects of that kind
@@ -542,19 +505,28 @@ class File_Therion implements Countable
          if (is_null($filter)) {
             return $this->_objects;
         } else {
+            // allow shorthands (ommitting class prefix)
+            if (!preg_match('/^File_Therion_/', $filter)) {
+                $filter = 'File_Therion_'.$filter;
+            }
+            
             $supported = "Survey"; // todo: support more types
-            if (!preg_match('^File_Therion_(?:'.$supported.')$', $filter)) {
-                throw new PEAR_Exception('getObjects(): Invalid $filter argument!',
-                 new InvalidArgumentException("unsupported filter='".$filter."'"));
+            if (!preg_match('/^File_Therion_(?:'.$supported.')$/', $filter)) {
+                throw new PEAR_Exception(
+                    'getObjects(): Invalid $filter argument ('.$filter.')!',
+                    new InvalidArgumentException(
+                        "unsupported filter='".$filter."'"
+                    )
+                );
             }
             
             $rv = array();
             foreach ($this->_objects as $o) {
                 if (get_class($o) == $filter) {
-                    $ret[] = $o;
+                    $rv[] = $o;
                 }
             }
-            return $ret;
+            return $rv;
         }
     }
      
