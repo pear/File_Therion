@@ -766,7 +766,6 @@ class File_Therion implements Countable
      * @throws PEAR_Exception with wrapped subexception in case of resolution error
      */
     public function evalInputCMD() {
-        print "DBG evalInputCMD(): CALLED on ".count($this->_lines)." lines\n";
         // scan all local files and search for 'input' commands
         for ($i=0; $i<count($this->_lines); $i++) {
             $curline  =& $this->_lines[$i];
@@ -797,7 +796,6 @@ class File_Therion implements Countable
                     $remotePath .= '.th';
                 }
                 
-                print "DBG evalInputCMD(".$remotePath.")@$i -> ".$curline->getContent()."\n";
                 
                 // setup new File-object with same options
                 $tmpFile = new File_Therion($remotePath);
@@ -805,7 +803,6 @@ class File_Therion implements Countable
                 
                 // fetch datasource and eval input commands there
                 $tmpFile->fetch();
-                print "   INPUT fetched ".count($tmpFile)." lines from $localURL\n";
                 $tmpFile->evalInputCMD();
                 
                 // add retrieved file lines to local buffer in place of $i
@@ -815,11 +812,9 @@ class File_Therion implements Countable
                     $curline->getContent(), // old content as comment
                     $curline->getIndent()); // preserve indenting
                 $this->_lines[$i] = $commtdOri;
-                print "   REPLACED: ".$i." with ". $commtdOri->toString();
                 $subLines = array_reverse($tmpFile->getLines());
                 foreach ($subLines as $subLine) {
-                  // TODO: This does not work so far. Why?
-                 //   $this->addLine($subLine, $i+1); // pushing content down
+                    $this->addLine($subLine, $i+1); // pushing content down
                 }
             }
         }
