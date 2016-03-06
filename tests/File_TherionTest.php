@@ -238,7 +238,6 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
         $th = new File_Therion($this->testdata_base.'/basics/rabbit.th');
         $th->fetch();
         $this->assertEquals(74, count($th), "parsed line number does not match sample");
-        $th->parse();
     }
     
     /**
