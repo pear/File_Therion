@@ -77,7 +77,7 @@ abstract class File_Therion_AbstractObject
                  if (gettype($this->{"_$type"}[$key]) == gettype($value)) {
                      $this->{"_$type"}[$key] = $value;
                  } else {
-                    throw new PEAR_Exception("set_$type '$k': Invalid option type!",
+                    throw new PEAR_Exception("set_$type '$key': Invalid option type!",
                         new InvalidArgumentException(
                         "passed option='$key'; type='".gettype($value)
                         ."'; expected='".gettype($this->{"_$type"}[$key])."'")

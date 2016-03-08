@@ -45,13 +45,13 @@ class File_Therion_Centreline
      * @var array  
      */
     protected $_metadata = array(
-        'team'       => array(),
-        'explo-team' => array(),
-        'date'       => "",
-        'explo-date' => "",
-        'units'      => "",
-        'copyright'  => "",
-        'author'     => "",
+        'team'        => array(),
+        'explo-team'  => array(),
+        'date'        => "",
+        'explo-date'  => "",
+        'units'       => array(),
+        'copyright'   => array(), // 0=year, 1=string
+        'declination' => array(), // 0=value, 1=unit: 0.0 grad
     );
     
     /**
@@ -117,7 +117,7 @@ class File_Therion_Centreline
         if (is_a($firstLine, 'File_Therion_Line')) {
             $flData = $firstLine->getDatafields();
             if (preg_match('/^cent(re|er)line/i', $flData[0])) {
-                $survey = new File_Therion_Centreline(
+                $centreline = new File_Therion_Centreline(
                     $firstLine->extractOptions()
                 );
             } else {
@@ -167,56 +167,44 @@ class File_Therion_Centreline
                     foreach ($data as $line) {
                         if (!$line->isCommentOnly()) {
                             $lineData = $line->getDatafields();
-                            $command  = array_shift($lineData);
+                            $command  = strtolower(array_shift($lineData));
                             
-                            switch (strtolower($command)) {
+                            switch ($command) {
                                 case 'input':
                                     // ignore silently because this should be 
                                     // handled at the file level
                                     $dataMode = false;
                                 break;
                                 
-                                case 'copyright':
-                                   // todo
-                                   $dataMode = false;
-                                break;
-                                
-                                case 'author':
-                                   // todo
-                                   $dataMode = false;
-                                break;
-                                
+                                case 'copyright':                           
                                 case 'date':
-                                   // todo
-                                   $dataMode = false;
+                                case 'explo-date':
+                                case 'units':
+                                case 'declination':
+                                    // just add these as arrays
+                                    // todo: better handling of type syntax
+                                    $dataMode = false;
+                                    $centreline->setMetaData(array(
+                                        $command => $lineData
+                                        )
+                                    );
                                 break;
                                 
                                 case 'team':
-                                   // todo
-                                   $dataMode = false;
+                                    $dataMode = false;
+                                    $p_str = $lineData[0];
+                                    $p_obj = File_Therion_Person::parse($p_str);
+                                    $centreline->addTeam($p_obj);                                    
                                 break;
-                                
-                                case 'explo-date':
-                                   // todo
-                                   $dataMode = false;
-                                break;
-                                
                                 case 'explo-team':
-                                   // todo
-                                   $dataMode = false;
+                                    $dataMode = false;
+                                    $p_str = $lineData[0];
+                                    $p_obj = File_Therion_Person::parse($p_str);
+                                    $centreline->addExploTeam($p_obj);                                    
                                 break;
+                                
                                 
                                 case 'station':
-                                   // todo
-                                   $dataMode = false;
-                                break;
-                                
-                                case 'units':
-                                   // todo
-                                   $dataMode = false;
-                                break;
-                                
-                                case 'declination':
                                    // todo
                                    $dataMode = false;
                                 break;
@@ -274,8 +262,29 @@ class File_Therion_Centreline
             }
         } 
         
+        return $centreline;
         
-        
+    }
+    
+    
+    /**
+     * Add a surveying team member.
+     * 
+     * @param File_Therion_Person team member
+     */
+    public function addTeam($person)
+    {
+        $this->_metadata['team'][] = $person;
+    }
+    
+    /**
+     * Add a team member which explored.
+     * 
+     * @param File_Therion_Person team member
+     */
+    public function addExploTeam($person)
+    {
+        $this->_metadata['explo-team'][] = $person;
     }
     
     /**
