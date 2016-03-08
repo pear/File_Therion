@@ -24,7 +24,9 @@
  * @license    http://www.gnu.org/licenses/lgpl-3.0.txt LGPLv3
  * @link       http://pear.php.net/package/File_Therion/
  */
-class File_Therion_Centreline implements Countable
+class File_Therion_Centreline
+    extends File_Therion_AbstractObject
+    implements Countable
 {
     
     /**
@@ -37,6 +39,18 @@ class File_Therion_Centreline implements Countable
     );
     
     
+    /**
+     * Basic data elements
+     * 
+     * @var array  
+     */
+    protected $_metadata = array(
+        'team'       => array(),
+        'explo-team' => array(),
+        'units'      => "",
+        'copyright'  => "",
+        'author'     => "",
+    );
     
     /**
      * Create a new therion centreline object.
@@ -48,35 +62,6 @@ class File_Therion_Centreline implements Countable
     {
         $this->setOptions($options);
     }
-    
-    /**
-     * Set options of this survey
-     * 
-     * 'title'   => Title of this survey
-     *
-     * @param array $options associative array of options to set
-     * @see {@link $_options}
-     */
-     public function setOptions($options=array())
-     {
-         foreach ($options as $k => $v) {
-             if (array_key_exists($k, $this->_options)) {
-                 if (gettype($this->_options[$k]) == gettype($v)) {
-                     $this->_option[$k] = $v;
-                 } else {
-                    throw new PEAR_Exception('setOptions(): Invalid option type!',
-                        new InvalidArgumentException(
-                        "passed option='$k'; type='".gettype($v)
-                        ."'; expected='".gettype($this->_options[$k])."'")
-                    );
-                 }
-             } else {
-                throw new PEAR_Exception('setOptions(): Invalid option name!',
-                    new InvalidArgumentException("passed option='$k'"));
-             }
-         }
-         
-     }
     
     
     /**

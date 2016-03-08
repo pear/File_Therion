@@ -18,6 +18,7 @@
 require_once 'PEAR.php';
 require_once 'PEAR/Exception.php';
 require_once 'File/Therion/Exception.php';
+require_once 'File/Therion/BasicObject.abstract.php';
 require_once 'File/Therion/Line.php';
 require_once 'File/Therion/Survey.php';
 require_once 'File/Therion/Centreline.php';
