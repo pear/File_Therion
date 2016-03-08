@@ -22,13 +22,9 @@ require_once 'File/Therion/BasicObject.abstract.php';
 require_once 'File/Therion/Line.php';
 require_once 'File/Therion/Survey.php';
 require_once 'File/Therion/Centreline.php';
-//require_once 'File/Therion/Person.php';
-//require_once 'File/Therion/Explo.php';
-//require_once 'File/Therion/Topo.php';
 //require_once 'File/Therion/Station.php';
-//require_once 'File/Therion/StationFlag.php';
-//require_once 'File/Therion/Shot.php';
-//require_once 'File/Therion/ShotFlag.php';
+require_once 'File/Therion/Shot.php';
+
 
 /**
  * Class representing a therion file

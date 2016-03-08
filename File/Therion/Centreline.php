@@ -30,7 +30,7 @@ class File_Therion_Centreline
 {
     
     /**
-     * Survey options (id, ...)
+     * Survey options (id, ...).
      * 
      * @var array assoc array
      */
@@ -40,17 +40,42 @@ class File_Therion_Centreline
     
     
     /**
-     * Basic data elements
+     * Basic data elements.
      * 
      * @var array  
      */
     protected $_metadata = array(
         'team'       => array(),
         'explo-team' => array(),
+        'date'       => "",
+        'explo-date' => "",
         'units'      => "",
         'copyright'  => "",
         'author'     => "",
     );
+    
+    /**
+     * Centreline data definition.
+     * 
+     * This holds the data definition order of shot elements.
+     * (eg "data normal from to length bearing gradient left right up down").
+     * 
+     * Index=0 is type, subsequent items define keyword
+     *
+     * @var array
+     */
+    protected $_shotDef = array();
+    
+    /**
+     * Centreline shot definition.
+     * 
+     * This holds a associative array containing the shots.
+     * Each shot is represented by an individual File_Therion_Shot object.
+     * This gives access to extended data fields.
+     *
+     * @var array
+     */
+    protected $_shots = array();
     
     /**
      * Create a new therion centreline object.
@@ -254,13 +279,13 @@ class File_Therion_Centreline
     }
     
     /**
-     * Count subsurveys of this survey (SPL Countable).
+     * Count number of shots of this centreline (SPL Countable).
      *
      * @return int number of subsurveys
      */
     public function count()
     {
-        return count($this->_surveys);
+        return count($this->_shots);
     }
     
     
