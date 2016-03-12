@@ -25,7 +25,7 @@
  * @link       http://pear.php.net/package/File_Therion/
  */
 class File_Therion_Shot
-    extends File_Therion_AbstractObject
+    extends File_Therion_BasicObject
 {
     
     /**

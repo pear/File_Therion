@@ -16,6 +16,8 @@
  * Abstract Class representing a basic therion object.
  * 
  * It features some common functions to set/get basic data elements.
+ * The interface is restricted because other than options should be
+ * explicitely defined with getters/setters.
  *
  * @category   file
  * @package    File_Therion
@@ -24,12 +26,16 @@
  * @license    http://www.gnu.org/licenses/lgpl-3.0.txt LGPLv3
  * @link       http://pear.php.net/package/File_Therion/
  */
-abstract class File_Therion_AbstractObject
+abstract class File_Therion_BasicObject
 {
     
     /**
-     * Object options (title, ...)
+     * Object options (title, ...).
      * 
+     * This defines the options available in the concrete object.
+     * When inheriting from this class, redeclare the array.
+     * 
+     * @see {@link _getSet_dataOrOption()}
      * @var array assoc array
      */
     protected $_options = array(
@@ -40,7 +46,10 @@ abstract class File_Therion_AbstractObject
     );
     
     /**
-     * Object metadata (simple ones)
+     * Object metadata (simple ones).
+     * 
+     * When inheriting from this class, redeclare the array and remember to
+     * define explicit setters/getters to access those elements.
      * 
      * @var array assoc array
      */
@@ -53,6 +62,9 @@ abstract class File_Therion_AbstractObject
     
     /**
      * Central shorthand function to get/set data items in options/metadata.
+     * 
+     * This will test existence and type of the passed key and value and
+     * throw an appropriate exception in case of problems.
      * 
      * @param string     $type "options" or "metadata"
      * @param string     $key  key to get/set
@@ -95,18 +107,33 @@ abstract class File_Therion_AbstractObject
      * 
      * The key and datatype will be checked against the
      * {@link $_options} array.
+     * 
+     * There are two call modes:
+     * <code>
+     * //set single option:
+     * $obj->setOptions($key, $value);
+     * 
+     * // set several options at once using assoc array:
+     * $opts = array('key1' => 'value', 'key2' => 'value', ...);
+     * $obj->setOptions($opts);
      *
      * @param array $options associative array of options to set
      * @see {@link $_options}
      * @throws PEAR_Exception with InvalidArgumentException
      */
-     public function setOptions($options=array())
-     {
-         foreach ($options as $k => $v) {
-             $this->_getSet_dataOrOption('options', $k, $v);
-         }
-         
-     }
+    public function setOptions($options=array(), $value=null)
+    {
+        if (!is_array($options)) {
+            // single mode
+            $this->_getSet_dataOrOption('options', $options, $value);
+            
+        } else {
+            // multi mode
+            foreach ($options as $k => $v) {
+            $this->_getSet_dataOrOption('options', $k, $v);
+            }
+        }
+    }
      
     /**
      * Get option of this object.
@@ -123,7 +150,10 @@ abstract class File_Therion_AbstractObject
      }
      
     /**
-     * Set Metadata of this object.
+     * Set some Metadata of this object.
+     * 
+     * Dev-Note: real object data should be accessbile to the end user
+     * only through explicitely named functions.
      * 
      * The key and datatype will be checked against the
      * {@link $_options} array.
@@ -132,7 +162,7 @@ abstract class File_Therion_AbstractObject
      * @see {@link $_metadata}
      * @throws PEAR_Exception with InvalidArgumentException
      */
-     public function setMetaData($options=array())
+     protected function setMetaData($options=array())
      {
          foreach ($options as $k => $v) {
              $this->_getSet_dataOrOption('metadata', $k, $v);
@@ -141,22 +171,21 @@ abstract class File_Therion_AbstractObject
      }
      
     /**
-     * Get Metadata of this object.
+     * Get some Metadata of this object.
+     * 
+     * Dev-Note: real object data should be accessbile to the end user
+     * only through explicitely named functions.
      *
      * @param string $option option key to get
      * @return mixed depending on option
      * @see {@link $_metadata}
      * @throws PEAR_Exception with InvalidArgumentException
      */
-     public function getMetaData($option)
+     protected function getMetaData($option)
      {
           return $this->_getSet_dataOrOption('metadata', $option, null);
          
      }
-    
-    
-    
-    
     
 }
 
