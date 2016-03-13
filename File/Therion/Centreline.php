@@ -44,7 +44,7 @@ class File_Therion_Centreline
      * 
      * @var array  
      */
-    protected $_metadata = array(
+    protected $_data = array(
         'team'        => array(),
         'explo-team'  => array(),
         'date'        => "",
@@ -85,7 +85,7 @@ class File_Therion_Centreline
      */
     public function __construct($options = array())
     {
-        $this->setOptions($options);
+        $this->setOption($options);
     }
     
     
@@ -184,10 +184,7 @@ class File_Therion_Centreline
                                     // just add these as arrays
                                     // todo: better handling of type syntax
                                     $dataMode = false;
-                                    $centreline->setMetaData(array(
-                                        $command => $lineData
-                                        )
-                                    );
+                                    $centreline->setData($command, $lineData);
                                 break;
                                 
                                 case 'team':

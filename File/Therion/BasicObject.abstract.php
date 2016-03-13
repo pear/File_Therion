@@ -46,14 +46,14 @@ abstract class File_Therion_BasicObject
     );
     
     /**
-     * Object metadata (simple ones).
+     * Object data (simple ones).
      * 
      * When inheriting from this class, redeclare the array and remember to
      * define explicit setters/getters to access those elements.
      * 
      * @var array assoc array
      */
-    protected $_metadata = array(
+    protected $_simpledata = array(
         // In subclasses: add here the valid options and datatypes
         // 'team'        => array(),
         // 'explo-team'  => array(),
@@ -61,46 +61,50 @@ abstract class File_Therion_BasicObject
     );
     
     /**
-     * Central shorthand function to get/set data items in options/metadata.
+     * Verify basic compliance of item.
      * 
      * This will test existence and type of the passed key and value and
      * throw an appropriate exception in case of problems.
      * 
-     * @param string     $type "options" or "metadata"
-     * @param string     $key  key to get/set
-     * @param mixed|null value to set or NULL to retrieve value
-     * @returns nothing or stored value
-     * @throws PEAR_Exception with InvalidArgumentException
+     * @param string     $type  name of local object variable
+     * @param string     $key   key to check (if != null)
+     * @param string     $value value to check against (if != null)
+     * @return true in case everything was ok
+     * @throws PEAR_Exception with InvalidArgumentException in case of failure
      */
-    protected function _getSet_dataOrOption($type, $key, $value=null)
+    protected function _verify($type, $key=null, $value=null)
     {
-        if ($value === null) {
-            // GET VALUE
-            if (array_key_exists($key, $this->{"_$type"})) {
-             return $this->{"_$type"}[$key];
-             } else {
-                throw new PEAR_Exception("get_$type: Invalid option name '$k'",
-                    new InvalidArgumentException("passed option='$k'"));
-             }
-             
-         } else {
-             // SET VALUE
-             if (array_key_exists($key, $this->{"_$type"})) {
-                 if (gettype($this->{"_$type"}[$key]) == gettype($value)) {
-                     $this->{"_$type"}[$key] = $value;
-                 } else {
-                    throw new PEAR_Exception("set_$type '$key': Invalid option type!",
-                        new InvalidArgumentException(
-                        "passed option='$key'; type='".gettype($value)
-                        ."'; expected='".gettype($this->{"_$type"}[$key])."'")
-                    );
-                 }
-             } else {
-                throw new PEAR_Exception("set_$type: Invalid option name '$k'",
-                    new InvalidArgumentException("passed option='$key'"));
-             }
-         }
+        // check basic existence of type
+        if (!isset($this->{"$type"})) {
+            throw new PEAR_Exception("Invalid type name '$type'",
+                new InvalidArgumentException());
+        }
+        
+        // check basic existence of key
+        if ($key!==null) {
+            if (!isset($this->{"$type"}[$key])) {
+                throw new PEAR_Exception("$type: Invalid key name '$k'",
+                new InvalidArgumentException());
+            }
+        }
+        
+        // check that passed value is of correct type
+        if ($value!==null) {
+            if (gettype($this->{"$type"}[$key]) !== gettype($value)) {
+                throw new PEAR_Exception(
+                    "$type [$key]: Invalid value type '".gettype($value)."'! "
+                    ."passed option='$key'; type='".gettype($value)
+                    ."'; expected='".gettype($this->{"$type"}[$key])."'",
+                    new InvalidArgumentException()
+                );
+            }
+        }
+        
+        
+        // all checks passed:
+        return true;
     }
+    
     
     /**
      * Set options of this object.
@@ -117,20 +121,22 @@ abstract class File_Therion_BasicObject
      * $opts = array('key1' => 'value', 'key2' => 'value', ...);
      * $obj->setOptions($opts);
      *
-     * @param array $options associative array of options to set
+     * @param array $option option (or associative array of options) to set
+     * @param array $value when $options is no array: value to set
      * @see {@link $_options}
      * @throws PEAR_Exception with InvalidArgumentException
      */
-    public function setOptions($options=array(), $value=null)
+    public function setOption($option, $value=null)
     {
-        if (!is_array($options)) {
+        if (!is_array($option)) {
             // single mode
-            $this->_getSet_dataOrOption('options', $options, $value);
+            $this->_verify('_options', $option, $value);
+            $this->_options[$option] = $value;
             
         } else {
             // multi mode
-            foreach ($options as $k => $v) {
-            $this->_getSet_dataOrOption('options', $k, $v);
+            foreach ($option as $k => $v) {
+                $this->setOption($k, $v);
             }
         }
     }
@@ -145,46 +151,54 @@ abstract class File_Therion_BasicObject
      */
      public function getOption($option)
      {
-          return $this->_getSet_dataOrOption('options', $option, null);
-         
+          return $this->_options[$option];
      }
      
+     
     /**
-     * Set some Metadata of this object.
+     * Set some simple data of this object.
      * 
-     * Dev-Note: real object data should be accessbile to the end user
+     * Dev-Note: real object data should be accessible to the end user
      * only through explicitely named functions.
      * 
      * The key and datatype will be checked against the
-     * {@link $_options} array.
+     * {@link $_data} array.
      *
-     * @param array $options associative array of options to set
-     * @see {@link $_metadata}
+     * @param array $key name (or associative array of data) to set
+     * @param array $value when $key is no array: value to set
+     * @see {@link $_data}
      * @throws PEAR_Exception with InvalidArgumentException
      */
-     protected function setMetaData($options=array())
+     protected function setData($key, $value=null)
      {
-         foreach ($options as $k => $v) {
-             $this->_getSet_dataOrOption('metadata', $k, $v);
-         }
+         if (!is_array($key)) {
+            // single mode
+            $this->_verify('_data', $key, $value);
+            $this->_data[$key] = $value;
+            
+        } else {
+            // multi mode
+            foreach ($key as $k => $v) {
+                $this->setData($k, $v);
+            }
+        }
          
      }
      
     /**
-     * Get some Metadata of this object.
+     * Get some simple data of this object.
      * 
      * Dev-Note: real object data should be accessbile to the end user
      * only through explicitely named functions.
      *
-     * @param string $option option key to get
+     * @param string $key data key to get
      * @return mixed depending on option
-     * @see {@link $_metadata}
+     * @see {@link $_data}
      * @throws PEAR_Exception with InvalidArgumentException
      */
-     protected function getMetaData($option)
+     protected function getData($key)
      {
-          return $this->_getSet_dataOrOption('metadata', $option, null);
-         
+          return $this->_data[$key];
      }
     
 }

@@ -97,7 +97,7 @@ class File_Therion_Survey
     public function __construct($id, $options = array())
     {
         $this->_name = $id;
-        $this->setOptions($options);
+        $this->setOption($options);
     }
     
     
