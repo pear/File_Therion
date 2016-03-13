@@ -414,6 +414,8 @@ class File_Therion_LineTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(1.23,   File_Therion_Line::unescape(1.23)); // int
         $this->assertEquals('""',   File_Therion_Line::escape("")); // empty
         $this->assertEquals('',     File_Therion_Line::unescape('""')); // empty
+        $this->assertEquals('" "',  File_Therion_Line::escape(' ')); // blank
+        $this->assertEquals(' ',    File_Therion_Line::unescape('" "')); // blank
         
         // test array interface
         $this->assertEquals(array("foo", "bar", "1.23"),

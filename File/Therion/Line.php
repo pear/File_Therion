@@ -345,7 +345,7 @@ class File_Therion_Line implements Countable
             if (stristr($value, ' ') || $value == "") {
                 // if space is contained, quote entire field
                 // TODO: support keywords as well
-                if (preg_match('/^[\d\s.]+$/', $value)) {
+                if (preg_match('/^\d+[\d\s.]*$/', $value)) {
                     $value = '['.$value.']'; // put numeric value or keyword in []
                 } else {
                     $value = '"'.$value.'"'; // put string value in ""
