@@ -176,9 +176,13 @@ class File_Therion_Centreline
                                     $dataMode = false;
                                 break;
                                 
-                                case 'copyright':                           
                                 case 'date':
                                 case 'explo-date':
+                                    $dataMode = false;
+                                    $centreline->setData($command, $lineData[0]);
+                                break;
+                                
+                                case 'copyright':                           
                                 case 'units':
                                 case 'declination':
                                     // just add these as arrays

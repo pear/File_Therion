@@ -24,6 +24,8 @@ require_once 'File/Therion/Survey.php';
 require_once 'File/Therion/Centreline.php';
 //require_once 'File/Therion/Station.php';
 require_once 'File/Therion/Shot.php';
+require_once 'File/Therion/DataTypes/DataTypeInterface.php';
+require_once 'File/Therion/DataTypes/Person.php';
 
 
 /**
