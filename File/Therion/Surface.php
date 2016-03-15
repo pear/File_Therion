@@ -63,8 +63,8 @@ class File_Therion_Surface
     /**
      * Parses given Therion_Line-objects into internal data structures.
      * 
-     * @param array $lines File_Therion_Line objects forming a centreline
-     * @return File_Therion_Centreline Centreline object
+     * @param array $lines File_Therion_Line objects forming a surface
+     * @return File_Therion_Surface Surface object
      * @throws PEAR_Exception with wrapped lower level exception
      * @todo implement me
      */

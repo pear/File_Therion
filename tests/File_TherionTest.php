@@ -374,7 +374,7 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
     }
     
     /**
-     * Test simple recursively parsing of a th file
+     * Test simple recursively fetching of a th file
      */
     public function testSimpleFetching_recurse()
     {

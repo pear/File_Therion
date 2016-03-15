@@ -42,6 +42,14 @@ class File_Therion_Survey
      */
     protected $_centrelines = array();
     
+    
+    /**
+     * Associated scraps
+     * 
+     * @var array
+     */
+    protected $_scraps = array();
+    
     /**
      * Associated scrap joins
      * 
@@ -71,6 +79,13 @@ class File_Therion_Survey
     protected $_maps = array();
     
     /**
+     * Associated surface definitions
+     * 
+     * @var array of surface objects
+     */
+    protected $_surface = array();
+    
+    /**
      * survey name (ID)
      * 
      * @var array
@@ -83,7 +98,9 @@ class File_Therion_Survey
      * @var array assoc array
      */
     protected $_options = array(
-        'title' => "",
+        'title'       => "",
+        'declination' => 0.0,
+        'entrance'    => "",   // name of station
     );
     
     
@@ -128,7 +145,7 @@ class File_Therion_Survey
             $flData = $firstLine->getDatafields();
             if (strtolower($flData[0]) == "survey") {
                 $survey = new File_Therion_Survey(
-                    $flData[1],
+                    $flData[1], // id, mandatory
                     $firstLine->extractOptions()
                 );
             } else {
@@ -187,12 +204,12 @@ class File_Therion_Survey
                                 
                                 case 'join':
                                     // Scrapjoins: add the remaining data fields
-                                    $survey->_joins[] = $lineData;
+                                    $survey->addJoin($lineData);
                                 break;
                                 
                                 case 'equate':
                                     // Equates: add the remaining data fields
-                                    $survey->_equates[] = $lineData;
+                                    $survey->addEquate($lineData);
                                 break;
                                 
                                 default:
@@ -207,7 +224,7 @@ class File_Therion_Survey
                     // Parse line collection using subparser
                     foreach ($data as $ctxLines) {
                         $ctxObj = File_Therion_Survey::parse($ctxLines);
-                        $survey->_surveys[] = $ctxObj;
+                        $survey->addSurvey($ctxObj);
                     }
                 break;
                 
@@ -215,25 +232,31 @@ class File_Therion_Survey
                     // Parse line collection using subparser
                     foreach ($data as $ctxLines) {
                         $ctxObj = File_Therion_Centreline::parse($ctxLines);
-                        $centrelines->_surveys[] = $ctxObj;
+                        $survey->addCentreline($ctxObj);
                     }
                 break;
                 
                 case 'map':
                     // Parse line collection using subparser
-                    // TODO
-                    //foreach ($data as $ctxLines) {
-                    //    $ctxObj = File_Therion_Map::parse($ctxLines);
-                    //    $survey->_maps[] = $ctxObj;
-                    //}
+                    foreach ($data as $ctxLines) {
+                        $ctxObj = File_Therion_Map::parse($ctxLines);
+                        $survey->addMap($ctxObj);
+                    }
                 break;
                 
                 case 'surface':
                     // Parse line collection using subparser
                     foreach ($data as $ctxLines) {
-                        // TODO
-                        //$ctxObj = File_Therion_Surface::parse($ctxLines);
-                        //$survey->_surface[] = $ctxObj;
+                        $ctxObj = File_Therion_Surface::parse($ctxLines);
+                        $survey->addSurface($ctxObj);
+                    }
+                break;
+                
+                case 'scrap':
+                    // Parse line collection using subparser
+                    foreach ($data as $ctxLines) {
+                        $ctxObj = File_Therion_Scrap::parse($ctxLines);
+                        $survey->addScrap($ctxObj);
                     }
                 break;
                 
@@ -245,6 +268,251 @@ class File_Therion_Survey
         return $survey;
         
     }
+    
+    /**
+     * Get name (id) of this survey.
+     * 
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->_name;
+    }
+    
+    /**
+     * Change name (id) of this survey.
+     * 
+     * @return string
+     * @todo implement parameter checks
+     */
+    public function setName($id)
+    {
+        $this->_name = $id;
+    }
+    
+    /**
+     * Add a station equate.
+     * 
+     * Example:
+     * <code>
+     * $survey->addEquate("1.1", "1.25@subsurvey");
+     * $survey->addEquate("1.1", "2.1", "1.25@subsurvey"); // threesome
+     * $survey->addEquate($station1, $station2);
+     * </code>
+     * 
+     * @param string|array station equates.
+     * @todo support station objects
+     * @todo add syntax checks
+     */
+    public function addEquate($src=null, ...$tgts)
+    {
+        if (!is_array($src)) {
+            $src = array($src);
+        }
+        
+        $merged = array_merge($src, $tgts);
+        
+        // check parameters
+        if (count($merged) < 2) {
+            throw new PEAR_Exception("addEquate(): Missing argument",
+               new InvalidArgumentException("expected >=2 elements"));
+        }
+        foreach ($merged as $j) {
+            if (!is_string($j)) {
+                throw new PEAR_Exception("addEquate(): Invalid argument",
+                    new InvalidArgumentException("expected string"));
+            }
+        }
+        
+        // homogenize and add
+        $this->_equates[] = $merged;
+    }
+    
+    /**
+     * Clean existing equates.
+     */
+    public function clearEquates()
+    {
+        $this->_equates = array();
+    }
+    
+    /**
+     * Get existing equates.
+     * 
+     * Each unique definition forms one array element.
+     * Each level has one array containing all join arguments.
+     * 
+     * @return array nested array
+     */
+    public function getEquates()
+    {
+        return $this->_equates;
+    }
+    
+    /**
+     * Add a scrap object.
+     * 
+     * Example:
+     * <code>
+     * $scrap = new File_Therion_Scrap("fooScrap");
+     * // $scrap->....
+     * $survey->addScrap($scrap);
+     * </code>
+     * 
+     * @param File_Therion_Scrap $scrap Map object to add
+     */
+    public function addScrap(File_Therion_Scrap $scrap)
+    {
+        $this->_scraps[] = $scrap;
+    }
+    
+    /**
+     * Remove associated scraps.
+     */
+    public function clearScraps()
+    {
+        $this->_scraps = array();
+    }
+    
+    /**
+     * Get existing Scrap objects.
+     * 
+     * @return array of File_Therion_Scrap objects
+     */
+    public function getScraps()
+    {
+        return $this->_scraps;
+    }
+    
+    /**
+     * Add a scrap join.
+     * 
+     * Example:
+     * <code>
+     * $survey->addJoin("ew1:0", "ew2:end"); // normal join
+     * $survey->addJoin("ew1:0", "ew2:end", "ew3:2"); // threesome
+     * </code>
+     * 
+     * @param string|array $join Single or multiple scrap joins.
+     * @todo maybe invent join datatype and consider this too...
+     * @todo add syntax checks
+     */
+    public function addJoin($src=null, ...$tgts)
+    {
+        if (!is_array($src)) {
+            $src = array($src);
+        }
+        
+        
+        $merged = array_merge($src, $tgts);
+        
+        // check parameters
+        if (count($merged) < 2) {
+            throw new PEAR_Exception("addJoin(): Missing argument",
+                new InvalidArgumentException("expected >=2 elements"));
+        }
+        foreach ($merged as $j) {
+            if (!is_string($j)) {
+                throw new PEAR_Exception("addJoin(): Invalid argument",
+                    new InvalidArgumentException("expected string"));
+            }
+        }
+        
+        // homogenize and add
+        $this->_joins[] = $merged;
+    }
+    
+    /**
+     * Clean existing scrap joins.
+     */
+    public function clearJoins()
+    {
+        $this->_joins = array();
+    }
+    
+    /**
+     * Get existing scrap joins.
+     * 
+     * Each unique definition forms one array element.
+     * Each level has one array containing all join arguments.
+     * 
+     * @return array nested array
+     */
+    public function getJoins()
+    {
+        return $this->_joins;
+    }
+    
+    /**
+     * Add a map definition.
+     * 
+     * Example:
+     * <code>
+     * $map = new File_Therion_Map("fooMap");
+     * // $map->....
+     * $survey->addMap($map);
+     * </code>
+     * 
+     * @param File_Therion_Map $map Map object to add
+     */
+    public function addMap(File_Therion_Map $map)
+    {
+        $this->_maps[] = $map;
+    }
+    
+    /**
+     * Remove associated maps.
+     */
+    public function clearMaps()
+    {
+        $this->_maps = array();
+    }
+    
+    /**
+     * Get existing Map objects.
+     * 
+     * @return array of File_Therion_Map objects
+     */
+    public function getMaps()
+    {
+        return $this->_maps;
+    }
+    
+    /**
+     * Add a surface definition.
+     * 
+     * Example:
+     * <code>
+     * $surface = new File_Therion_Surface();
+     * // $surface->....
+     * $survey->addMap($surface);
+     * </code>
+     * 
+     * @param File_Therion_Surface $surface Surface object to add
+     */
+    public function addSurface(File_Therion_Surface $surface)
+    {
+        $this->_surface[] = $surface;
+    }
+    
+    /**
+     * Remove associated surface definitions.
+     */
+    public function clearSurface()
+    {
+        $this->_surface = array();
+    }
+    
+    /**
+     * Get existing surface objects.
+     * 
+     * @return array of File_Therion_Surface objects
+     */
+    public function getSurface()
+    {
+        return $this->_surface;
+    }
+    
     
     /**
      * Count subsurveys of this survey (SPL Countable).

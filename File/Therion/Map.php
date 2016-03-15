@@ -72,7 +72,7 @@ class File_Therion_Map
     /**
      * Parses given Therion_Line-objects into internal data structures.
      * 
-     * @param array $lines File_Therion_Line objects forming a centreline
+     * @param array $lines File_Therion_Line objects forming a map
      * @return File_Therion_Map Map object
      * @throws PEAR_Exception with wrapped lower level exception
      * @todo implement me
