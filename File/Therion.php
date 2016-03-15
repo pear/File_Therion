@@ -22,6 +22,8 @@ require_once 'File/Therion/BasicObject.abstract.php';
 require_once 'File/Therion/Line.php';
 require_once 'File/Therion/Survey.php';
 require_once 'File/Therion/Centreline.php';
+require_once 'File/Therion/Map.php';
+require_once 'File/Therion/Surface.php';
 //require_once 'File/Therion/Station.php';
 require_once 'File/Therion/Shot.php';
 require_once 'File/Therion/DataTypes/DataTypeInterface.php';
