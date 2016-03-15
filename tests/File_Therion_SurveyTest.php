@@ -349,6 +349,46 @@ class File_Therion_SurveyTest extends PHPUnit_Framework_TestCase {
         
     }
     
+    public function testParsingSubsurvey()
+    {   
+        // Basic nested survey structure
+        $sampleLines = array(
+            File_Therion_Line::parse('survey lvl_1'),
+            File_Therion_Line::parse('  survey lvl_1_1'),
+            File_Therion_Line::parse('    # content'),
+            File_Therion_Line::parse('  endsurvey'),
+            File_Therion_Line::parse('  survey lvl_1_2'),
+            File_Therion_Line::parse('    # content'),
+            File_Therion_Line::parse('    survey lvl_2_1'),
+            File_Therion_Line::parse('      # content'),
+            File_Therion_Line::parse('    endsurvey'),
+            File_Therion_Line::parse('  endsurvey'),
+            File_Therion_Line::parse('  survey lvl_1_3'),
+            File_Therion_Line::parse('    survey lvl_2_2'),
+            File_Therion_Line::parse('      # content'),
+            File_Therion_Line::parse('    endsurvey'),
+            File_Therion_Line::parse('    survey lvl_2_3'),
+            File_Therion_Line::parse('      survey lvl_2_1'),
+            File_Therion_Line::parse('        # content'),
+            File_Therion_Line::parse('      endsurvey'),
+            File_Therion_Line::parse('    endsurvey'),
+            File_Therion_Line::parse('  endsurvey'),
+            File_Therion_Line::parse('endsurvey'),
+        );
+        $sample = File_Therion_Survey::parse($sampleLines);
+        $this->assertInstanceOf('File_Therion_Survey', $sample);
+        $this->assertEquals(3, count($sample->getSurveys()));
+        $subsurveys = $sample->getSurveys();
+        $this->assertEquals(0, count($subsurveys[0]));
+        $this->assertEquals(1, count($subsurveys[1]));
+        $this->assertEquals(2, count($subsurveys[2]));
+        
+        $sample->clearSurveys();
+        $this->assertEquals(array(), $sample->getSurveys());
+        $this->assertEquals(0, count($sample->getSurveys()));
+        
+    }
+    
     
 
 }

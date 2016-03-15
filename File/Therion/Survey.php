@@ -349,6 +349,40 @@ class File_Therion_Survey
         return $this->_equates;
     }
     
+    /**
+     * Add a subsurvey.
+     * 
+     * Example:
+     * <code>
+     * $subsurvey = new File_Therion_Survey("fooSurvey");
+     * // $subsurvey->....
+     * $survey->addSurvey($subsurvey);
+     * </code>
+     * 
+     * @param File_Therion_Survey $subsurvey Survey object to add
+     */
+    public function addSurvey(File_Therion_Survey $subsurvey)
+    {
+        $this->_surveys[] = $subsurvey;
+    }
+    
+    /**
+     * Remove associated subsurveys.
+     */
+    public function clearSurveys()
+    {
+        $this->_surveys = array();
+    }
+    
+    /**
+     * Get existing subsurveys.
+     * 
+     * @return array of File_Therion_Survey objects
+     */
+    public function getSurveys()
+    {
+        return $this->_surveys;
+    }
     
     /**
      * Add a centreline definition.
