@@ -519,6 +519,13 @@ class File_Therion_LineTest extends PHPUnit_Framework_TestCase
         $sample = new File_Therion_Line('"""foobar"""');
         $this->assertEquals(array('"foobar"'), $sample->getDatafields());
         
+        $sample = new File_Therion_Line('map pdx -title "Rabbit Cave -- extended elevation"');
+        $this->assertEquals(
+            array('map', 'pdx', '-title', 'Rabbit Cave -- extended elevation'),
+            $sample->getDatafields()
+        );
+        
+        
         
         // test encoding data
         $sample = new File_Therion_Line("encoding  iso8859-2".PHP_EOL);
