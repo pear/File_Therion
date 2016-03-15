@@ -83,7 +83,7 @@ abstract class File_Therion_BasicObject
         // check basic existence of key
         if ($key!==null) {
             if (!isset($this->{"$type"}[$key])) {
-                throw new PEAR_Exception("$type: Invalid key name '$k'",
+                throw new PEAR_Exception("$type: Invalid key name '$key'",
                 new InvalidArgumentException());
             }
         }
