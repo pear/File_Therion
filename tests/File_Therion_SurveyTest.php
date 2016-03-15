@@ -327,17 +327,26 @@ class File_Therion_SurveyTest extends PHPUnit_Framework_TestCase {
     }
       
     public function testParsingCentreline()
-    {
-        // Basic survey structure with centreline
+    {   
+        // Basic survey structure with simple data
+        // Centreline will be tested extensively in the scrap test class
         $sampleLines = array(
             File_Therion_Line::parse('survey test'),
-            File_Therion_Line::parse('  join ew1:0 ew2:end'),
-            File_Therion_Line::parse('  # some othercomment'),
             File_Therion_Line::parse('  centreline'),
-            File_Therion_Line::parse('    data normal from to tape compass clino'),
+            File_Therion_Line::parse('    # content'),
+            File_Therion_Line::parse('  endcentreline'),
+            File_Therion_Line::parse('  centreline'),
+            File_Therion_Line::parse('    # content'),
             File_Therion_Line::parse('  endcentreline'),
             File_Therion_Line::parse('endsurvey'),
         );
+        $sample = File_Therion_Survey::parse($sampleLines);
+        $this->assertInstanceOf('File_Therion_Survey', $sample);
+        $this->assertEquals(2, count($sample->getCentrelines()));
+        
+        $sample->clearCentrelines();
+        $this->assertEquals(array(), $sample->getCentrelines());
+        
     }
     
     

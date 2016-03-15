@@ -349,6 +349,42 @@ class File_Therion_Survey
         return $this->_equates;
     }
     
+    
+    /**
+     * Add a centreline definition.
+     * 
+     * Example:
+     * <code>
+     * $centreline = new File_Therion_Centreline();
+     * // $centreline->....
+     * $survey->addCentreline($centreline);
+     * </code>
+     * 
+     * @param File_Therion_Centreline $centreline Centreline object to add
+     */
+    public function addCentreline(File_Therion_Centreline $centreline)
+    {
+        $this->_centrelines[] = $centreline;
+    }
+    
+    /**
+     * Remove associated centrelines.
+     */
+    public function clearCentrelines()
+    {
+        $this->_centrelines = array();
+    }
+    
+    /**
+     * Get existing Centrelines objects.
+     * 
+     * @return array of File_Therion_Centreline objects
+     */
+    public function getCentrelines()
+    {
+        return $this->_centrelines;
+    }
+    
     /**
      * Add a scrap object.
      * 
