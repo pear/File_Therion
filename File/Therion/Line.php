@@ -297,12 +297,12 @@ class File_Therion_Line implements Countable
      * </code>
      * 
      * @return array
+     * @todo: see if there are multiarg options allowed and if so, support them
      */
     public function extractOptions()
     {
         $r = array();
         $data = $this->getDatafields();
-        $lastSeenOption = "";
         for ($i=0; $i<count($data); $i++) {
             $m = array();
             if (preg_match('/^-(.+)/', $data[$i], $m)) {
