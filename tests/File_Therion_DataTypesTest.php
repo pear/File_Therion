@@ -5,7 +5,7 @@
  * PHP version 5
  *
  * @category   file
- * @package    File_Therion
+ * @package    File_Therion_Tests
  * @author     Benedikt Hallinger <beni@php.net>
  * @copyright  2016 Benedikt Hallinger
  * @license    http://www.gnu.org/licenses/lgpl-3.0.txt LGPLv3
@@ -60,6 +60,9 @@ class File_Therion_DataTypesTest extends PHPUnit_Framework_TestCase {
 
     }
     
+    /**
+     * Test Datatype Person.
+     */
     public function testPerson()
     {
         // testing of parsing direct string values

@@ -32,20 +32,20 @@ require_once 'File/Therion/DataTypes/Person.php';
 
 
 /**
- * Class representing a therion file
+ * Class representing a therion file.
  * 
- * Also serves functions to parse and write .th data to/from File_Therion objects.
+ * Also serves functions to parse and write data to/from File_Therion objects.
  *
  * Therion (http://therion.speleo.sk/) is an openSource application for managing
  * cave survey data.
  *
  * The data structure follows mostly the SQL diagram in the therion book (see
  * Chapter 'SQL export'), in short:
- *   - A .th-file contains surveys.
- *   - Surveys can be nested.
- *   - Surveys contain metadata (people etc) and one ore more centreline(s).
- *   - A Centreline contain shots and stations.
- *   - Shots and stations can contain flags.
+ * - A .th-file contains surveys.
+ * - Surveys can be nested.
+ * - Surveys contain metadata (people etc) and one ore more centreline(s).
+ * - A Centreline contain shots and stations.
+ * - Shots and stations can contain flags.
  * 
  * The Data format is specified in the therion book, but basicly a file contains
  * human readable text lines following a specific syntax and describing the
@@ -54,20 +54,24 @@ require_once 'File/Therion/DataTypes/Person.php';
  * 
  * There are two basic workflows:
  * <code>
- * // read and parse to objects:
+ * // Read datasource and parse to objects:
+ * $src = "some/local/file.th";  // may also be URL!
  * $th = new File_Therion($src); // Instanciate new datasource
  * $th->fetch();                 // Get contents (read)
  * $th->evalInputCMD();          // evaluate 'input' commands recursively
  * $th->parse();                 // Generate Therion objects to work with
+ * $survey = $th->getSurveys();  // example: retrieve parsed survey
  *
- * // craft a .th Therion file out of data model:
- * <code>
- * $survey = new File_Therion_Survey(); // ... craft data model
- * $th = new File_Therion($tgt); // Instanciate new data target
- * $th->addObject($survey);      // associate therion data model objects
- * $th->update();                // update internal line buffer out of objects
- * $th->write();                 // physically write to data target
- * $th->toString();              // altenatively: fetch  data as string
+ * 
+ * // Generate a .th Therion file out of data model:
+ * $survey = new File_Therion_Survey();
+ * // $survey->....  // do many things: craft data model
+ * $tgt = "some/local/target.th"; // usually local file
+ * $th = new File_Therion($tgt);  // Instanciate new data target
+ * $th->addObject($survey);       // associate therion data model objects
+ * $th->update();                 // update internal lines using data objects
+ * $th->write();                  // physically write to data target $tgt
+ * $th->toString();               // altenatively: fetch  data as string
  * </code>
  *
  * @category   file
@@ -128,7 +132,7 @@ class File_Therion implements Countable
     
     
     /**
-     * Create a new therion file object.
+     * Create a new therion file object representing content at $url.
      *
      * Use this to create a new interface for parsing existing files
      * or writing new ones.
@@ -218,7 +222,7 @@ class File_Therion implements Countable
     
     
     /**
-     * Update the internal line representation of this file from datsource.
+     * Update the internal line representation of this file from datasource.
      * 
      * This will open the connection to the $url and read out its contents;
      * parsing it to File_Therion_Line objects (and thereby validating syntax).
@@ -339,7 +343,7 @@ class File_Therion implements Countable
     }
     
     /**
-     * Update the line contents of this file from contained objects.
+     * Update the internal line representation of this file from contained objects.
      * 
      * This will generate therion file lines out of the associated objects.
      * 
