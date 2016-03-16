@@ -45,12 +45,18 @@ class File_Therion_Centreline
      * @var array  
      */
     protected $_data = array(
+        'author'      => array(), // 0=year, 1=Person
+        'copyright'   => array(), // 0=year, 1=string
         'title'       => "",
         'date'        => "",
         'explo-date'  => "",
         'units'       => array(),
-        'copyright'   => array(), // 0=year, 1=string
-        'declination' => array(), // 0=value, 1=unit: 0.0 grad
+        'instrument'  => array(), // assoc: [<quantity>]=<description>
+        'infer'       => array(), // assoc: [<what>]=<boolean>
+        'declination' => array(), // 0=value, 1=unit; eg. (0.0 grad)
+        'grid-angle'  => array(), // (<value> <units>)
+        'sd'          => array(), // assoc: [<quantity>]=(<value> <units>)
+        'units'       => array(), // assoc: [<quantity>]=(<factor> <units>)
     );
     
     /**
