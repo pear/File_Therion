@@ -57,6 +57,7 @@ class File_Therion_Centreline
         'grid-angle'  => array(), // (<value> <units>)
         'sd'          => array(), // assoc: [<quantity>]=(<value> <units>)
         'units'       => array(), // assoc: [<quantity>]=(<factor> <units>)
+        'station-names' => array("",""), // <prefix> <postfix>
     );
     
     /**
@@ -83,6 +84,9 @@ class File_Therion_Centreline
      * This holds the data definition order of shot elements.
      * (eg "data normal from to length bearing gradient left right up down").
      * 
+     * array is associative:
+     * - key 'style' is "normal", "diving", etc
+     * - key 'order' is "left", "right", "up", etc.
      * Index=0 is type, subsequent items define keyword
      *
      * @var array
@@ -94,11 +98,20 @@ class File_Therion_Centreline
      * 
      * This holds a associative array containing the shots.
      * Each shot is represented by an individual File_Therion_Shot object.
-     * This gives access to extended data fields.
+     * This gives access to extended data fields like flags.
      *
-     * @var array
+     * @var array with File_Therion_Shot objects.
      */
     protected $_shots = array();
+    
+    /**
+     * Centreline stations.
+     * 
+     * Stations may alter some of the shots or introduce supplementary data.
+     *
+     * @var array with File_Therion_Station objects.
+     */
+    protected $_sstations = array();
     
     /**
      * Create a new therion centreline object.
@@ -182,7 +195,13 @@ class File_Therion_Centreline
         // We delegate as much as possible, so we just honor commands
         // the local level knows about.
         // Other lines will be collected and given to a suitable parser.
-        $mode = "normal"; // data mode: parse shot data and flags etc
+        $cur_flags = array(
+            'splay'       => false,
+            'duplicate'   => false,
+            'surface'     => false,
+            'approximate' => false,
+        );
+        $dataDefinitionSeen = false;
         foreach ($orderedData as $type => $data) {
             switch ($type) {
                 case 'LOCAL':
@@ -196,12 +215,10 @@ class File_Therion_Centreline
                                 case 'input':
                                     // ignore silently because this should be 
                                     // handled at the file level
-                                    $dataMode = false;
                                 break;
                                 
                                 case 'date':
                                 case 'explo-date':
-                                    $dataMode = false;
                                     $centreline->setData($command, $lineData[0]);
                                 break;
                                 
@@ -210,21 +227,19 @@ class File_Therion_Centreline
                                 case 'declination':
                                     // just add these as arrays
                                     // todo: better handling of type syntax
-                                    $dataMode = false;
                                     $centreline->setData($command, $lineData);
                                 break;
                                 
                                 case 'team':
                                     // parse first item as person,
                                     // add remaining stuff as roles (if any)
-                                    $dataMode = false;
                                     $p_str = array_shift($lineData);
                                     $p_obj = File_Therion_Person::parse($p_str);
                                     $centreline->addTeam($p_obj, $lineData);                                    
                                 break;
                                 case 'explo-team':
-                                    $dataMode = false;
                                     $p_str = $lineData[0];
+                                    // todo: syntax error if more than 1 element
                                     $p_obj = File_Therion_Person::parse($p_str);
                                     $centreline->addExploTeam($p_obj);                                    
                                 break;
@@ -232,52 +247,72 @@ class File_Therion_Centreline
                                 
                                 case 'station':
                                    // todo
-                                   $dataMode = false;
                                 break;
                                 
                                 case 'station-names':
                                    // todo
-                                   $dataMode = false;
+                                break;
+                                
+                                case 'fix':
+                                   // todo
+                                break;
+                                
+                                case 'flags':
+                                    // set flags for following shots
+                                    // $flag=="not" activates "false"
+                                    $state = true;
+                                    foreach ($lineData as $flag) {
+                                        if ($flag == "approx") { // expand alias
+                                            $flag = "approximate";
+                                        }
+                                        if (array_key_exists($flag, $cur_flags)) {
+                                           // change flag state
+                                           $cur_flags[$flag] = $state;
+                                        }
+                                        // toggle for following flag
+                                        // (all but "not" reset the state->true)
+                                        $state = ($flag==="not")? false: true;
+                                    }
                                 break;
                                 
                                 
                                 case 'data':
                                     //data format for following shot data
-                                   // todo
-                                   $dataMode = true;
+                                   $dataDefinitionSeen = true;
+                                   $style = array_shift($lineData);
+                                   $centreline->setShotOrder($style, $lineData);
                                 break;
                                 
                                 
                                 
                                 default:
-                                    // not a valid command; see if in data mode.
-                                    if ($dataMode) {
-                                
-                                        if ($command == 'flags') {
-                                           // todo
-                                           
-                                        } elseif ($command == 'fix') {
-                                           // todo
-                                           
-                                        } elseif ($command == 'extend') {
-                                           // todo
-                                           // ignore for now; will be an issue when
-                                           // writing parsed data
-                                           
-                                        } else {
-                                            // line data, as long as the count of fields
-                                            // correspond to the definition
-                                            
-                                            // todo: parse shot
-                                            // $centreline->_shots[] =
-                                            //  new File_Therion_Shot(...);
+                                    // not a valid command!
+                                    if ($dataDefinitionSeen) {
+                                        // see if we can successfully parse
+                                        // a shot object. This will raise an
+                                        // exception if syntax fails, which
+                                        // is desired in this case.
+                                        $shotOrder = $centreline->getShotOrder();
+                                        array_unshift($lineData, $command); //readd
+                                        $shot = File_Therion_Shot::parse(
+                                            $lineData,
+                                            $shotOrder
+                                        );
+                                        
+                                        // adjust shot flags according to
+                                        // current defined flag states
+                                        foreach ($cur_flags as $fn=>$fv) {
+                                            $shot->setFlag($fn, $fv);
                                         }
+                                   
+                                        // add the shot to centreline
+                                        $centreline->addShot($shot);
                                 
-                                } else {
-                                    // not in data mode: rise exception
-                                    throw new PEAR_Exception(
-                                     "parse(): unsupported command '$command'");
-                                 }
+                                    } else {
+                                        // not in data mode: rise exception
+                                        throw new PEAR_Exception(
+                                         "parse(): unsupported command '$command'");
+                                    }
                             }
                         }
                     }
@@ -383,6 +418,69 @@ class File_Therion_Centreline
     {
         $this->_exploteam = array();
     }
+    
+    /**
+     * Add a survey shot to this centreline.
+     * 
+     * @param File_Therion_Shot $shot shot object
+     */
+    public function addShot(File_Therion_Shot $shot)
+    {
+        $this->_shots[] = $shot;
+    }
+    
+    /**
+     * Get all shots of this centreline.
+     * 
+     * @return array array of File_Therion_Shot objects.
+     */
+    public function getShots()
+    {
+        return $this->_shots;
+    }
+    
+    /**
+     * Remove all associated shots from this centreline.
+     * 
+     */
+    public function clearShots()
+    {
+        $this->_shots = array();
+    }
+    
+    /**
+     * Set ordering of shot data.
+     *
+     * @param string $style Ordering style ('normal', 'diving', ...)
+     * @param string $order Data order ('from', 'to', 'length', ...)
+     * @todo: syntax checks etc
+     */
+    public function setShotOrder($style, array $order)
+    {
+        $this->_shotDef['style'] = $style;
+        $this->_shotDef['order'] = $order;
+    }
+    
+    /**
+     * Get ordering of shot data.
+     * 
+     * @return array of data names
+     */
+    public function getShotOrder()
+    {
+        return $this->_shotDef['order'];
+    }
+    
+    /**
+     * Get ordering style of shot data.
+     * 
+     * @return string style
+     */
+    public function getShotStyle()
+    {
+        return $this->_shotDef['style'];
+    }
+    
     
     /**
      * Count number of shots of this centreline (SPL Countable).

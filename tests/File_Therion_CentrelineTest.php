@@ -210,7 +210,8 @@ class File_Therion_CentrelineTest extends PHPUnit_Framework_TestCase {
         );
         $sample = File_Therion_Centreline::parse($sampleLines);
         $this->assertInstanceOf('File_Therion_Centreline', $sample);
-        
+        $this->assertEquals(3, count($sample));  // SPL count shots
+         
     }
 
 }

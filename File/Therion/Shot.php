@@ -25,25 +25,16 @@
  * @link       http://pear.php.net/package/File_Therion/
  */
 class File_Therion_Shot
-    extends File_Therion_BasicObject
 {
     
     /**
-     * Survey options (none so far).
-     * 
-     * @var array assoc array
-     */
-    protected $_options = array();
-    
-    
-    /**
-     * Basic data elements.
+     * Basic normalized data elements.
      * 
      * @var array  
      */
-    protected $_metadata = array(
-        'from'      => "",
-        'to'        => "",
+    protected $_data = array(
+        'from'      => "", // Station
+        'to'        => "", // Station
         'length'    => "",
         'bearing'   => "",
         'gradient'  => "",
@@ -60,10 +51,10 @@ class File_Therion_Shot
      * @var array  
      */
     protected $_flags = array(
-       'surface'   => false,
-       'splay'     => false,
-       'duplicate' => false,
-        // more according to thbook
+       'surface'     => false,
+       'splay'       => false,
+       'duplicate'   => false,
+       'approximate' => false,
     );
     
     
@@ -73,6 +64,67 @@ class File_Therion_Shot
      */
     public function __construct()
     {
+    }
+    
+    /**
+     * Parse string content into a shot object using ordering information.
+     * 
+     * @param array $data  datafields to parse
+     * @param array $order therion names of datafields in correct order
+     * @return File_Therion_Shot shot object
+     * @throws File_Therion_SyntaxException in case $data does not suit $order
+     */
+    public static function parse(array $data, array $order)
+    {
+        // inspect $order: count "active" fields
+        
+        return new File_Therion_Shot();
+        
+        throw new File_Therion_SyntaxException(
+            "parse(): Invalid shot data count ("
+            .count($data)." != ".count($order).")"
+        );
+    }
+    
+    /**
+     * Set shot flag.
+     * 
+     * @param string  $flag  name of the flag.
+     * @param boolean $value true/false
+     * @throws PEAR_Exception with nested lower level exception
+     */
+    public function setFlag($flag, $value=true)
+    {
+        $value = ($value)? true : false;  // force explicitely bool
+        
+        if ($flag == "approx") $flag = "approximate"; // expand alias
+        
+        if (array_key_exists($flag, $this->_flags)) {
+            $this->_flags[$flag] = $value;
+        } else {
+            throw new PEAR_Exception("setFlag(): Invalid flag $flag",
+                new InvalidArgumentException("flag not nvalid for shot"));
+        }
+    }
+    
+    /**
+     * Get shot flag.
+     * 
+     * @param string  $flag  name of the flag.
+     * @throws PEAR_Exception with nested lower level exception
+     */
+    public function getFlag(string $flag)
+    {
+        if ($flag == "approx") {
+            // expand alias
+            $flag = "approximate";
+        }
+        if (array_key_exists($flag, $this->_flags)) {
+            return $this->_flags[$flag];
+        } else {
+            throw new PEAR_Exception("setFlag(): Invalid flag $flag",
+                new InvalidArgumentException("flag not nvalid for shot"));
+        }
     }
     
 }
