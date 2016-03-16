@@ -45,14 +45,31 @@ class File_Therion_Centreline
      * @var array  
      */
     protected $_data = array(
-        'team'        => array(),
-        'explo-team'  => array(),
+        'title'       => "",
         'date'        => "",
         'explo-date'  => "",
         'units'       => array(),
         'copyright'   => array(), // 0=year, 1=string
         'declination' => array(), // 0=value, 1=unit: 0.0 grad
     );
+    
+    /**
+     * Team members (surveying persons).
+     * 
+     * Each array item is an assoc array containing:
+     * - key='persons'  = File_Therion_Person object
+     * - key='roles'    = array of strings with roles
+     * 
+     * @var array
+     */
+    protected $_team = array();
+    
+    /**
+     * Explo-Team members (exploring persons).
+     * 
+     * @var array with File_Therion_Person objects
+     */
+    protected $_exploteam = array();
     
     /**
      * Centreline data definition.
@@ -80,10 +97,10 @@ class File_Therion_Centreline
     /**
      * Create a new therion centreline object.
      *
-     * @param string $id Name of the survey
+     * @param array $options Optional associative options array
      * @todo Restrict naming convention, not all characters are allowed!
      */
-    public function __construct($options = array())
+    public function __construct(array $options = array())
     {
         $this->setOption($options);
     }
@@ -192,10 +209,12 @@ class File_Therion_Centreline
                                 break;
                                 
                                 case 'team':
+                                    // parse first item as person,
+                                    // add remaining stuff as roles (if any)
                                     $dataMode = false;
-                                    $p_str = $lineData[0];
+                                    $p_str = array_shift($lineData);
                                     $p_obj = File_Therion_Person::parse($p_str);
-                                    $centreline->addTeam($p_obj);                                    
+                                    $centreline->addTeam($p_obj, $lineData);                                    
                                 break;
                                 case 'explo-team':
                                     $dataMode = false;
@@ -267,25 +286,96 @@ class File_Therion_Centreline
         
     }
     
-    
     /**
      * Add a surveying team member.
      * 
-     * @param File_Therion_Person team member
+     * @param File_Therion_Person $person team member
+     * @param string|array string with one role or array of strings with roles
+     * @todo add parameter checks, especially for roles param
      */
-    public function addTeam($person)
+    public function addTeam(File_Therion_Person $person, $roles = array())
     {
-        $this->_metadata['team'][] = $person;
+        if (!is_array($roles)) {
+            $roles = array($roles);
+        }
+          
+        $this->_team[] = array('person' => $person, 'roles' => $roles);
+    }
+    
+    /**
+     * Get all surveying team members.
+     * 
+     * @return array array of File_Therion_Person objects.
+     * @see {@link getTeamRoles()} for querying team roles.
+     */
+    public function getTeam()
+    {
+        $rv = array();
+        foreach ($this->_team as $tm) {
+            $rv[] = $tm['person'];
+        }
+        return $rv;
+    }
+    
+    /**
+     * Remove all associated team members.
+     * 
+     */
+    public function clearTeam()
+    {
+        $this->_team = array();
+    }
+    
+    /**
+     * Get surveying roles of a team member.
+     * 
+     * Note that exploring team members have no roles.
+     * 
+     * @param File_Therion_Person $person team member.
+     * @return array string array with surveying roles of that person.
+     * @throws OutOfBoundsException in case person is no surveying team member.
+     */
+    public function getTeamRoles(File_Therion_Person $person)
+    {
+        foreach ($this->_team as $tm) {
+            if ($person == $tm['person']) {
+                return $tm['roles'];
+            }
+        }
+        
+        // in case no such team member:
+        throw new OutOfBoundsException(
+            "No such team member: ".$person->toString()
+        );
     }
     
     /**
      * Add a team member which explored.
      * 
-     * @param File_Therion_Person team member
+     * @param File_Therion_Person $person team member
      */
-    public function addExploTeam($person)
+    public function addExploTeam(File_Therion_Person $person)
     {
-        $this->_metadata['explo-team'][] = $person;
+        $this->_exploteam[] = $person;
+    }
+    
+    /**
+     * Get all exploring team members.
+     * 
+     * @return array array of File_Therion_Person objects.
+     */
+    public function getExploTeam()
+    {
+        return $this->_exploteam;
+    }
+    
+    /**
+     * Remove all associated exploring team members.
+     * 
+     */
+    public function clearExploTeam()
+    {
+        $this->_exploteam = array();
     }
     
     /**
