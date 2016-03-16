@@ -73,11 +73,13 @@ class File_Therion_Shot
      * @param array $order therion names of datafields in correct order
      * @return File_Therion_Shot shot object
      * @throws File_Therion_SyntaxException in case $data does not suit $order
+     * @todo implement me
      */
     public static function parse(array $data, array $order)
     {
         // inspect $order: count "active" fields
         
+        // TODO: Implement me please
         return new File_Therion_Shot();
         
         throw new File_Therion_SyntaxException(
