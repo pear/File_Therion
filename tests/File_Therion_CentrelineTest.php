@@ -211,7 +211,26 @@ class File_Therion_CentrelineTest extends PHPUnit_Framework_TestCase {
         $sample = File_Therion_Centreline::parse($sampleLines);
         $this->assertInstanceOf('File_Therion_Centreline', $sample);
         $this->assertEquals(3, count($sample));  // SPL count shots
-         
+        
+        $shots = $sample->getShots();
+        $this->assertEquals('0',  $shots[0]->getFrom());
+        $this->assertEquals('1',  $shots[0]->getTo());
+        $this->assertEquals(200,  $shots[0]->getBearing());
+        $this->assertEquals(-5,   $shots[0]->getGradient());
+        $this->assertEquals(6.4,  $shots[0]->getLength());
+        
+        $this->assertEquals('1',  $shots[1]->getFrom());
+        $this->assertEquals('2',  $shots[1]->getTo());
+        $this->assertEquals(73,   $shots[1]->getBearing());
+        $this->assertEquals(8,    $shots[1]->getGradient());
+        $this->assertEquals(5.2,  $shots[1]->getLength());
+        
+        $this->assertEquals('2',  $shots[2]->getFrom());
+        $this->assertEquals('3',  $shots[2]->getTo());
+        $this->assertEquals(42,   $shots[2]->getBearing());
+        $this->assertEquals(0,    $shots[2]->getGradient());
+        $this->assertEquals(2.09, $shots[2]->getLength());
+        
     }
 
 }
