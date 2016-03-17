@@ -80,14 +80,14 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
         try {
             $sample = new File_Therion("no_file");
             $sample->addLine("string");
-        } catch (PEAR_Exception $e) {
-            $this->assertInstanceOf('PEAR_Exception', $e);
+        } catch (Exception $e) {
+            $this->assertInstanceOf('InvalidArgumentException', $e);
         }
         try {
             $sample = new File_Therion("no_file");
             $sample->addLine(new File_Therion_Line("some content"), "notAnInt");
-        } catch (PEAR_Exception $e) {
-            $this->assertInstanceOf('PEAR_Exception', $e);
+        } catch (Exception $e) {
+            $this->assertInstanceOf('InvalidArgumentException', $e);
         }
 
         

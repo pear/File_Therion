@@ -74,13 +74,13 @@ class File_Therion_Map
      * 
      * @param array $lines File_Therion_Line objects forming a map
      * @return File_Therion_Map Map object
-     * @throws PEAR_Exception with wrapped lower level exception
+     * @throws InvalidArgumentException
      * @todo implement me
      */
     public static function parse($lines)
     {
         if (!is_array($lines)) {
-            throw new PEAR_Exception(
+            throw new InvalidArgumentException(
                 'parse(): Invalid $lines argument (expected array, seen:'
                 .gettype($lines).')'
             );
@@ -104,8 +104,9 @@ class File_Therion_Map
             }
                 
         } else {
-            throw new PEAR_Exception("parse(): Invalid $line argument @1",
-                new InvalidArgumentException("passed type='".gettype($firstLine)."'"));
+            throw new InvalidArgumentException(
+                "Invalid $line argument @1 passed type='"
+                .gettype($firstLine)."'");
         }
         
         // Pop last last line and control that it was the end tag
@@ -119,8 +120,9 @@ class File_Therion_Map
             }
             
         } else {
-            throw new PEAR_Exception("parse(): Invalid $line argument @last",
-                new InvalidArgumentException("passed type='".gettype($lastLine)."'"));
+            throw new InvalidArgumentException(
+                "Invalid $line argument @last passed type='"
+                .gettype($lastLine)."'");
         }
         
         

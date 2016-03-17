@@ -15,8 +15,6 @@
 /**
  * Package includes.
  */
-require_once 'PEAR.php';
-require_once 'PEAR/Exception.php';
 require_once 'File/Therion/Exception.php';
 require_once 'File/Therion/BasicObject.abstract.php';
 require_once 'File/Therion/Line.php';
@@ -152,7 +150,7 @@ class File_Therion implements Countable
      * </code>
      *
      * @param string $url path or URL of the file
-     * @throws PEAR_Exception with wrapped lower level exception
+     * @throws File_Therion_Exception with wrapped lower level exception
      */
     public function __construct($url)
     {
@@ -169,7 +167,7 @@ class File_Therion implements Countable
      * 
      * Be aware that this function cleans all references to associated objects.
      *
-     * @throws PEAR_Exception with wrapped lower level exception (InvalidArgumentException, etc)
+     * @throws InvalidArgumentException
      * @throws File_Therion_SyntaxException if parse errors occur
      */
     public function parse()
@@ -210,7 +208,8 @@ class File_Therion implements Countable
                 break;
                 
                 default:
-                    throw new PEAR_Exception("parse(): unsupported type '$type'");
+                    throw new File_Therion_SyntaxException(
+                        "unsupported multiline command '$type'");
             }
         } 
         
@@ -233,7 +232,8 @@ class File_Therion implements Countable
      * After fetching physical content, you may call {@link parse()} to generate
      * Therion data model objects out of it.
      *
-     * @throws PEAR_Exception with wrapped lower level exception
+     * @throws File_Therion_IOException
+     * @throws InvalidArgumentException
      * @todo Honor input encoding
      */
     public function fetch()
@@ -271,7 +271,9 @@ class File_Therion implements Countable
                     // its not a real URL - see if there is such a file
                     if (file_exists($this->_url)) {
                         if (!is_readable($this->_url)) {
-                            throw new PEAR_Exception("File '".$this->_url."' is not readable!");
+                            throw new File_Therion_IOException(
+                                "File '".$this->_url."' is not readable!"
+                            );
                         }
                         
                         // open and read out
@@ -283,9 +285,9 @@ class File_Therion implements Countable
                         
                     } else {
                         // bail out: invalid parameter
-                        throw new PEAR_Exception(
-                          'fetch(): $url \''.$this->_url.'\' not readable nor a valid URL!',
-                          new InvalidArgumentException("passed type='".gettype($this->_url)."'"));
+                        throw new InvalidArgumentException(
+                          'fetch(): $url \''.$this->_url
+                          .'\' not readable nor a valid URL!');
                     }
                 }
                 break;
@@ -293,8 +295,10 @@ class File_Therion implements Countable
 
             default:
                 // bail out: invalid parameter
-                throw new PEAR_Exception('fetch(): unsupported $url type!',
-                  new InvalidArgumentException("passed type='".gettype($this->_url)."'"));
+                throw new InvalidArgumentException(
+                    'fetch(): unsupported $url type!'.
+                    "passed type='".gettype($this->_url)."'"
+                );
 
         }
         
@@ -358,7 +362,7 @@ class File_Therion implements Countable
     }
      
      
-     /**
+    /**
      * Add a line to this file.
      * 
      * The optional lineNumber parameter allows to adjust the insertion
@@ -401,13 +405,15 @@ class File_Therion implements Countable
      * @param File_Therion_Line $line Line to add
      * @param int  $lineNumber At which logical position to add (-1=end, 0=first line, ...)
      * @param bool $replace when true, the target line will be overwritten
-     * @throws PEAR_Exception with wrapped lower level exception
+     * @throws InvalidArgumentException
      */
     public function addLine($line, $lineNumber=-1, $replace=false)
     {
         if (!is_a($line, 'File_Therion_Line')) {
-            throw new PEAR_Exception('addLine(): Invalid $line argument!',
-                  new InvalidArgumentException("passed type='".gettype($line)."'"));
+            throw new InvalidArgumentException(
+                'addLine(): Invalid $line argument! '.
+                "passed type='".gettype($line)."'"
+            );
         }
         
         // synonyms+checks for lineNumber
@@ -417,8 +423,10 @@ class File_Therion implements Countable
             $lineNumber = -1;
         } else {
             if (!is_int($lineNumber)) {
-                throw new PEAR_Exception('addLine(): Invalid $lineNumber argument!',
-                 new InvalidArgumentException("int expected, or string 'start' or 'end'"));
+                throw new InvalidArgumentException(
+                    'addLine(): Invalid $lineNumber argument! '
+                    ."int expected, or string 'start' or 'end'"
+                );
             }
         }
         
@@ -450,7 +458,7 @@ class File_Therion implements Countable
     }
      
      
-     /**
+    /**
      * Clear associated lines.
      * 
      * This will wipe out the internal line buffer.
@@ -460,7 +468,7 @@ class File_Therion implements Countable
          $this->_lines = array();
      }
      
-     /**
+    /**
      * Clear associated objects.
      * 
      * This will unassociate all registered objects.
@@ -472,7 +480,7 @@ class File_Therion implements Countable
          $this->_objects = array();
     }
      
-     /**
+    /**
      * Add an File_Therion data model object to this file
      * 
      * Associated objects can be written to a file after {@link update()}
@@ -489,7 +497,7 @@ class File_Therion implements Countable
          $this->_objects[] = $thObj;
     }
      
-     /**
+    /**
      * Get all associated objects.
      * 
      * You can optionaly query for specific types using $filter.
@@ -504,6 +512,7 @@ class File_Therion implements Countable
      *
      * @param string $filter File_Therion_* class name, retrieve only objects of that kind
      * @return array of File_Therion_* objects (empty array if no such objects)
+     * @throws InvalidArgumentException
      */
     public function getObjects($filter = null)
     {
@@ -517,11 +526,8 @@ class File_Therion implements Countable
             
             $supported = "Survey"; // todo: support more types
             if (!preg_match('/^File_Therion_(?:'.$supported.')$/', $filter)) {
-                throw new PEAR_Exception(
-                    'getObjects(): Invalid $filter argument ('.$filter.')!',
-                    new InvalidArgumentException(
-                        "unsupported filter='".$filter."'"
-                    )
+                throw new InvalidArgumentException(
+                    'getObjects(): Invalid $filter argument ('.$filter.')!'
                 );
             }
             
@@ -535,7 +541,7 @@ class File_Therion implements Countable
         }
     }
      
-     /**
+    /**
      * Write this therion file content to the file.
      *  
      * This will overwrite the file denoted with {@link $_url}.
@@ -548,7 +554,7 @@ class File_Therion implements Countable
      *
      * @param  string|ressource $survey Therion_Survey object to write
      * @param  array            $options Options for the writer
-     * @throws Pear_Exception   with wrapped lower level exception (InvalidArgumentException, etc)
+     * @throws File_Therion_IOException 
      * @todo write to target encoding
      */
     public function write()
@@ -566,12 +572,12 @@ class File_Therion implements Countable
             $fh = $this->_url;
         }
         if (!is_writable($fh)) {
-           throw new Pear_Exception("'".$this->_url."' is not writable!");
+           throw new File_Therion_IOException("'".$this->_url."' is not writable!");
         }
          
         // then dump that string to the datasource:
         if (!fwrite($fh, $stringContent)) {
-            throw new Pear_Exception("error writing to '".$this->_url."' !");
+            throw new File_Therion_IOException("error writing to '".$this->_url."' !");
         }
     }
     
@@ -601,7 +607,7 @@ class File_Therion implements Countable
         foreach ($this->_lines as $line) {
             if ($this->_wrapAt > 0) {
                 // todo: honor wrapping request by user
-                throw new PEAR_Exception('WRAPPING FEATURE NOT IMPLEMENTED');
+                throw new File_Therion_Exception('WRAPPING FEATURE NOT IMPLEMENTED');
             }
             $ret .= $line->toString();
         }
@@ -614,13 +620,13 @@ class File_Therion implements Countable
      * This will just change the path, no data will be read/written!
      * 
      * @param string|ressource $url filename/url or handle
+     * @throws InvalidArgumentException in case $url is no string or ressource
      */
     public function setURL($url)
     {
         if (!is_string($url) && !is_resource($url)) {
-            throw new PEAR_Exception(
-                'Invalid datasource/target type supplied ('.gettype($url).')!',
-                new InvalidArgumentException()
+            throw new InvalidArgumentException(
+                'Invalid datasource/target type supplied ('.gettype($url).')!'
             );
         }
         $this->_url = $url;
@@ -644,12 +650,12 @@ class File_Therion implements Countable
      * (eg. ending the line with backslash and continuing it on the next one).
      * 
      * @param int $wrapAt wrap at this column, 0=disable
+     * @throws InvalidArgumentException
      */
     public function setWrapping($wrapAt)
     {
         if (!is_int($wrapAt)) {
-            throw new PEAR_Exception('setWrapping(): Invalid $wrapAt argument!',
-                  new InvalidArgumentException("passed type='".gettype($wrapAt)."'"));
+            throw new InvalidArgumentException('Invalid $wrapAt argument!');
         }
         $this->_wrapAt = $wrapAt;
     }
@@ -746,7 +752,10 @@ class File_Therion implements Countable
      * $lvls parameter (null/default: endless, 0: no input, >0: nested levels).
      * 
      * @param  int $lvls remaining levels to input
-     * @throws PEAR_Exception with wrapped subexception in case of resolution error
+     * @throws InvalidArgumentException when input command is invalid pointer
+     * @throws File_Therion_IOException in case of reading problems
+     * @throws File_Therion_SyntaxException case of parsing/syntax errors
+     * @todo support relative URLs
      */
     public function evalInputCMD($lvls = null) {
         // check nesting limit
@@ -763,7 +772,7 @@ class File_Therion implements Countable
             $curline  =& $this->_lines[$i];
             $lineData = $curline->getDatafields();
             if (isset($lineData[0]) && $lineData[0] == 'input') {
-                // TODO: try to guess datasource relative to
+                // Try to guess datasource relative to
                 //   - url:    path is relative to local url
                 //   - string: path is either absolute or relative to current file
                 //   - other:  unable to handle -> exception
@@ -771,16 +780,14 @@ class File_Therion implements Countable
                 $localURL = $this->_url;
                 if (is_string($localURL) && preg_match('?^\w+://?', $localURL)) {
                     // real URL: TODO
-                    throw new PEAR_Exception("evalInputCMD(): unsupported feature: input type URL");
+                    throw new File_Therion_Exception("unsupported feature: input type URL");
                 } elseif (is_string($localURL)) {
                     // its a plain string (file path)
                     $remotePath = dirname($localURL).'/'.$remotePath;
                     
                 } else {
-                    // other: we cant guess it
-                    throw new PEAR_Exception(
-                        'evalInputCMD() Invalid $url type!',
-                        new InvalidArgumentException());
+                    // other: we can't guess it
+                    throw new InvalidArgumentException('Invalid $url type!');
                 }
                 
                 // when $url basename has no filename extension, append ".th".
@@ -794,6 +801,7 @@ class File_Therion implements Countable
                 $tmpFile->setEncoding($this->_encoding);
                 
                 // fetch datasource and eval input commands there
+                // may throw File_Therion_IOException, which bubbles up
                 $tmpFile->fetch();
                 
                 // eval nested input commands in those lines;
@@ -848,6 +856,7 @@ class File_Therion implements Countable
      * @todo: deal with nested structures: each call to extract... should deal with just one level
      * @param array $lines array of File_Therion_Line objects
      * @return array with ordered lines
+     * @throws InvalidArgumentException when $lines is not strictly Line-objects
      */
     public static function extractMultilineCMD($lines)
     {
@@ -882,9 +891,8 @@ class File_Therion implements Countable
         $curCTX  = $baseCTX;
         foreach ($lines as $line) {
             if (!is_a($line, 'File_Therion_Line')) {
-                 throw new PEAR_Exception(
-                        'extractMultilineCMD() Invalid $line type!',
-                        new InvalidArgumentException());
+                 throw new InvalidArgumentException(
+                        'extractMultilineCMD() Invalid $line object type!');
             }
                  
             // investigate command type of line and determine context

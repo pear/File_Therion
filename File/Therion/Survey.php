@@ -123,13 +123,14 @@ class File_Therion_Survey
      * 
      * @param array $lines array of File_Therion_Line objects containing a survey
      * @return File_Therion_Survey Survey object
-     * @throws PEAR_Exception with wrapped lower level exception
+     * @throws InvalidArgumentException
+     * @throws File_Therion_SyntaxException for therion syntax errors
      * @todo implement me
      */
     public static function parse($lines)
     {        
         if (!is_array($lines)) {
-            throw new PEAR_Exception(
+            throw new InvalidArgumentException(
             'parse(): Invalid $lines argument (expected array)');
         }
         
@@ -155,8 +156,10 @@ class File_Therion_Survey
             }
                 
         } else {
-            throw new PEAR_Exception("parse(): Invalid $line argument @1",
-                new InvalidArgumentException("passed type='".gettype($firstLine)."'"));
+            throw new InvalidArgumentException(
+                "parse(): Invalid $line argument @1"
+                ."passed type='".gettype($firstLine)."'"
+            );
         }
         
         // Pop last last line and control that it was the end tag
@@ -170,8 +173,8 @@ class File_Therion_Survey
             }
             
         } else {
-            throw new PEAR_Exception("parse(): Invalid $line argument @last",
-                new InvalidArgumentException("passed type='".gettype($lastLine)."'"));
+            throw new InvalidArgumentException("Invalid $line argument @last; "
+                ."passed type='".gettype($lastLine)."'");
         }
         
         
@@ -213,7 +216,7 @@ class File_Therion_Survey
                                 break;
                                 
                                 default:
-                                    throw new PEAR_Exception(
+                                    throw new File_Therion_SyntaxException(
                                      "parse(): unsupported command '$command'");
                             }
                         }
@@ -261,7 +264,9 @@ class File_Therion_Survey
                 break;
                 
                 default:
-                    throw new PEAR_Exception("parse(): unsupported type '$type'");
+                    throw new File_Therion_SyntaxException(
+                        "unsupported multiline command '$type'"
+                    );
             }
         } 
         
@@ -302,6 +307,8 @@ class File_Therion_Survey
      * 
      * @param string|array station equates.
      * @todo support station objects
+     * @throws InvalidArgumentException
+     * @throws File_Therion_SyntaxException
      * @todo add syntax checks
      */
     public function addEquate($src=null, ...$tgts)
@@ -314,13 +321,13 @@ class File_Therion_Survey
         
         // check parameters
         if (count($merged) < 2) {
-            throw new PEAR_Exception("addEquate(): Missing argument",
-               new InvalidArgumentException("expected >=2 elements"));
+            throw new File_Therion_SyntaxException(
+                "Missing argument: expected >=2 elements");
         }
         foreach ($merged as $j) {
             if (!is_string($j)) {
-                throw new PEAR_Exception("addEquate(): Invalid argument",
-                    new InvalidArgumentException("expected string"));
+                throw new File_Therion_SyntaxException(
+                    "addEquate(): Invalid argument expected string");
             }
         }
         
@@ -464,6 +471,7 @@ class File_Therion_Survey
      * </code>
      * 
      * @param string|array $join Single or multiple scrap joins.
+     * @throws File_Therion_SyntaxException
      * @todo maybe invent join datatype and consider this too...
      * @todo add syntax checks
      */
@@ -478,13 +486,13 @@ class File_Therion_Survey
         
         // check parameters
         if (count($merged) < 2) {
-            throw new PEAR_Exception("addJoin(): Missing argument",
-                new InvalidArgumentException("expected >=2 elements"));
+            throw new File_Therion_SyntaxException(
+                "Missing argument: expected >=2 elements");
         }
         foreach ($merged as $j) {
             if (!is_string($j)) {
-                throw new PEAR_Exception("addJoin(): Invalid argument",
-                    new InvalidArgumentException("expected string"));
+                throw new File_Therion_SyntaxException(
+                    "Invalid argument expected string");
             }
         }
         

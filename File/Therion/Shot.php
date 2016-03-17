@@ -93,7 +93,7 @@ class File_Therion_Shot
      * 
      * @param string  $flag  name of the flag.
      * @param boolean $value true/false
-     * @throws PEAR_Exception with nested lower level exception
+     * @throws InvalidArgumentException
      */
     public function setFlag($flag, $value=true)
     {
@@ -104,8 +104,8 @@ class File_Therion_Shot
         if (array_key_exists($flag, $this->_flags)) {
             $this->_flags[$flag] = $value;
         } else {
-            throw new PEAR_Exception("setFlag(): Invalid flag $flag",
-                new InvalidArgumentException("flag not nvalid for shot"));
+            throw new InvalidArgumentException(
+                "Invalid flag $flag; flag not nvalid for shot");
         }
     }
     
@@ -113,7 +113,7 @@ class File_Therion_Shot
      * Get shot flag.
      * 
      * @param string  $flag  name of the flag.
-     * @throws PEAR_Exception with nested lower level exception
+     * @throws InvalidArgumentException
      */
     public function getFlag(string $flag)
     {
@@ -124,8 +124,8 @@ class File_Therion_Shot
         if (array_key_exists($flag, $this->_flags)) {
             return $this->_flags[$flag];
         } else {
-            throw new PEAR_Exception("setFlag(): Invalid flag $flag",
-                new InvalidArgumentException("flag not nvalid for shot"));
+            throw new InvalidArgumentException(
+                "Invalid flag $flag; flag not valid for shot");
         }
     }
     

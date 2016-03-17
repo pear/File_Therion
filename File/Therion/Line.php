@@ -73,7 +73,7 @@ class File_Therion_Line implements Countable
      * @param string|array $data    data of the line
      * @param string $comment comment of the line
      * @param string $indent  intent characters
-     * @throws PEAR_Exception with wrapped lower level exception
+     * @throws InvalidArgumentException
      */
     public function __construct($data, $comment = '', $indent = '')
     {
@@ -89,9 +89,8 @@ class File_Therion_Line implements Countable
             $this->addData($indent, $stringData, $comment);
           
         } else {               
-            throw new PEAR_Exception(
-                'cannot construct new Line: Invalid data type!',
-                new InvalidArgumentException());
+            throw new InvalidArgumentException(
+                'cannot construct new Line: Invalid $data type!');
         }    
     }
     
@@ -122,6 +121,7 @@ class File_Therion_Line implements Countable
      * 
      * @param string|File_Therion_Line  $line physical line or Line object
      * @throws File_Therion_SyntaxException in case the Line did not expect additional wrapped content
+     * @throws InvalidArgumentException
      */
     public function addPhysicalLine($line)
     {
@@ -131,7 +131,8 @@ class File_Therion_Line implements Countable
             
         } else {
             if (!is_a($line, 'File_Therion_Line')) {
-                throw new PEAR_Exception('addPhysicalLine(): Invalid $line type!', new InvalidArgumentException());
+                throw new InvalidArgumentException(
+                    'addPhysicalLine(): Invalid $line type!');
             }
             //foreach ($line->_content as $cl) {
             //    $this->addData($cl['indent'], $cl['data'], $cl['comment']);
@@ -148,21 +149,21 @@ class File_Therion_Line implements Countable
      * @param string  $indent  intent characters
      * @param boolean $indent  in case the line expects further data
      * @throws File_Therion_SyntaxException in case the Line did not expect additional wrapped content
-     * @throws PEAR_Exception in case of parsmeter errors (with wrapped lower level exception)
+     * @throws InvalidArgumentException
      */
     protected function addData($indent, $data, $comment)
     {
         if (!is_string($indent)) {
-            throw new PEAR_Exception('addData(): Invalid $indent argument!',
-              new InvalidArgumentException("passed type='".gettype($file)."'"));
+            throw new InvalidArgumentException(
+                "Invalid $indent argument! passed type='".gettype($file)."'");
         }
         if (!is_string($data)) {
-            throw new PEAR_Exception('addData(): Invalid $data argument!',
-              new InvalidArgumentException("passed type='".gettype($file)."'"));
+            throw new InvalidArgumentException(
+                "Invalid $data argument! passed type='".gettype($file)."'");
         }
         if (!is_string($comment)) {
-            throw new PEAR_Exception('addData(): Invalid $comment argument!',
-              new InvalidArgumentException("passed type='".gettype($file)."'"));
+            throw new InvalidArgumentException(
+                "Invalid $comment argument! passed type='".gettype($file)."'");
         }
                  
         // Detect if this line expects further lines...
@@ -494,7 +495,10 @@ class File_Therion_Line implements Countable
         }
         
         if (!is_a($preceedingLineObj, 'File_Therion_Line')) {
-            throw new PEAR_Exception('detectWrapContinuation(): Invalid $priorLine argument!', new InvalidArgumentException("passed type='".gettype($priorLine)."', expected File_Therion_Line")); ;
+            throw new InvalidArgumentException(
+                'detectWrapContinuation(): Invalid $priorLine argument! '
+                ."passed type='".gettype($priorLine)
+                ."', expected File_Therion_Line");
         } else {
             return $preceedingLineObj->isContinued();
         }

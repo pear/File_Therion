@@ -130,14 +130,15 @@ class File_Therion_Centreline
      * 
      * @param array $lines File_Therion_Line objects forming a centreline
      * @return File_Therion_Centreline Centreline object
-     * @throws PEAR_Exception with wrapped lower level exception
+     * @throws InvalidArgumentException
+     * @throws File_Therion_SyntaxException
      * @todo implement me
      */
     public static function parse($lines)
     {
         if (!is_array($lines)) {
-            throw new PEAR_Exception(
-                'parse(): Invalid $lines argument (expected array, seen:'
+            throw new InvalidArgumentException(
+                'Invalid $lines argument (expected array, seen:'
                 .gettype($lines).')'
             );
         }
@@ -163,8 +164,9 @@ class File_Therion_Centreline
             }
                 
         } else {
-            throw new PEAR_Exception("parse(): Invalid $line argument @1",
-                new InvalidArgumentException("passed type='".gettype($firstLine)."'"));
+            throw new InvalidArgumentException(
+                "Invalid $line argument @1; passed type='"
+                .gettype($firstLine)."'");
         }
         
         // Pop last last line and control that it was the end tag
@@ -178,8 +180,9 @@ class File_Therion_Centreline
             }
             
         } else {
-            throw new PEAR_Exception("parse(): Invalid $line argument @last",
-                new InvalidArgumentException("passed type='".gettype($lastLine)."'"));
+            throw new InvalidArgumentException(
+                "Invalid $line argument @last; passed type='"
+                .gettype($lastLine)."'");
         }
         
         
@@ -310,8 +313,8 @@ class File_Therion_Centreline
                                 
                                     } else {
                                         // not in data mode: rise exception
-                                        throw new PEAR_Exception(
-                                         "parse(): unsupported command '$command'");
+                                        throw new File_Therion_Exception(
+                                         "unsupported command '$command'");
                                     }
                             }
                         }
@@ -319,7 +322,9 @@ class File_Therion_Centreline
                 break;
                 
                 default:
-                    throw new PEAR_Exception("parse(): unsupported type '$type'");
+                    throw new File_Therion_SyntaxException(
+                        "unsupported multiline command '$type'"
+                    );
             }
         } 
         

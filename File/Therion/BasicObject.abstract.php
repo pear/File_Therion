@@ -70,32 +70,30 @@ abstract class File_Therion_BasicObject
      * @param string     $key   key to check (if != null)
      * @param string     $value value to check against (if != null)
      * @return true in case everything was ok
-     * @throws PEAR_Exception with InvalidArgumentException in case of failure
+     * @throws InvalidArgumentException in case of verification failure
      */
     protected function _verify($type, $key=null, $value=null)
     {
         // check basic existence of type
         if (!isset($this->{"$type"})) {
-            throw new PEAR_Exception("Invalid type name '$type'",
-                new InvalidArgumentException());
+            throw new InvalidArgumentException("Invalid type name '$type'");
         }
         
         // check basic existence of key
         if ($key!==null) {
             if (!isset($this->{"$type"}[$key])) {
-                throw new PEAR_Exception("$type: Invalid key name '$key'",
-                new InvalidArgumentException());
+                throw new InvalidArgumentException(
+                    "$type: Invalid key name '$key'");
             }
         }
         
         // check that passed value is of correct type
         if ($value!==null) {
             if (gettype($this->{"$type"}[$key]) !== gettype($value)) {
-                throw new PEAR_Exception(
+                throw new InvalidArgumentException(
                     "$type [$key]: Invalid value type '".gettype($value)."'! "
                     ."passed option='$key'; type='".gettype($value)
-                    ."'; expected='".gettype($this->{"$type"}[$key])."'",
-                    new InvalidArgumentException()
+                    ."'; expected='".gettype($this->{"$type"}[$key])."'"
                 );
             }
         }
@@ -124,7 +122,7 @@ abstract class File_Therion_BasicObject
      * @param array $option option (or associative array of options) to set
      * @param array $value when $options is no array: value to set
      * @see {@link $_options}
-     * @throws PEAR_Exception with InvalidArgumentException
+     * @throws InvalidArgumentException when option is not defined
      */
     public function setOption($option, $value=null)
     {
@@ -147,7 +145,7 @@ abstract class File_Therion_BasicObject
      * @param string $option option key to get
      * @return mixed depending on option
      * @see {@link $_options}
-     * @throws PEAR_Exception with InvalidArgumentException
+     * @throws InvalidArgumentException when option is not defined
      */
      public function getOption($option)
      {
@@ -167,7 +165,7 @@ abstract class File_Therion_BasicObject
      * @param array $key name (or associative array of data) to set
      * @param array $value when $key is no array: value to set
      * @see {@link $_data}
-     * @throws PEAR_Exception with InvalidArgumentException
+     * @throws InvalidArgumentException when option is not defined
      */
      protected function setData($key, $value=null)
      {
@@ -194,7 +192,7 @@ abstract class File_Therion_BasicObject
      * @param string $key data key to get
      * @return mixed depending on option
      * @see {@link $_data}
-     * @throws PEAR_Exception with InvalidArgumentException
+     * @throws InvalidArgumentException when option is not defined
      */
      protected function getData($key)
      {
