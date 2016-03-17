@@ -72,20 +72,117 @@ class File_Therion_Shot
      * @param array $data  datafields to parse
      * @param array $order therion names of datafields in correct order
      * @return File_Therion_Shot shot object
-     * @throws File_Therion_SyntaxException in case $data does not suit $order
-     * @todo implement me
+     * @throws File_Therion_SyntaxException
+     * @throws InvalidArgumentException
+     * @todo implement more fields (currently just basic normal data fields)
      */
     public static function parse(array $data, array $order)
     {
-        // inspect $order: count "active" fields
+        if (count($order) < 1) {
+            throw new InvalidArgumentException(
+                "data readings order must at least have one value"
+            );
+        }
         
-        // TODO: Implement me please
-        return new File_Therion_Shot();
+        // inspect $order and parse value in correct field.
+        //
+        // Therion book says: station, from, to, tape/length, 
+        // [back]compass/[back]bearing, [back]clino/[back]gradient, depth,
+        // fromdepth, todepth, depthchange, counter, fromcount, tocount,
+        // northing, easting, altitude, up/ceiling, down/floor, left,
+        // right, ignore, ignoreall.
+        $shot = new File_Therion_Shot();
+        $lastParsedOrder = null;
+        foreach ($order as $o) {
+            $lastParsedOrder = $o; // just for the record
+            
+            $value = array_shift($data); // get next corresponding value
+            
+            // Determine parsing action and carry it out
+            switch ($o) {
+                // Normal fields: they have corresponding method names
+                case 'from':
+                    $shot->setFrom($value);
+                    break;
+                case 'to':
+                    $shot->setTo($value);
+                    break;
+                case 'length':
+                    $shot->setLength($value);
+                    break;
+                case 'bearing':
+                    $shot->setBearing($value);
+                    break;
+                case 'gradient':
+                    $shot->setGradient($value);
+                    break;
+                    
+                // Dimensions need separate method names
+                case 'up':
+                    $shot->setUpDimension($value);
+                    break;
+                case 'down':
+                    $shot->setDownDimension($value);
+                    break;
+                case 'left':
+                    $shot->setLeftDimension($value);
+                    break;
+                case 'right':
+                    $shot->setRightDimension($value);
+                    break;
+                
+                // Aliases of internal fields
+                case 'tape':
+                    $shot->setLength($value);
+                    break;
+                case 'compass':
+                    $shot->setBearing($value);
+                    break;
+                case 'clino':
+                    $shot->setGradient($value);
+                    break;
+                case 'ceiling':
+                    $shot->setUpDimension($value);
+                    break;
+                case 'floor':
+                    $shot->setDownDimension($value);
+                    break;
+                    
+                // TODO: support backwards readings; this should stay untouched
+                //       to enable proper export of original data.
+                //       However we need extra functions to let the user adjust.
+                
+                
+                // TODO: Support more fields from the book
+                
+                // ignored field: ignore :)
+                case 'ignore':
+                    $i_ord[] = 'ignore';
+                    break;
+                // ignoreall field: ignore and stop parsing
+                case 'ignoreall':
+                    $i_ord[] = 'ignoreall';
+                    break 2;
+                    
+                
+                default:
+                    throw new File_Therion_SyntaxException(
+                        "unknown/unsupported data readings order type '$o'"
+                    );
+            }
+        }
         
-        throw new File_Therion_SyntaxException(
-            "parse(): Invalid shot data count ("
-            .count($data)." != ".count($order).")"
-        );
+        // Done with parsing.
+        // In case we have still valid data left and the last field was not a
+        // 'ignoreall' one, we have a syntax error.
+        if ($lastParsedOrder != 'ignoreall' && count($data) > 0) {
+            throw new File_Therion_SyntaxException(
+                count($data)." data elements left after parsing "
+                .count($order)." fields"
+            );
+        }
+        
+        return $shot;
     }
     
     /**
@@ -234,6 +331,8 @@ class File_Therion_Shot
      
      /**
      * Set from (source) station.
+     * 
+     * When station name is "-" or ".", then the splay flag is set implicitely.
      * 
      * @param string $station
      */
@@ -435,6 +534,25 @@ class File_Therion_Shot
         $r = $b*-1;
         
         return $r;
+    }
+    
+    /**
+     * Swap direction of measurement of this shot.
+     * 
+     * This will swap the from and to stations and adjust bearing and gradient.
+     */
+    public function reverse()
+    {
+        // swap stations
+        $f = $this->getFrom();
+        $this->setFrom($this->getTo());
+        $this->setTo($f);
+        
+        // swap bearing
+        $this->setBearing($this->getBackBearing());
+        
+        // swap gradient
+        $this->setGradient($this->getBackGradient());
     }
 }
 
