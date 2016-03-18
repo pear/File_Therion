@@ -498,7 +498,7 @@ class File_Therion implements Countable
     }
      
     /**
-     * Get all associated objects.
+     * Get all associated objects of this file.
      * 
      * You can optionaly query for specific types using $filter.
      * You may ommit the prefix 'File_Therion_' from the filter.
@@ -700,6 +700,16 @@ class File_Therion implements Countable
     public function setEncoding($codeset)
     {
         $this->_encoding = $codeset;
+    }
+    
+    /**
+     * Get encoding of input/output files currently active.
+     * 
+     * @return string encoding
+     */
+    public function getEncoding()
+    {
+        return $this->_encoding;
     }
     
     
