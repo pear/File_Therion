@@ -404,11 +404,43 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
      */
     public function testSimpleParsing()
     {
+        // Fetch rabbit example
         $th = new File_Therion($this->testdata_base.'/basics/rabbit.th');
         $th->fetch();
+        $this->assertEquals(0, count($th->getSurveys()));
         $this->assertEquals(74, count($th), "parsed line number does not match sample");
+        $this->assertEquals('iso8859-2', $th->getEncoding());
+        
+        // parse file contents into php therion objects
         $th->parse();
-        $this->assertEquals(1, count($th->getObjects('Survey')));
+        $this->assertEquals(1, count($th->getSurveys()));
+        
+        // get survey and inspect it
+        $survey = array_shift($th->getSurveys());
+        $this->assertInstanceOf('File_Therion_Survey', $survey);
+        $this->assertEquals("Rabbit Cave", $survey->getOption('title'));
+        $this->assertEquals(0, count($survey->getSurveys()));
+        $this->assertEquals(1, count($survey->getCentrelines()));
+        $this->assertEquals(3, count($survey->getJoins()));
+        $this->assertEquals(0, count($survey->getEquates()));
+        $this->assertEquals(2, count($survey->getMaps()));
+        $this->assertEquals(1, count($survey->getSurface()));
+
+        // inspect centreline
+        $centreline = array_shift($survey->getCentrelines());
+        $this->assertInstanceOf('File_Therion_Centreline', $centreline);
+        $this->assertEquals("1997.08.10", $centreline->getDate()->toString());
+        $this->assertEquals(null, $centreline->getExploDate());
+        $this->assertEquals(3, count($centreline->getTeam()));
+        $this->assertEquals('"Martin Budaj"',
+            $centreline->getTeam()[0]->toString());
+            $this->assertEquals('"Miroslav Hofer"',
+            $centreline->getTeam()[2]->toString());
+        $this->assertEquals(0, count($centreline->getExploTeam()));
+        $this->assertEquals(array(), $centreline->getExploTeam());
+        
+        
+        // TODO: More to test for!
     }
 
 }

@@ -195,12 +195,32 @@ class File_Therion implements Countable
                                 case 'encoding':
                                     $this->setEncoding($lineData[1]);
                                 break;
+                                
+                                //case 'join':
+                                //  TODO: Support lone join commands in file
+                                //break;
+                                
+                                //case 'equate':
+                                //  TODO: Support lone join commands in file
+                                //break;
+                                
+                                /* TODO: switch on syntax check
+                                 *       Once we have identified and coded all
+                                 *       possible commands at this level
+                                default:
+                                    throw new File_Therion_SyntaxException(
+                                       "unsupported multiline command '$type'");
+                                */
                             }
                         }
                     }
                 break;
                 
                 case 'survey':
+                case 'centreline':
+                case 'scrap':
+                case 'map':
+                case 'surface':
                     // walk each line collection and parse it using subparser
                     foreach ($data as $ctxLines) {
                         $ctxObj = File_Therion_Survey::parse($ctxLines);
@@ -515,7 +535,7 @@ class File_Therion implements Countable
      * @return array of File_Therion_* objects (empty array if no such objects)
      * @throws InvalidArgumentException
      */
-    public function getObjects($filter = null)
+    protected function getObjects($filter = null)
     {
          if (is_null($filter)) {
             return $this->_objects;
@@ -524,9 +544,17 @@ class File_Therion implements Countable
             if (!preg_match('/^File_Therion_/', $filter)) {
                 $filter = 'File_Therion_'.$filter;
             }
+            $filter = ($filter=='File_Therion_Centerline')?   // allow alias
+                'File_Therion_Centreline' : $filter;
             
-            $supported = "Survey"; // todo: support more types
-            if (!preg_match('/^File_Therion_(?:'.$supported.')$/', $filter)) {
+            $supported = array(
+                "File_Therion_Survey",
+                "File_Therion_Centreline",
+                "File_Therion_Scrap",
+                "File_Therion_Map",
+                "File_Therion_Surface",
+            );
+            if (!in_array($filter, $supported)) {
                 throw new InvalidArgumentException(
                     'getObjects(): Invalid $filter argument ('.$filter.')!'
                 );
@@ -541,6 +569,158 @@ class File_Therion implements Countable
             return $rv;
         }
     }
+    
+    
+    /**
+     * Get all associated objects of this file.
+     * 
+     * Example:
+     * <code>
+     * $allObjects = $thFile->getObjects(); // get all
+     * </code>
+     *
+     * @return array of File_Therion_* objects (empty array if no such objects)
+     */
+    public function getAllObjects()
+    {
+        return $this->getObjects();
+    }
+    
+    /**
+     * Get all directly associated surveys of this file.
+     * 
+     * Example:
+     * <code>
+     * $allSurveys = $thFile->getSurveys();
+     * </code>
+     *
+     * @return array of File_Therion_Survey objects (or empty array)
+     */
+    public function getSurveys()
+    {
+        return $this->getObjects('File_Therion_Survey');
+    }
+    
+    /**
+     * Get all directly associated centrelines of this file.
+     * 
+     * Note that this kind of object is usually not "lone" in a file but 
+     * commonly part of a survey. This function returns only "lone" objects
+     * without parent structure.
+     * 
+     * Example:
+     * <code>
+     * $allCentrelines = $thFile->getCentrelines();
+     * </code>
+     *
+     * @return array of File_Therion_Centreline objects (or empty array)
+     */
+    public function getCentrelines()
+    {
+        return $this->getObjects('File_Therion_Centreline');
+    }
+    
+    /**
+     * Get all directly associated Scraps of this file.
+     * 
+     * Note that this kind of object is usually not "lone" in a file but 
+     * commonly part of a survey. This function returns only "lone" objects
+     * without parent structure.
+     * 
+     * Example:
+     * <code>
+     * $allScraps = $thFile->getScraps();
+     * </code>
+     *
+     * @return array of File_Therion_Scrap objects (or empty array)
+     */
+    public function getScraps()
+    {
+        return $this->getObjects('File_Therion_Scrap');
+    }
+    
+    /**
+     * Get all directly associated Maps of this file.
+     * 
+     * Note that this kind of object is usually not "lone" in a file but 
+     * commonly part of a survey. This function returns only "lone" objects
+     * without parent structure.
+     * 
+     * Example:
+     * <code>
+     * $allMaps = $thFile->getMaps();
+     * </code>
+     *
+     * @return array of File_Therion_Map objects (or empty array)
+     */
+    public function getMaps()
+    {
+        return $this->getObjects('File_Therion_Map');
+    }
+    
+    /**
+     * Get all directly associated Surface definitions of this file.
+     * 
+     * Note that this kind of object is usually not "lone" in a file but 
+     * commonly part of a survey. This function returns only "lone" objects
+     * without parent structure.
+     * 
+     * Example:
+     * <code>
+     * $allSurfaces = $thFile->getSurfaces();
+     * </code>
+     *
+     * @return array of File_Therion_Surface objects (or empty array)
+     */
+    public function getSurfaces()
+    {
+        return $this->getObjects('File_Therion_Surface');
+    }
+    
+    /**
+     * Get all directly associated join definitions of this file.
+     * 
+     * Note that this kind of object is usually not "lone" in a file but 
+     * commonly part of a survey. This function returns only "lone" objects
+     * without parent structure.
+     * 
+     * Example:
+     * <code>
+     * $allJoins = $thFile->getJoins();
+     * </code>
+     *
+     * @return array of join definitions (or empty array)
+     * @todo IMPLEMENT ME
+     */
+    public function getJoins()
+    {
+        // note: don't forget addJoin; probably implement this in addObject()
+        throw new File_Therion_Exception(
+            __METHOD__.': FEATURE NOT IMPLEMENTED');
+    }
+    
+    /**
+     * Get all directly associated equate definitions of this file.
+     * 
+     * Note that this kind of object is usually not "lone" in a file but 
+     * commonly part of a survey. This function returns only "lone" objects
+     * without parent structure.
+     * 
+     * Example:
+     * <code>
+     * $allEquates = $thFile->getEquates();
+     * </code>
+     *
+     * @return array of join definitions (or empty array)
+     * @todo IMPLEMENT ME
+     */
+    public function getEquates()
+    {
+        // note: don't forget addEquate; probably implement this in addObject()
+        throw new File_Therion_Exception(
+            __METHOD__.': FEATURE NOT IMPLEMENTED');
+    }
+    
      
     /**
      * Write this therion file content to the file.

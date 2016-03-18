@@ -88,7 +88,10 @@ abstract class File_Therion_BasicObject
         }
         
         // check that passed value is of correct type
-        if ($value!==null) {
+        if (!is_null($value)
+            && !is_null($this->{"$type"}[$key])
+            && gettype($this->{"$type"}[$key])
+            ) {
             if (gettype($this->{"$type"}[$key]) !== gettype($value)) {
                 throw new InvalidArgumentException(
                     "$type [$key]: Invalid value type '".gettype($value)."'! "
