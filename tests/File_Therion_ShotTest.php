@@ -154,6 +154,7 @@ class File_Therion_ShotTest extends PHPUnit_Framework_TestCase {
      */
     public function testBackBearing()
     {
+        // Test degrees
         foreach (range(0, 360) as $co) {
             $sample = new File_Therion_Shot();
             $sample->setBearing($co);
@@ -164,6 +165,26 @@ class File_Therion_ShotTest extends PHPUnit_Framework_TestCase {
             $sampleB->setBearing($bc);
             $bco = $sampleB->getBackBearing();
             
+            $c=($c==360)? 0 : $c;       // expect 360 to be adjusted to 0
+            $bco=($bco==360)? 0 : $bco; // expect 360 to be adjusted to 0
+            $this->assertEquals($c, $bco, "deg=$c (co=$co); bc=$bc; bco=$bco");
+        }
+        
+        // Test grads
+        foreach (range(0, 400) as $co) {
+            $sample = new File_Therion_Shot();
+            $sample->setUnit('bearing', 'grads');
+            $sample->setBearing($co);
+            $c = $sample->getBearing();  // get possibly converted value
+            $bc = $sample->getBackBearing();
+            
+            $sampleB = new File_Therion_Shot();
+            $sampleB->setUnit('bearing', 'grads');
+            $sampleB->setBearing($bc);
+            $bco = $sampleB->getBackBearing();
+            
+            $c=($c==400)? 0 : $c;       // expect 360 to be adjusted to 0
+            $bco=($bco==400)? 0 : $bco; // expect 360 to be adjusted to 0
             $this->assertEquals($c, $bco, "grad=$c (co=$co); bc=$bc; bco=$bco");
         }
     }
@@ -182,7 +203,7 @@ class File_Therion_ShotTest extends PHPUnit_Framework_TestCase {
             $sampleB->setGradient($bc);
             $bco = $sampleB->getBackGradient();
             
-            $this->assertEquals($c, $bco, "grad=$c; bc=$bc; bco=$bco");
+            $this->assertEquals($c, $bco, "deg=$c; bc=$bc; bco=$bco");
         }
     }
     

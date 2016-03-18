@@ -549,14 +549,26 @@ class File_Therion_Shot
         if (!is_float($bearing)) {
             throw new InvalidArgumentException("Invalid argument type");
         }
-        if ($bearing <0 || $bearing > 360) {
-            // TODO: support other units too
-            throw new InvalidArgumentException(
-                "bearing out of range: $bearing (0->360 grad)"
-            );
-        }
         
-        $bearing = ($bearing==360)? 0.0 : $bearing; // treat 360 as float(0)
+        // basic sanity checks and adjustments
+        if ($this->getUnit('bearing') == 'degrees'
+            && ($bearing <0 || $bearing > 360)) {
+            throw new InvalidArgumentException(
+                "bearing out of range: $bearing (0->360 degrees)"
+            );
+            $bearing = ($bearing==360)? 0.0 : $bearing; // treat 360 as float(0)
+        }
+        if ($this->getUnit('bearing') == 'grads'
+            && ($bearing <0 || $bearing > 400)) {
+            throw new InvalidArgumentException(
+                "bearing out of range: $bearing (0->400 grads)"
+            );
+            
+            $bearing = ($bearing==400)? 0.0 : $bearing; // treat 400 as float(0)
+        }            
+        // TODO: support other units too
+        
+        
         $this->_data['bearing'] = $bearing;
     }
     
@@ -573,14 +585,24 @@ class File_Therion_Shot
         $gradient = (is_string($gradient)||is_int($gradient))? floatval($gradient) : $gradient;
         
         if (!is_float($gradient)) {
-            throw new InvalidArgumentException("Invalid argument type");
-        }
-        if ($gradient <-90 || $gradient > 90) {
-            // TODO: support other units too
             throw new InvalidArgumentException(
-                "gradient out of range: $gradient (-90->+90 grad)"
+                "Invalid argument type (".gettype($gradient).") gradient=$gradient");
+        }
+        if ($this->getUnit('gradient') == 'degrees'
+            && ($gradient <-90 || $gradient > 90)) {
+            
+            throw new InvalidArgumentException(
+                "gradient out of range: $gradient (-90->+90 degrees)"
             );
         }
+        if ($this->getUnit('gradient') == 'grad'
+            && ($gradient <-100 || $gradient > 100)) {
+            
+            throw new InvalidArgumentException(
+                "gradient out of range: $gradient (-90->+90 grads)"
+            );
+        }
+        // TODO: support other units too
         
         
         $this->_data['gradient'] = $gradient;
@@ -672,10 +694,19 @@ class File_Therion_Shot
             throw new InvalidArgumentException("bearing '$b' not type float!");
         }
         
-        if ($b >= 180.0) {
-            $r = $b-180.0;
+        $unit = $this->getUnit('bearing');
+        if ($unit == 'degrees' || $unit == 'grads') {
+            $max = ($unit=='degrees')? 360.0 : 400.0;
+            if ($b >= $max/2) {
+                $r = $b-$max/2;
+            } else {
+                $r = $b+$max/2;
+            }
+            if ($r >= $max) $r = $max; // cap limit, eg. 360 becomes 0
+            
         } else {
-            $r = $b+180.0;
+            // todo: implement more units
+            throw new File_Therion_Exception("Unit '$unit' not implmented yet!");
         }
 
         return $r;
