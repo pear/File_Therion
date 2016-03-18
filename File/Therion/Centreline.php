@@ -48,8 +48,8 @@ class File_Therion_Centreline
         'author'      => array(), // 0=year, 1=Person
         'copyright'   => array(), // 0=year, 1=string
         'title'       => "",
-        'date'        => "",
-        'explo-date'  => "",
+        'date'        => array(),
+        'explo-date'  => array(),
         'units'       => array(),
         'instrument'  => array(), // assoc: [<quantity>]=<description>
         'infer'       => array(), // assoc: [<what>]=<boolean>
@@ -223,8 +223,12 @@ class File_Therion_Centreline
                                 break;
                                 
                                 case 'date':
+                                    $pd = File_Therion_Date::parse($lineData[0]);
+                                    $centreline->setDate($pd);
+                                break;
                                 case 'explo-date':
-                                    $centreline->setData($command, $lineData[0]);
+                                    $pd = File_Therion_Date::parse($lineData[0]);
+                                    $centreline->setExploDate($pd);
                                 break;
                                 
                                 case 'copyright':
@@ -448,6 +452,105 @@ class File_Therion_Centreline
     {
         $this->_exploteam = array();
     }
+    
+    /**
+     * Get survey date.
+     * 
+     * @return null|File_Therion_Date therion date
+     */
+    public function getDate()
+    {
+        $dates = $this->getData('date');
+        if (count($dates) == 2) {
+            return $dates;
+        } elseif (count($dates) == 0) {
+            return null;
+        } else {
+            return $dates[0];
+        }
+    }
+    
+    /**
+     * Set survey date.
+     * 
+     * If a an array with exactly two Date objects is given, this will be
+     * threaten as time interval.
+     * 
+     * @param array|File_Therion_Date $date therion date or array for date interval
+     * @throws InvalidArgumentException
+     */
+    public function setDate($date)
+    {
+        if (is_array($date)) {
+            if (count($date) != 2) {
+                throw new InvalidArgumentException(
+                    "Invalid number of arguments - expected two date objects");
+            }
+            if (!is_a($date[0], 'File_Therion_Date')) {
+                throw new InvalidArgumentException(
+                    "Date is not of type File_Therion_Date");
+            }
+            if (!is_a($date[1], 'File_Therion_Date')) {
+                throw new InvalidArgumentException(
+                    "Date is not of type File_Therion_Date");
+            }
+        } else {
+            if (!is_a($date, 'File_Therion_Date')) {
+                throw new InvalidArgumentException(
+                    "Date is not of type File_Therion_Date");
+            }
+            $date = array($date);
+        }
+        $this->setData('date', $date);
+    }
+    
+    /**
+     * Get exploration date.
+     * 
+     * @return null|array|File_Therion_Date therion date
+     */
+    public function getExploDate()
+    {
+        $dates = $this->getData('explo-date');
+        if (count($dates) == 2) {
+            return $dates;
+        } elseif (count($dates) == 0) {
+            return null;
+        } else {
+            return $dates[0];
+        }
+    }
+    
+    /**
+     * Set exploration date.
+     * 
+     * @param File_Therion_Date $date therion date
+     */
+    public function setExploDate(File_Therion_Date $date)
+    {
+        if (is_array($date)) {
+            if (count($date) != 2) {
+                throw new InvalidArgumentException(
+                    "Invalid number of arguments - expected two date objects");
+            }
+            if (!is_a($date[0], 'File_Therion_Date')) {
+                throw new InvalidArgumentException(
+                    "Date is not of type File_Therion_Date");
+            }
+            if (!is_a($date[1], 'File_Therion_Date')) {
+                throw new InvalidArgumentException(
+                    "Date is not of type File_Therion_Date");
+            }
+        } else {
+            if (!is_a($date, 'File_Therion_Date')) {
+                throw new InvalidArgumentException(
+                    "Date is not of type File_Therion_Date");
+            }
+            $date = array($date);
+        }
+        $this->setData('explo-date', $date);
+    }
+    
     
     /**
      * Add a survey shot to this centreline.
