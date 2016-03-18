@@ -204,7 +204,8 @@ class File_Therion_Centreline
             'surface'     => false,
             'approximate' => false,
         );
-        $dataDefinitionSeen = false;
+        $lastSeenDatadef = false;
+        $lastSeenStyle   = false;
         foreach ($orderedData as $type => $data) {
             switch ($type) {
                 case 'LOCAL':
@@ -281,26 +282,37 @@ class File_Therion_Centreline
                                 
                                 case 'data':
                                     //data format for following shot data
-                                   $dataDefinitionSeen = true;
-                                   $style = array_shift($lineData);
-                                   $centreline->setShotOrder($style, $lineData);
+                                   $lastSeenStyle   = array_shift($lineData);
+                                   $lastSeenDatadef = $lineData;
                                 break;
+                                
+                                /* TODO: implement units, extend shot class for this
+                                case 'units':
+                                    //unit definition for following shot data
+                                   $lastSeenStyle   = array_shift($lineData);
+                                   $lastSeenDatadef = $lineData;
+                                break;*/
                                 
                                 
                                 
                                 default:
                                     // not a valid command!
-                                    if ($dataDefinitionSeen) {
+                                    
+                                    if ($lastSeenStyle) {
+                                        // $lastSeenStyle signals that we had
+                                        // a data-definition in the centreline:
                                         // see if we can successfully parse
                                         // a shot object. This will raise an
                                         // exception if syntax fails, which
                                         // is desired in this case.
-                                        $shotOrder = $centreline->getShotOrder();
                                         array_unshift($lineData, $command); //readd
                                         $shot = File_Therion_Shot::parse(
                                             $lineData,
-                                            $shotOrder
+                                            $lastSeenDatadef
                                         );
+                                        
+                                        // set reading style of shot
+                                        $shot->setStyle($lastSeenStyle);
                                         
                                         // adjust shot flags according to
                                         // current defined flag states
@@ -451,39 +463,6 @@ class File_Therion_Centreline
     public function clearShots()
     {
         $this->_shots = array();
-    }
-    
-    /**
-     * Set ordering of shot data.
-     *
-     * @param string $style Ordering style ('normal', 'diving', ...)
-     * @param string $order Data order ('from', 'to', 'length', ...)
-     * @todo: syntax checks etc
-     */
-    public function setShotOrder($style, array $order)
-    {
-        $this->_shotDef['style'] = $style;
-        $this->_shotDef['order'] = $order;
-    }
-    
-    /**
-     * Get ordering of shot data.
-     * 
-     * @return array of data names
-     */
-    public function getShotOrder()
-    {
-        return $this->_shotDef['order'];
-    }
-    
-    /**
-     * Get ordering style of shot data.
-     * 
-     * @return string style
-     */
-    public function getShotStyle()
-    {
-        return $this->_shotDef['style'];
     }
     
     

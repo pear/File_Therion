@@ -232,6 +232,69 @@ class File_Therion_CentrelineTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals(2.09, $shots[2]->getLength());
         
     }
+    
+    /**
+     * test parsing of data part
+     */
+    public function testParsingShotsWithSeveralDataDefinitions()
+    {
+        $sampleLines = array(
+            File_Therion_Line::parse('centreline'),
+            File_Therion_Line::parse('  units compass clino grads'),
+            File_Therion_Line::parse(' data normal from to compass clino tape'),
+            File_Therion_Line::parse('  0     1   200       -5      6.4'),
+            File_Therion_Line::parse('  1     2    73        8      5.2'),
+            File_Therion_Line::parse('  2     3    42        0      2.09'),
+            File_Therion_Line::parse('   '),
+            File_Therion_Line::parse(' # reading changes order, values similar'),
+            File_Therion_Line::parse(' data normal to from length clino bearing'),
+            File_Therion_Line::parse('  4     3   6.4       -5      200'),
+            File_Therion_Line::parse('  5     4   5.2        8       73'),
+            File_Therion_Line::parse('  6     5  2.09        0       42'),
+            File_Therion_Line::parse('endcentreline'),            
+        );
+        $sample = File_Therion_Centreline::parse($sampleLines);
+        $this->assertInstanceOf('File_Therion_Centreline', $sample);
+        $this->assertEquals(6, count($sample));  // SPL count shots
+        
+        $shots = $sample->getShots();
+        $this->assertEquals('0',  $shots[0]->getFrom());
+        $this->assertEquals('1',  $shots[0]->getTo());
+        $this->assertEquals(200,  $shots[0]->getBearing());
+        $this->assertEquals(-5,   $shots[0]->getGradient());
+        $this->assertEquals(6.4,  $shots[0]->getLength());
+        
+        $this->assertEquals('1',  $shots[1]->getFrom());
+        $this->assertEquals('2',  $shots[1]->getTo());
+        $this->assertEquals(73,   $shots[1]->getBearing());
+        $this->assertEquals(8,    $shots[1]->getGradient());
+        $this->assertEquals(5.2,  $shots[1]->getLength());
+        
+        $this->assertEquals('2',  $shots[2]->getFrom());
+        $this->assertEquals('3',  $shots[2]->getTo());
+        $this->assertEquals(42,   $shots[2]->getBearing());
+        $this->assertEquals(0,    $shots[2]->getGradient());
+        $this->assertEquals(2.09, $shots[2]->getLength());
+        
+        $this->assertEquals('3',  $shots[3]->getFrom());
+        $this->assertEquals('4',  $shots[3]->getTo());
+        $this->assertEquals(200,  $shots[3]->getBearing());
+        $this->assertEquals(-5,   $shots[3]->getGradient());
+        $this->assertEquals(6.4,  $shots[3]->getLength());
+        
+        $this->assertEquals('4',  $shots[4]->getFrom());
+        $this->assertEquals('5',  $shots[4]->getTo());
+        $this->assertEquals(73,   $shots[4]->getBearing());
+        $this->assertEquals(8,    $shots[4]->getGradient());
+        $this->assertEquals(5.2,  $shots[4]->getLength());
+        
+        $this->assertEquals('5',  $shots[5]->getFrom());
+        $this->assertEquals('6',  $shots[5]->getTo());
+        $this->assertEquals(42,   $shots[5]->getBearing());
+        $this->assertEquals(0,    $shots[5]->getGradient());
+        $this->assertEquals(2.09, $shots[5]->getLength());
+        
+    }
 
 }
 ?>
