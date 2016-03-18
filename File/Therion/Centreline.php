@@ -111,7 +111,7 @@ class File_Therion_Centreline
      *
      * @var array with File_Therion_Station objects.
      */
-    protected $_sstations = array();
+    protected $_stations = array();
     
     /**
      * Create a new therion centreline object.
