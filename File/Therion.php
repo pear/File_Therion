@@ -27,6 +27,7 @@ require_once 'File/Therion/Scrap.php';
 require_once 'File/Therion/Shot.php';
 require_once 'File/Therion/DataTypes/DataTypeInterface.php';
 require_once 'File/Therion/DataTypes/Person.php';
+require_once 'File/Therion/DataTypes/Date.php';
 
 
 /**
@@ -58,7 +59,7 @@ require_once 'File/Therion/DataTypes/Person.php';
  * $th->fetch();                 // Get contents (read)
  * $th->evalInputCMD();          // evaluate 'input' commands recursively
  * $th->parse();                 // Generate Therion objects to work with
- * $survey = $th->getSurveys();  // example: retrieve parsed survey
+ * $survey = $th->getSurveys();  // example: retrieve parsed surveys
  *
  * 
  * // Generate a .th Therion file out of data model:
@@ -114,7 +115,7 @@ class File_Therion implements Countable
      * will be populated by {@link parse()} or {@link update()}
      * 
      * @access protected
-     * @var array of data (File_Therio_* objects)
+     * @var array of data (File_Therion_* objects)
      */
     protected $_objects = array();
     
