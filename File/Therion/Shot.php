@@ -26,6 +26,19 @@
  */
 class File_Therion_Shot
 {
+ 
+    /**
+     * Known field name aliases
+     * 
+     * @var array
+     */
+    protected static $_aliases = array(
+        'tape'     => 'length',
+        'compass'  => 'bearing',
+        'clino'    => 'gradient',
+        'ceiling'  => 'up',
+        'floor'    => 'down'
+    );
     
     /**
      * Basic normalized data elements.
@@ -553,6 +566,36 @@ class File_Therion_Shot
         
         // swap gradient
         $this->setGradient($this->getBackGradient());
+    }
+    
+    
+    
+    /**
+     * Resolve field name alias.
+     * 
+     * @param string $alias alias name
+     * @return string normalized name
+     */
+    public static function unaliasField($alias)
+    {
+        $aliases = File_Therion_Shot::$_aliases;
+        return (array_key_exists($alias, $aliases))
+            ? $aliases[$alias]
+            : $alias;
+    }
+    
+    /**
+     * Get alias for normalized field name.
+     * 
+     * @param string $name alias name
+     * @return string alias name
+     */
+    public static function aliasField($name)
+    {
+        $reversedAliases = array_flip(File_Therion_Shot::$_aliases);
+        return (array_key_exists($name, $reversedAliases))
+            ? $reversedAliases[$name]
+            : $name;
     }
 }
 

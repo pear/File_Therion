@@ -187,5 +187,30 @@ class File_Therion_ShotTest extends PHPUnit_Framework_TestCase {
     }
     
 
+    /**
+     * test aliasing / unaliasing of fields
+     */
+    public function testAliases()
+    {
+        $this->assertEquals(
+            'tape', File_Therion_Shot::aliasField('length'));
+        $this->assertEquals(
+            'ceiling', File_Therion_Shot::aliasField('up'));
+
+        $this->assertEquals(
+            'length', File_Therion_Shot::unaliasField('tape'));
+        $this->assertEquals(
+            'up', File_Therion_Shot::unaliasField('ceiling'));
+            
+        $this->assertEquals(
+            'length', File_Therion_Shot::unaliasField('length'));
+        $this->assertEquals(
+            'tape', File_Therion_Shot::aliasField('tape'));
+            
+        $this->assertEquals(
+            'fooxyz', File_Therion_Shot::aliasField('fooxyz'));
+        $this->assertEquals(
+            'fooxyz', File_Therion_Shot::unaliasField('fooxyz')); 
+    }
 }
 ?>
