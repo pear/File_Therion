@@ -68,14 +68,14 @@ class File_Therion_Shot
         'length'    => 'meters',
         'bearing'   => 'degrees',
         'gradient'  => 'degrees',
+        'left'      => 'meters',
+        'right'     => 'meters',
+        'up'        => 'meters',
+        'down'      => 'meters'
     );
     
     /**
      * Basic normalized data elements.
-     * 
-     * The data is held here in normalized units:
-     * - length units in decimal meters
-     * - angle units in degree
      * 
      * @var array  
      */
@@ -147,7 +147,7 @@ class File_Therion_Shot
             $lastParsedOrder = $o; // just for the record
             
             $value = array_shift($data); // get next corresponding value
-            
+
             // Determine parsing action and carry it out
             switch ($o) {
                 // Normal fields: they have corresponding method names
@@ -426,7 +426,7 @@ class File_Therion_Shot
     /**
      * Get shot compass bearing.
      * 
-     * @return int between 0 and 360 (when unit was grad)
+     * @return int between 0 and 360 (when unit is degrees)
      */
     public function getBearing()
     {
@@ -436,7 +436,7 @@ class File_Therion_Shot
     /**
      * Get shot gradient.
      * 
-     * @return float between -90 to 90 (when unit was grad)
+     * @return float between -90 to 90 (when unit is degrees)
      */
     public function getGradient()
     {
@@ -539,7 +539,7 @@ class File_Therion_Shot
      * 
      * @param float $bearing between 0 and 360 (when unit was grad)
      * @throws InvalidArgumentException
-     * @todo support other units than grad
+     * @todo support other units than degrees and grad
      */
     public function setBearing($bearing)
     {
@@ -659,10 +659,11 @@ class File_Therion_Shot
     /**
      * Calculate backwards compass reading.
      * 
-     * Result=360 will be reported as 0.
+     * Result=360 will be reported as 0 (with degrees).
      * 
-     * @return float between 0 and 360 (when unit was grad)
-     * @todo implement other units than grad
+     * @return float between 0 and 360 (when unit is degrees)
+     * @throws InvalidArgumentException
+     * @todo implement other units than grad and degree
      */
     public function getBackBearing()
     {
@@ -683,7 +684,7 @@ class File_Therion_Shot
     /**
      * Calculate backwards clino reading.
      * 
-     * @return float between -90 and 90 (when unit was grad)
+     * @return float between -90 and 90 (when unit is degrees)
      */
     public function getBackGradient()
     {
