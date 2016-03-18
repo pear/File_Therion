@@ -192,25 +192,46 @@ class File_Therion_ShotTest extends PHPUnit_Framework_TestCase {
      */
     public function testAliases()
     {
+        // test aliasing
         $this->assertEquals(
             'tape', File_Therion_Shot::aliasField('length'));
         $this->assertEquals(
             'ceiling', File_Therion_Shot::aliasField('up'));
 
+        // test unaliasing
         $this->assertEquals(
             'length', File_Therion_Shot::unaliasField('tape'));
         $this->assertEquals(
             'up', File_Therion_Shot::unaliasField('ceiling'));
-            
+        
+        // keep aliases or normalized value when already resolved/aliased
         $this->assertEquals(
             'length', File_Therion_Shot::unaliasField('length'));
         $this->assertEquals(
             'tape', File_Therion_Shot::aliasField('tape'));
-            
+        
+        // keep arbitary unknown values
         $this->assertEquals(
             'fooxyz', File_Therion_Shot::aliasField('fooxyz'));
         $this->assertEquals(
             'fooxyz', File_Therion_Shot::unaliasField('fooxyz')); 
+    }
+    
+    /**
+     * test get order
+     */
+    public function testGetOrder()
+    {
+        $sample = new File_Therion_Shot();
+        $sample->setOrder(array('from', 'to', 'tape', 'ceiling'));
+        $this->assertEquals(
+            array('from', 'to', 'tape', 'ceiling'),
+            $sample->getOrder()  // aliases untouched
+        );
+        $this->assertEquals(
+            array('from', 'to', 'length', 'up'),
+            $sample->getOrder(true) // normalized
+        );
     }
 }
 ?>

@@ -41,6 +41,25 @@ class File_Therion_Shot
     );
     
     /**
+     * data definition order for this shot.
+     * 
+     * This may contain alias names.
+     * 
+     * @var array
+     */
+    protected $_order = array(
+        'from', 'to', 'length', 'bearing', 'gradient',
+        'left', 'right', 'up', 'down'
+    );
+    
+    /**
+     * data reading style
+     * 
+     * @var string
+     */
+    protected $_style = "normal";
+    
+    /**
      * Basic normalized data elements.
      * 
      * @var array  
@@ -56,6 +75,11 @@ class File_Therion_Shot
         'up'        => 0.0,
         'down'      => 0.0,
         // more according to thbook
+        // Therion book says: station, from, to, tape/length, 
+        // [back]compass/[back]bearing, [back]clino/[back]gradient, depth,
+        // fromdepth, todepth, depthchange, counter, fromcount, tocount,
+        // northing, easting, altitude, up/ceiling, down/floor, left,
+        // right, ignore, ignoreall.
     );
     
     /**
@@ -73,7 +97,8 @@ class File_Therion_Shot
     
     /**
      * Create a new therion shot object.
-     *
+     * 
+     * After creating, set style and order.
      */
     public function __construct()
     {
@@ -82,31 +107,23 @@ class File_Therion_Shot
     /**
      * Parse string content into a shot object using ordering information.
      * 
-     * @param array $data  datafields to parse
-     * @param array $order therion names of datafields in correct order
+     * @param array  $data  datafields to parse
+     * @param array  $order therion names of datafields in correct order
      * @return File_Therion_Shot shot object
      * @throws File_Therion_SyntaxException
      * @throws InvalidArgumentException
      * @todo implement more fields (currently just basic normal data fields)
      */
-    public static function parse(array $data, array $order)
+    public static function parse($data, $order)
     {
-        if (count($order) < 1) {
-            throw new InvalidArgumentException(
-                "data readings order must at least have one value"
-            );
-        }
         
-        // inspect $order and parse value in correct field.
-        //
-        // Therion book says: station, from, to, tape/length, 
-        // [back]compass/[back]bearing, [back]clino/[back]gradient, depth,
-        // fromdepth, todepth, depthchange, counter, fromcount, tocount,
-        // northing, easting, altitude, up/ceiling, down/floor, left,
-        // right, ignore, ignoreall.
+        // craft basic shot
         $shot = new File_Therion_Shot();
+        $shot->setOrder($order);  // will throw exception
+        
+        // use order (with normalized names) to parse value into correct field
         $lastParsedOrder = null;
-        foreach ($order as $o) {
+        foreach ($shot->getOrder(true) as $o) {
             $lastParsedOrder = $o; // just for the record
             
             $value = array_shift($data); // get next corresponding value
@@ -143,23 +160,6 @@ class File_Therion_Shot
                 case 'right':
                     $shot->setRightDimension($value);
                     break;
-                
-                // Aliases of internal fields
-                case 'tape':
-                    $shot->setLength($value);
-                    break;
-                case 'compass':
-                    $shot->setBearing($value);
-                    break;
-                case 'clino':
-                    $shot->setGradient($value);
-                    break;
-                case 'ceiling':
-                    $shot->setUpDimension($value);
-                    break;
-                case 'floor':
-                    $shot->setDownDimension($value);
-                    break;
                     
                 // TODO: support backwards readings; this should stay untouched
                 //       to enable proper export of original data.
@@ -169,13 +169,11 @@ class File_Therion_Shot
                 // TODO: Support more fields from the book
                 
                 // ignored field: ignore :)
-                case 'ignore':
-                    $i_ord[] = 'ignore';
-                    break;
                 // ignoreall field: ignore and stop parsing
+                case 'ignore':
+                    break;
                 case 'ignoreall':
-                    $i_ord[] = 'ignoreall';
-                    break 2;
+                    break 2;  // done with parsing
                     
                 
                 default:
@@ -186,8 +184,8 @@ class File_Therion_Shot
         }
         
         // Done with parsing.
-        // In case we have still valid data left and the last field was not a
-        // 'ignoreall' one, we have a syntax error.
+        // In case we have still valid data left and the last field was not
+        // an 'ignoreall' one, we have a syntax error.
         if ($lastParsedOrder != 'ignoreall' && count($data) > 0) {
             throw new File_Therion_SyntaxException(
                 count($data)." data elements left after parsing "
@@ -238,6 +236,92 @@ class File_Therion_Shot
                 "Invalid flag $flag; flag not valid for shot");
         }
     }
+    
+    
+    /**
+     * Get data definition style of this shot
+     * 
+     * @return string "normal", "diving", etc
+     */
+    public function getStyle()
+    {
+        return $this->_style;
+    }
+    
+    
+    /**
+     * Set data definition style of this shot
+     * 
+     * @param string $style "normal", "diving", etc
+     * @throws InvalidArgumentException when style is unknown
+     * @todo support other styles besides "normal"
+     */
+    public function setStyle($style)
+    {
+        if (preg_match('/^normal|diving$/', $style)) {
+            $this->_style = $style;
+        } else {
+            throw new InvalidArgumentException(
+                "data readings style unsupported: '$style'"
+            );
+        }
+    }
+    
+    /**
+     * Get data definition order of this shot.
+     * 
+     * @param boolean $normalize return unaliased field names
+     * @return array ordered array with keywords
+     */
+    public function getOrder($normalize = false)
+    {
+        $fields = $this->_order;
+        if ($normalize) {
+            $fields = array_map(
+                array('File_Therion_Shot', 'unaliasField'),
+                $fields
+            );
+        }
+        return $fields;
+    }
+    
+    /**
+     * Set data definition order of this shot.
+     * 
+     * @param array $order therion names of datafields in correct order
+     * @throws InvalidArgumentException
+     */
+    public function setOrder($order)
+    {
+        if (count($order) < 1) {
+            throw new InvalidArgumentException(
+                "data readings order must at least have one value"
+            );
+        }
+        
+        // check order fields against known fields.
+        // while doing this, also resolve aliases.
+        $newOrder = array();
+        foreach ($order as $o) {
+            $o_normalized = File_Therion_Shot::unaliasField($o);
+            
+            if (!in_array($o_normalized, array_keys($this->_data))) {
+                throw new File_Therion_SyntaxException(
+                    "unknown/unsupported data readings order type '$o'"
+                );
+            }
+            
+            $newOrder[] = $o; // add original field name
+        }
+        
+        
+        $this->_order = $newOrder;
+    }
+    
+    
+    
+    
+    
     
     
     /**
@@ -571,7 +655,7 @@ class File_Therion_Shot
     
     
     /**
-     * Resolve field name alias.
+     * Resolve field name alias to normalized name.
      * 
      * @param string $alias alias name
      * @return string normalized name
