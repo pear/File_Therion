@@ -233,5 +233,26 @@ class File_Therion_ShotTest extends PHPUnit_Framework_TestCase {
             $sample->getOrder(true) // normalized
         );
     }
+    
+    /**
+     * Test setting/getting units
+     */
+    public function testSetGetUnits()
+    {
+        $sample = new File_Therion_Shot();
+        $sample->setUnit('clino', 'grads');
+        $this->assertEquals('grads', $sample->getUnit('clino'));
+        
+        $sample->setUnit('clino', 'grad');
+        $this->assertEquals('grads', $sample->getUnit('clino'));
+    }
+    
+    /**
+     * Test units calculations
+     */
+    public function testUnitsCalculations()
+    {
+        $this->markTestIncomplete("This test has not been implemented yet.");
+    }
 }
 ?>

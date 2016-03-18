@@ -60,7 +60,22 @@ class File_Therion_Shot
     protected $_style = "normal";
     
     /**
+     * Units definition for normalized fields.
+     * 
+     * @var array  
+     */
+    protected $_units = array(
+        'length'    => 'meters',
+        'bearing'   => 'degrees',
+        'gradient'  => 'degrees',
+    );
+    
+    /**
      * Basic normalized data elements.
+     * 
+     * The data is held here in normalized units:
+     * - length units in decimal meters
+     * - angle units in degree
      * 
      * @var array  
      */
@@ -107,19 +122,24 @@ class File_Therion_Shot
     /**
      * Parse string content into a shot object using ordering information.
      * 
-     * @param array  $data  datafields to parse
-     * @param array  $order therion names of datafields in correct order
+     * @param array $data  datafields to parse
+     * @param array $order therion names of datafields in correct order
+     * @param array $units associative unit settings (type=>unit)
      * @return File_Therion_Shot shot object
      * @throws File_Therion_SyntaxException
      * @throws InvalidArgumentException
      * @todo implement more fields (currently just basic normal data fields)
      */
-    public static function parse($data, $order)
+    public static function parse($data, $order, $units=array())
     {
+        if (!$units) $units = array();
         
         // craft basic shot
         $shot = new File_Therion_Shot();
         $shot->setOrder($order);  // will throw exception
+        foreach ($units as $t => $u) {
+            $shot->setUnit($t, $u);  // will throw exception
+        }
         
         // use order (with normalized names) to parse value into correct field
         $lastParsedOrder = null;
@@ -319,8 +339,52 @@ class File_Therion_Shot
     }
     
     
+    /**
+     * Set unit for measurements of this shot.
+     * 
+     * 
+     * @param string $type Measurement type ('clino', 'bearing', ...)
+     * @param string $unit Unit: deg, degree[s]; grad[s], ...
+     * @throws InvalidArgumentException
+     * @todo support other units than degree
+     * @todo unit checking
+     */
+    public function setUnit($type, $unit)
+    {
+        $ntype = File_Therion_Shot::unaliasField($type);
+        if (!array_key_exists($ntype, $this->_units)) {
+            throw new InvalidArgumentException(
+                "Unsupported unit type '$type'" );
+        }
+        
+        // normalize unit names
+        $unit = preg_replace('/deg|degrees?/', 'degrees', $unit);
+        $unit = preg_replace('/grads?/', 'grads', $unit);
+        // todo: more units!
+        // length units supported: meter[s], centimeter[s], inch[es], feet[s], yard[s] (also m,
+        // cm, in, ft, yd). Angle units supported: degree[s], minute[s] (also deg, min), grad[s],
+        // mil[s], percent[age] (clino only). A degree value may be entered in decimal notation
+        // (x.y) or in a special notation for degrees, minutes and seconds (deg[:min[:sec]]).
+        
+        
+        $this->_units[$ntype] = $unit;
+    }
     
-    
+    /**
+     * Get current unit for measurement.
+     * 
+     * @param string $type Measurement type ('clino', 'bearing', ...)
+     * @return string Unit: degrees; grads, ...
+     */
+    public function getUnit($type)
+    {
+        $ntype = File_Therion_Shot::unaliasField($type);
+        if (!array_key_exists($ntype, $this->_units)) {
+            throw new InvalidArgumentException(
+                "Unsupported unit type '$type'" );
+        }
+        return $this->_units[$ntype];
+    }
     
     
     

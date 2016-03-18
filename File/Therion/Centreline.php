@@ -206,6 +206,7 @@ class File_Therion_Centreline
         );
         $lastSeenDatadef = false;
         $lastSeenStyle   = false;
+        $lastSeenUnits   = false;
         foreach ($orderedData as $type => $data) {
             switch ($type) {
                 case 'LOCAL':
@@ -282,16 +283,14 @@ class File_Therion_Centreline
                                 
                                 case 'data':
                                     //data format for following shot data
-                                   $lastSeenStyle   = array_shift($lineData);
-                                   $lastSeenDatadef = $lineData;
+                                    $lastSeenStyle   = array_shift($lineData);
+                                    $lastSeenDatadef = $lineData;
                                 break;
                                 
-                                /* TODO: implement units, extend shot class for this
                                 case 'units':
                                     //unit definition for following shot data
-                                   $lastSeenStyle   = array_shift($lineData);
-                                   $lastSeenDatadef = $lineData;
-                                break;*/
+                                    $lastSeenUnits = $lineData;
+                                break;
                                 
                                 
                                 
@@ -308,7 +307,8 @@ class File_Therion_Centreline
                                         array_unshift($lineData, $command); //readd
                                         $shot = File_Therion_Shot::parse(
                                             $lineData,
-                                            $lastSeenDatadef
+                                            $lastSeenDatadef,
+                                            $lastSeenUnits
                                         );
                                         
                                         // set reading style of shot
