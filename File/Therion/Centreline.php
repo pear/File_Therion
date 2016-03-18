@@ -227,8 +227,7 @@ class File_Therion_Centreline
                                     $centreline->setData($command, $lineData[0]);
                                 break;
                                 
-                                case 'copyright':                           
-                                case 'units':
+                                case 'copyright':
                                 case 'declination':
                                     // just add these as arrays
                                     // todo: better handling of type syntax
@@ -280,16 +279,30 @@ class File_Therion_Centreline
                                     }
                                 break;
                                 
+                                case 'extend':
+                                    // todo
+                                break;
+                                
                                 
                                 case 'data':
-                                    //data format for following shot data
+                                    // data format for following shot data
                                     $lastSeenStyle   = array_shift($lineData);
                                     $lastSeenDatadef = $lineData;
                                 break;
                                 
                                 case 'units':
-                                    //unit definition for following shot data
-                                    $lastSeenUnits = $lineData;
+                                    // unit definition for following shot data
+                                    // units <quantity list> [<factor>] <units>
+                                    
+                                    // parse "compass clino grads" into array
+                                    // todo: this is rather crude but should
+                                    //       work in most basic cases where just
+                                    //       one unit and no factor was given
+                                    for ($u=0; $u<count($lineData)-1; $u++) {
+                                        $type = $lineData[$u];
+                                        $unit = $lineData[count($lineData)-1];
+                                        $lastSeenUnits[$type] = $unit;
+                                    }
                                 break;
                                 
                                 
