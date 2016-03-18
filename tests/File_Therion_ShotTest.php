@@ -249,10 +249,21 @@ class File_Therion_ShotTest extends PHPUnit_Framework_TestCase {
     
     /**
      * Test units calculations
+     * 
+     * @todo just raw tests implemented, more needed
      */
     public function testUnitsCalculations()
     {
-        $this->markTestIncomplete("This test has not been implemented yet.");
+        $this->assertEquals(
+            0, File_Therion_Shot::convertValue(0, 'degrees', 'grads') );
+        $this->assertEquals(
+            400, File_Therion_Shot::convertValue(360, 'degrees', 'grads') );
+        $this->assertEquals(
+            0, File_Therion_Shot::convertValue(0, 'grads', 'degrees') );
+        $this->assertEquals(
+            360, File_Therion_Shot::convertValue(400, 'grads', 'degrees') );
+
+        // todo: more tests!
     }
 }
 ?>

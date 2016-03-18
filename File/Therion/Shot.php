@@ -746,6 +746,38 @@ class File_Therion_Shot
             ? $reversedAliases[$name]
             : $name;
     }
+    
+    /**
+     * Convert value between units.
+     * 
+     * @param float  $value
+     * @param string $from Unit to convert from
+     * @param string $to   Unit to convert to
+     * @return float converted value
+     * @see {@link setUnit()} and {@link $_units} for possible units
+     * @throws InvalidArgumentException
+     * @todo implement me please (grads/degrees currently raw implemented)
+     */
+    public static function convertValue($value, $from, $to)
+    {
+        // todo: support aliases
+        
+        // factors define possible conversions
+        $factors['degrees']['grads'] = 10/9;
+        $factors['grads']['degrees'] = 9/10;
+        
+        if (!array_key_exists($from, $factors)) {
+            throw new InvalidArgumentException(
+                "unsupported conversion: $from->$to ($from unknown)");
+        }
+        if (!array_key_exists($to, $factors[$from])) {
+            throw new InvalidArgumentException(
+                "unsupported conversion: $from->$to ($to unknown)");
+        }
+        
+        return $value * $factors[$from][$to];
+    }
+
 }
 
 ?>
