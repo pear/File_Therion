@@ -1,0 +1,9 @@
+# sample file containing nested centrelines
+# this centreline belongs to survey recursetest at its base level,
+# but it is placed in a separate file which is nested.
+
+centreline -id lvl4
+	#...
+endcentreline
+
+# no next level

@@ -1,0 +1,14 @@
+# sample file containing nested survey centrelines
+# The dataset contains one survey defining several centrelines in nested structure
+
+survey recursetest
+
+	# base centreline
+	centreline -id lvl1
+		#...
+	endcentreline
+	
+	# import next file, this contains another centreline and import command
+	# which in turn contains a centreline and import command
+	input lvl2.th
+endsurvey
