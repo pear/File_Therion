@@ -58,8 +58,12 @@ require_once 'File/Therion/DataTypes/Date.php';
  * $th = new File_Therion($src); // Instanciate new datasource
  * $th->fetch();                 // Get contents (read)
  * $th->evalInputCMD();          // evaluate 'input' commands recursively
- * $th->parse();                 // Generate Therion objects to work with
- * $survey = $th->getSurveys();  // example: retrieve parsed surveys
+ * $th->updateObjects();         // Generate Therion objects to work with
+ * $surveys = $th->getSurveys(); // example: retrieve parsed surveys
+ * 
+ * // The above can be summed up with:
+ * $th = File_Therion::parse($url); // fetch url recursively
+ * $surveys = $th->getSurveys();    // get surveys
  *
  * 
  * // Generate a .th Therion file out of data model:
@@ -68,7 +72,7 @@ require_once 'File/Therion/DataTypes/Date.php';
  * $tgt = "some/local/target.th"; // usually local file
  * $th = new File_Therion($tgt);  // Instanciate new data target
  * $th->addObject($survey);       // associate therion data model objects
- * $th->update();                 // update internal lines using data objects
+ * $th->updateLines();            // update internal lines using data objects
  * $th->write();                  // physically write to data target $tgt
  * $th->toString();               // altenatively: fetch  data as string
  * </code>
@@ -102,7 +106,7 @@ class File_Therion implements Countable
     /**
      * Lines of this file.
      * 
-     * will be populated by {@link parse()} or {@link update()}
+     * will be populated by {@link parse()} or {@link updateLines()}
      * 
      * @access protected
      * @var array of data (File_Therion_Line objects)
@@ -112,7 +116,7 @@ class File_Therion implements Countable
     /**
      * objects of this file.
      * 
-     * will be populated by {@link parse()} or {@link update()}
+     * will be populated by {@link parse()} or {@link updateObjects()}
      * 
      * @access protected
      * @var array of data (File_Therion_* objects)
@@ -137,7 +141,7 @@ class File_Therion implements Countable
      * or writing new ones.
      * 
      * The $url is a pointer to a datasource (or target).
-     * Use {@link parse()} if you want to {@link fetch()} the source contents or
+     * Use {@link fetch()} if you want to read the source contents or
      * {@link write()} to write the current content to the target.
      * 
      * Example:
@@ -145,7 +149,7 @@ class File_Therion implements Countable
      * $thFile = new File_Therion('foobar.th'); // local file (r/w access)
      * $thFile = new File_Therion('http://example.com/foo.th'); // web (r/o)
      * $thFile->fetch();  // get contents
-     * $thFile->parse();  // parse fetched contents
+     * $thFile->updateObjects();  // parse fetched contents
      * $surveys = $thFile->getObjects('File_Therion_Survey'); // get surveys
      * $all = $thFile->getObjects(); // get all parsed objects
      * </code>
@@ -156,6 +160,42 @@ class File_Therion implements Countable
     public function __construct($url)
     {
            $this->setURL($url);
+    }
+    
+    /**
+     * Parse datasource into objects.
+     * 
+     * This will perform the following operations:
+     * - create a new File_Therion object pointing to the datasource given
+     * - {@link fetch()} the datasource ($url)
+     * - {@link evalInputCMD()} optionally import referenced content ($lvls > 0)
+     * - {@link updateObjects()} represented by the lines
+     * 
+     * After this procedure the File_Therion object returned is in a consistent
+     * state (internal line buffer equals parsed content).
+     * Exceptions will be bubbled up.
+     * 
+     * To limit the number of possible nested levels you may specify the
+     * $recurse parameter (null=default: endless, 0: none, >0: nested levels).
+     * 
+     * Please read also the documentation of {@link fetch()},
+     * {@link evalInputCMD()} and {@link updateObjects()} for informations on
+     * their respective capabilitys and pitfalls.
+     * 
+     * @param string $url     path or URL of the file
+     * @param int    $recurse restrict recursion
+     * @return File_Therion object
+     * @throws File_Therion_IOException in case of reading problems
+     * @throws File_Therion_SyntaxException case of parsing/syntax errors
+     * @throws File_Therion_Exception for generic errors
+     */
+    public static function parse($url, $recurse=null)
+    {
+        $th = new File_Therion($url);
+        $th->fetch();
+        $th->evalInputCMD($recurse);
+        $th->updateObjects();
+        return $th;
     }
 
 
@@ -171,7 +211,7 @@ class File_Therion implements Countable
      * @throws InvalidArgumentException
      * @throws File_Therion_SyntaxException if parse errors occur
      */
-    public function parse()
+    public function updateObjects()
     {
         $this->checkSyntax();
         
@@ -250,8 +290,8 @@ class File_Therion implements Countable
      * Be aware that this function clears the internal line buffer, so any
      * changes made by {@link addLine()} get discarded.
      * 
-     * After fetching physical content, you may call {@link parse()} to generate
-     * Therion data model objects out of it.
+     * After fetching physical content, you may call {@link updateObjects()
+     * to generate Therion data model objects out of it.
      *
      * @throws File_Therion_IOException
      * @throws InvalidArgumentException
@@ -374,7 +414,7 @@ class File_Therion implements Countable
      * 
      * @todo implement me
      */
-    public function update()
+    public function updateLines()
     {
         $this->_lines = array(); // clean existing line content
         
@@ -493,7 +533,7 @@ class File_Therion implements Countable
      * Clear associated objects.
      * 
      * This will unassociate all registered objects.
-     * You probably want to call {@link update()} hereafter to also clean the
+     * You probably want to call {@link clearLines()} hereafter to also clean the
      * calculated line content.
      */
     public function clearObjects()
@@ -504,11 +544,11 @@ class File_Therion implements Countable
     /**
      * Add an File_Therion data model object to this file
      * 
-     * Associated objects can be written to a file after {@link update()}
+     * Associated objects can be written to a file after {@link updateLines()}
      * has been called to update the internal line representation.
      * 
      * Be aware that {@link clearObjects()} will discard any manual changes made
-     * so far, and be warned that {@link parse()} will clean them too.
+     * so far, and be warned that {@link updateObjects()} will clean them too.
      * 
      * @param object $thObj File_Therion_* object to add
      * @todo implement me better: checks etc
@@ -783,7 +823,7 @@ class File_Therion implements Countable
      */
     public function toString()
     {
-        // Iterate over file objects composing a string
+        // Iterate over line objects composing a string
         $ret = "";
         foreach ($this->_lines as $line) {
             if ($this->_wrapAt > 0) {
