@@ -109,6 +109,14 @@ class File_Therion_Shot
        'approximate' => false,
     );
     
+    /**
+     * Prefix/Postfix of this shots station names.
+     * 
+     * This is meaningful in centreline context (station-names command there).
+     * 
+     * @var array  
+     */
+    protected $_station_names = array("","");
     
     /**
      * Create a new therion shot object.
@@ -386,6 +394,37 @@ class File_Therion_Shot
         return $this->_units[$ntype];
     }
     
+    /**
+     * Set shot station names pre-/postfix.
+     * 
+     * @param string $prefix
+     * @param string $postfix
+     */
+    public function setStationNames($prefix, $postfix)
+    {
+        if (!is_string($prefix)) {
+            throw new InvalidArgumentException(
+                "Unsupported prefix type '".gettype($prefix)."'" );
+        }
+        if (!is_string($postfix)) {
+            throw new InvalidArgumentException(
+                "Unsupported postfix type '".gettype($postfix)."'" );
+        }
+        
+        $this->_station_names = array($prefix, $postfix);
+    }
+    
+    /**
+     * Get station-names (pre-/postfix).
+     * 
+     * @return array: [0]=prefix, [1]=postfix
+     */
+    public function getStationNames()
+    {
+        return $this->_station_names;
+    }
+    
+    
     
     
     /**
@@ -396,21 +435,35 @@ class File_Therion_Shot
     /**
      * Get from (source) station.
      * 
+     * @param boolean $raw If set to true, no pre-/postfix will be applied.
      * @return string
      */
-    public function getFrom()
+    public function getFrom($raw = false)
     {
-        return $this->_data['from'];
+        if ($raw) {
+            return $this->_data['from'];
+        } else {
+            $prefix  = $this->getStationNames()[0];
+            $postfix = $this->getStationNames()[1];
+            return $prefix.$this->_data['from'].$postfix;
+        }
     }
     
     /**
      * Get to (targeted) station.
      * 
+     * @param boolean $raw If set to true, no pre-/postfix will be applied.
      * @return string
      */
-    public function getTo()
+    public function getTo($raw = false)
     {
-        return $this->_data['to'];
+        if ($raw) {
+            return $this->_data['to'];
+        } else {
+            $prefix  = $this->getStationNames()[0];
+            $postfix = $this->getStationNames()[1];
+            return $prefix.$this->_data['to'].$postfix;
+        }
     }
     
     /**

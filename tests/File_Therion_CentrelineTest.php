@@ -236,6 +236,43 @@ class File_Therion_CentrelineTest extends PHPUnit_Framework_TestCase {
     /**
      * test parsing of data part
      */
+    public function testStationNames()
+    {
+        $sampleLines = array(
+            File_Therion_Line::parse('centreline'),
+            File_Therion_Line::parse('  units compass clino grads'),
+            File_Therion_Line::parse('  data normal from to compass clino tape'),
+            File_Therion_Line::parse('  station-names "pre" "post"'),
+            File_Therion_Line::parse('  0     1   200       -5      6.4 '),
+            File_Therion_Line::parse('  1     2    73        8      5.2 '),
+            File_Therion_Line::parse('  2     3    42        0      2.09'),
+            File_Therion_Line::parse('endcentreline'),            
+        );
+        $sample = File_Therion_Centreline::parse($sampleLines);
+        $this->assertInstanceOf('File_Therion_Centreline', $sample);
+        $this->assertEquals(3, count($sample));  // SPL count shots
+        
+        $shots = $sample->getShots();
+        $this->assertEquals('pre0post',  $shots[0]->getFrom());
+        $this->assertEquals('pre1post',  $shots[0]->getTo());
+        $this->assertEquals('pre1post',  $shots[1]->getFrom());
+        $this->assertEquals('pre2post',  $shots[1]->getTo());
+        $this->assertEquals('pre2post',  $shots[2]->getFrom());
+        $this->assertEquals('pre3post',  $shots[2]->getTo());
+        
+        // test getting raw value
+        $this->assertEquals('0',  $shots[0]->getFrom(true));
+        $this->assertEquals('1',  $shots[0]->getTo(true));
+        $this->assertEquals('1',  $shots[1]->getFrom(true));
+        $this->assertEquals('2',  $shots[1]->getTo(true));
+        $this->assertEquals('2',  $shots[2]->getFrom(true));
+        $this->assertEquals('3',  $shots[2]->getTo(true));
+        
+    }
+    
+    /**
+     * test parsing of data part
+     */
     public function testParsingShotsWithSeveralDataDefinitions()
     {
         $sampleLines = array(

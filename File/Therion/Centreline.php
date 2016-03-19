@@ -258,7 +258,9 @@ class File_Therion_Centreline
                                 break;
                                 
                                 case 'station-names':
-                                   // todo
+                                    $centreline->setStationNames(
+                                        $lineData[0], $lineData[1]
+                                    );
                                 break;
                                 
                                 case 'fix':
@@ -551,6 +553,36 @@ class File_Therion_Centreline
         $this->setData('explo-date', $date);
     }
     
+    /**
+     * Set shot station names pre-/postfix.
+     * 
+     * @param string $prefix
+     * @param string $postfix
+     */
+    public function setStationNames($prefix, $postfix)
+    {
+        if (!is_string($prefix)) {
+            throw new InvalidArgumentException(
+                "Unsupported prefix type '".gettype($prefix)."'" );
+        }
+        if (!is_string($postfix)) {
+            throw new InvalidArgumentException(
+                "Unsupported postfix type '".gettype($postfix)."'" );
+        }
+        
+        $this->setData('station-names', array($prefix, $postfix));
+    }
+    
+    /**
+     * Get station-names (pre-/postfix).
+     * 
+     * @return array: [0]=prefix, [1]=postfix
+     */
+    public function getStationNames()
+    {
+        return $this->getData('station-names');
+    }
+    
     
     /**
      * Add a survey shot to this centreline.
@@ -569,6 +601,13 @@ class File_Therion_Centreline
      */
     public function getShots()
     {
+        // update all shots prefix/postfix with station-names param
+        // 'station-names' => array("",""), // <prefix> <postfix>
+        $s_names = $this->getData('station-names');
+        foreach ($this->_shots as $s) {
+            $s->setStationNames($s_names[0], $s_names[1]);
+        }
+        
         return $this->_shots;
     }
     
