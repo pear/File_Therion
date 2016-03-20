@@ -226,6 +226,40 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
             )
         );
         
+        
+        // test adding with index bigger than valid
+        $sample = new File_Therion("no_file");
+        $this->assertEquals(array(), $sample->getLines());
+        $sample->addLine(new File_Therion_Line("some content: 0"));
+        $sample->addLine(new File_Therion_Line("some content: 1"));
+        $exception = null;
+        try {
+            $sample->addLine(new File_Therion_Line("some content: 20"), 20);
+        } catch (Exception $e) {
+            $exception = $e;
+        }
+        $this->assertInstanceOf(
+            'OutOfBoundsException', $exception,
+            "OutOfBoundsException expected"
+        );
+        
+        
+        // test replacing with index bigger than valid
+        $sample = new File_Therion("no_file");
+        $this->assertEquals(array(), $sample->getLines());
+        $sample->addLine(new File_Therion_Line("some content: 0"));
+        $sample->addLine(new File_Therion_Line("some content: 1"));
+        $exception = null;
+        try {
+            $sample->addLine(new File_Therion_Line("some content: 20"), 20, true);
+        } catch (Exception $e) {
+            $exception = $e;
+        }
+        $this->assertInstanceOf(
+            'OutOfBoundsException', $exception,
+            "OutOfBoundsException expected"
+        );
+        
     }
     
     

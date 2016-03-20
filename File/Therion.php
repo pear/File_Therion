@@ -467,6 +467,7 @@ class File_Therion implements Countable
      * @param int  $lineNumber At which logical position to add (-1=end, 0=first line, ...)
      * @param bool $replace when true, the target line will be overwritten
      * @throws InvalidArgumentException
+     * @throws OutOfBoundsException when requested index is not available
      */
     public function addLine($line, $lineNumber=-1, $replace=false)
     {
@@ -491,10 +492,27 @@ class File_Therion implements Countable
             }
         }
         
+        // test requested linenumber on internal state length
+        if ($lineNumber > count($this->_lines)) {
+            if ($replace) {
+                throw new OutOfBoundsException(
+                    "replace-lineNumber ".$lineNumber." is > ".count($this->_lines)."!");
+            } else {
+                throw new OutOfBoundsException(
+                    "add-lineNumber ".$lineNumber." is > ".count($this->_lines)."!"); 
+            }
+        }
+        
+        
         if ($lineNumber != -1 && count($this->_lines) > 0) {
             // append/replace somewhere in the middle
             if ($lineNumber == 0) $lineNumber++; // correct index
-            $insertion = ($replace)? array($line) : array($line, $this->_lines[$lineNumber-1]);
+            $insertion = ($replace)?
+                array($line) :
+                array($line, $this->_lines[$lineNumber-1] );
+            
+            // replace the index, either with just the new line
+            // or when adding, with the new line followed by ther old line
             array_splice($this->_lines, $lineNumber-1, 1, $insertion);
                     
         } else {
