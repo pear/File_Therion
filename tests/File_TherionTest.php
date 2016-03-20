@@ -19,11 +19,18 @@ require_once 'File/Therion.php';  //includepath is loaded by phpUnit from phpuni
 class File_TherionTest extends PHPUnit_Framework_TestCase {
 
     /**
-     * Base location of test data (therion distirbution)
+     * Base location of test data (therion distribution)
      * 
      * @var string
      */
-    protected $testdata_base = __DIR__.'/data/samples/';
+    protected $testdata_base_therion = __DIR__.'/data/samples_therion/';
+    
+    /**
+     * Base location of test data (own samples)
+     * 
+     * @var string
+     */
+    protected $testdata_base_own = __DIR__.'/data/samples_own/';
     
     
     /**
@@ -77,20 +84,24 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals(array(), $sample->getLines());
         
         // expect exception in case of wrong parameter
+        $exception = null;
         try {
             $sample = new File_Therion("no_file");
             $sample->addLine("string");
         } catch (Exception $e) {
-            $this->assertInstanceOf('InvalidArgumentException', $e);
+            $exception = $e;
         }
+        $this->assertInstanceOf('InvalidArgumentException', $exception);
+        
+        $exception = null;
         try {
             $sample = new File_Therion("no_file");
             $sample->addLine(new File_Therion_Line("some content"), "notAnInt");
         } catch (Exception $e) {
-            $this->assertInstanceOf('InvalidArgumentException', $e);
+             $exception = $e;
         }
-
-        
+        $this->assertInstanceOf('InvalidArgumentException', $exception);
+                
         
         // adding a line
         $sample = new File_Therion("no_file");
@@ -402,7 +413,7 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
      */
     public function testSimpleFetching()
     {
-        $th = new File_Therion($this->testdata_base.'/basics/rabbit.th');
+        $th = new File_Therion($this->testdata_base_therion.'/basics/rabbit.th');
         $th->fetch();
         $this->assertEquals(74, count($th), "parsed line number does not match sample");
     }
@@ -412,21 +423,21 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
      */
     public function testSimpleFetching_recurse()
     {
-        $th = new File_Therion($this->testdata_base.'/basics/rabbit.th');
+        $th = new File_Therion($this->testdata_base_therion.'/basics/rabbit.th');
         $th->fetch();
         $th->evalInputCMD(); // interpret input commands (rabbit.th2)
         $this->assertEquals(74+936, count($th), "parsed line number does not match sample");
         
         // test recursing limit
         // @todo: this should be better tested with custom created nested data
-        $th = new File_Therion($this->testdata_base.'/basics/rabbit.th');
+        $th = new File_Therion($this->testdata_base_therion.'/basics/rabbit.th');
         $th->fetch();
         $th->evalInputCMD(1);
         $this->assertEquals(74+936, count($th), "parsed line number does not match sample");
         
         // test recursing limit
         // @todo: this should be better tested with custom created nested data
-        $th = new File_Therion($this->testdata_base.'/basics/rabbit.th');
+        $th = new File_Therion($this->testdata_base_therion.'/basics/rabbit.th');
         $th->fetch();
         $th->evalInputCMD(0);
         $this->assertEquals(74, count($th), "parsed line number does not match sample");
@@ -436,17 +447,17 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
     /**
      * Test simple parsing of a th file
      */
-    public function testSimpleParsing()
+    public function testSimpleObjectUpdate()
     {
         // Fetch rabbit example
-        $th = new File_Therion($this->testdata_base.'/basics/rabbit.th');
+        $th = new File_Therion($this->testdata_base_therion.'/basics/rabbit.th');
         $th->fetch();
         $this->assertEquals(0, count($th->getSurveys()));
         $this->assertEquals(74, count($th), "parsed line number does not match sample");
         $this->assertEquals('iso8859-2', $th->getEncoding());
         
         // parse file contents into php therion objects
-        $th->parse();
+        $th->updateObjects();
         $this->assertEquals(1, count($th->getSurveys()));
         
         // get survey and inspect it
@@ -475,6 +486,92 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
         
         
         // TODO: More to test for!
+    }
+    
+    /**
+     * Test basic parse recursion
+     */
+    public function testBasicParseRecursion()
+    {
+        // expect exception in case of wrong parameter
+        $exception = null;
+        try {
+            $th = File_Therion::parse(
+                $this->testdata_base_own.'/recursetest/cave.th', -1);
+        } catch (Exception $e) {
+            $exception = $e;
+        }
+        $this->assertInstanceOf(
+            'InvalidArgumentException', $exception,
+            "InvalidArgumentException expected"
+        );
+        $exception = null;
+        try {
+            $th = File_Therion::parse(
+                $this->testdata_base_own.'/recursetest/cave.th', 'wrongParam');
+        } catch (Exception $e) {
+            $exception = $e;
+        }
+        $this->assertInstanceOf(
+            'InvalidArgumentException', $exception,
+            "InvalidArgumentException expected"
+        );
+        
+        
+        // Recurse 0-6 level
+        for ($i=0; $i<=6; $i++) {
+            $expectedCentrelines = ($i<=3)? $i+1 : 4; // expect max 4 CLs
+            $recursor = $i;
+            $th = File_Therion::parse(
+                $this->testdata_base_own.'/recursetest/cave.th', $recursor);
+    
+            $this->assertEquals(1, count($th->getSurveys()));
+            $this->assertEquals($i, $recursor, "Recursing variable touched!");
+            $survey = array_shift($th->getSurveys());
+            $this->assertEquals(
+                $expectedCentrelines, count($survey->getCentrelines())
+            );
+        }
+        
+        // Recurse endlessly
+        $th = File_Therion::parse($this->testdata_base_own.'/recursetest/cave.th');
+        $this->assertEquals(1, count($th->getSurveys()));
+        $survey = array_shift($th->getSurveys());
+        $this->assertEquals(4, count($survey->getCentrelines()));
+        
+        // Recurse endlessly (explicitely)
+        $th = File_Therion::parse($this->testdata_base_own.'/recursetest/cave.th', null);
+        $this->assertEquals(1, count($th->getSurveys()));
+        $survey = array_shift($th->getSurveys());
+        $this->assertEquals(4, count($survey->getCentrelines()));
+        
+    }
+    
+    /**
+     * Test parsing static factory
+     */
+    public function testParse()
+    {
+        // Basic parse: no recursion
+        $th = File_Therion::parse($this->testdata_base_therion.'/basics/rabbit.th', 0);
+        $this->assertEquals(1, count($th->getSurveys()));
+        $survey = array_shift($th->getSurveys());
+        $this->assertEquals(1, count($survey->getCentrelines()));
+        $this->assertEquals(3, count($survey->getJoins()));
+        $this->assertEquals(0, count($survey->getEquates()));
+        $this->assertEquals(2, count($survey->getMaps()));
+        $this->assertEquals(1, count($survey->getSurface()));
+        
+        // Recursive parse: recurse endlessly
+        $th = File_Therion::parse($this->testdata_base_therion.'/basics/rabbit.th');
+        $this->assertEquals(1, count($th->getSurveys()));
+        $survey = array_shift($th->getSurveys());
+        $this->assertEquals(1, count($survey->getCentrelines()));
+        $this->assertEquals(3, count($survey->getJoins()));
+        $this->assertEquals(0, count($survey->getEquates()));
+        $this->assertEquals(2, count($survey->getMaps()));
+        $this->assertEquals(1, count($survey->getSurface()));
+        
     }
 
 }

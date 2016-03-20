@@ -430,8 +430,7 @@ class File_Therion implements Countable
      * point; the line will be inserted at the index, pushing already
      * present content one line down (-1=end, 0=start, ...).
      * When replacing, the selected index will be replaced; here 0 will
-     * be treated as 1 (replacing the first line). When there is no such
-     * line, it will be added instead.
+     * be treated as 1 (replacing the first line).
      * 
      * Instead of $lineNumber 0 and -1 you can use the strings 'start'/'end',
      * this will make your code more readable.
@@ -1001,7 +1000,10 @@ class File_Therion implements Countable
      *        be automatically resolved.
      * 
      * To limit the number of possible nested levels you may specify the
-     * $lvls parameter (null/default: endless, 0: no input, >0: nested levels).
+     * $lvls parameter:
+     * - null: endless recursion (default)
+     * -    0: no input
+     * -   >0: nested levels
      * 
      * @param  int $lvls remaining levels to input
      * @throws InvalidArgumentException when input command is invalid pointer
@@ -1031,7 +1033,7 @@ class File_Therion implements Countable
         }
         
         // scan all local files and search for 'input' commands
-        for ($i=0; $i<count($this->_lines); $i++) {
+        for ($i=count($this->_lines)-1; $i>0; $i--) {
             $curline  =& $this->_lines[$i];
             $lineData = $curline->getDatafields();
             if (isset($lineData[0]) && $lineData[0] == 'input') {
@@ -1059,29 +1061,50 @@ class File_Therion implements Countable
                 }
                 
                 
-                // setup new File-object with same options
+                // setup new File-object with same options that we
+                // will use to conviniently fetch and collect the content
                 $tmpFile = new File_Therion($remotePath);
                 $tmpFile->setEncoding($this->_encoding);
-                
+    
                 // fetch datasource and eval input commands there
                 // may throw File_Therion_IOException, which bubbles up
                 $tmpFile->fetch();
                 
                 // eval nested input commands in those lines;
-                // will do nothing when the nesting reached its limit
+                // will do nothing when the nesting reached its limit.
+                // after this call, $tmpFile contains all nested lines of
+                // to-be-input files, as deep as nesting was allowed by $lvls.
                 $tmpFile->evalInputCMD($lvls);
                 
+                // Replace current input command with a commented one
+                $cp = " # (resolved below)"; // some comment postfix
+                $commtdOri = new File_Therion_Line(
+                    "",                         // empty content (comment only)
+                    $curline->getContent().$cp  // old content as comment...
+                    .$curline->getComment(),    //   ... and with old comment
+                    $curline->getIndent()       // preserve indenting
+                );
+                $this->addLine($commtdOri, $i+1, true);  // replace that line
+                
                 // add retrieved file lines to local buffer in place of $i
-                // (this has to replace the orginating input command,
-                //  which gets replaced with a commented out original)
-                $commtdOri = new File_Therion_Line("", // empty content
-                    $curline->getContent(), // old content as comment
-                    $curline->getIndent()); // preserve indenting
-                $this->_lines[$i] = $commtdOri;
                 $subLines = array_reverse($tmpFile->getLines());
                 foreach ($subLines as $subLine) {
-                    $this->addLine($subLine, $i+1); // pushing content down
+                    if (!is_null($subLine)) { // DBG: that should never happen!!!
+                        // adjust indenting to that of the sourcing file
+                        $subLine->setIndent(
+                            $curline->getIndent().$subLine->getIndent());
+                            
+                        // add the line to the sourcing file
+                        if ($i+2 <= count($this->getLines())) {
+                            $this->addLine($subLine, $i+2); // pushing content down
+                        } else {
+                            // add to end: this happens, when the input command
+                            // was on the very last line.
+                             $this->addLine($subLine, $i+1);
+                        }
+                    }
                 }
+
             }
         }
     }
