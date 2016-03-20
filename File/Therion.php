@@ -513,7 +513,10 @@ class File_Therion implements Countable
             
             // replace the index, either with just the new line
             // or when adding, with the new line followed by ther old line
-            array_splice($this->_lines, $lineNumber-1, 1, $insertion);
+            $offset = $lineNumber-1;
+            $length = 1; // fix replace one element
+            if ($offset <0) $offset = 0; // force correct offset (never needed?)
+            array_splice($this->_lines, $offset, $length, $insertion);
                     
         } else {
             // append/replace at end
