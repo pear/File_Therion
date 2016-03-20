@@ -7,4 +7,6 @@ centreline -id lvl2
 endcentreline
 
 # include next level
+# (note two empty lines after "input lvl3.th" command)
 input lvl3.th
+

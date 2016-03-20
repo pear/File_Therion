@@ -7,4 +7,6 @@ centreline -id lvl3
 endcentreline
 
 # include next level
+# (note that there is no blank line at the end!)
 input lvl4.th
+# this line lives after input lvl4.th command and tells the end of that file input.
