@@ -561,6 +561,7 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals(0, count($survey->getEquates()));
         $this->assertEquals(2, count($survey->getMaps()));
         $this->assertEquals(1, count($survey->getSurface()));
+        $this->assertEquals(0, count($th->getScraps()));
         
         // Recursive parse: recurse endlessly
         $th = File_Therion::parse($this->testdata_base_therion.'/basics/rabbit.th');
@@ -571,6 +572,7 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals(0, count($survey->getEquates()));
         $this->assertEquals(2, count($survey->getMaps()));
         $this->assertEquals(1, count($survey->getSurface()));
+        $this->assertEquals(4, count($survey->getScraps()));
         
     }
 

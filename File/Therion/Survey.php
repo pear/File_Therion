@@ -200,6 +200,10 @@ class File_Therion_Survey
                             $command  = array_shift($lineData);
                             
                             switch (strtolower($command)) {
+                                case 'encoding':
+                                    $survey->setEncoding($lineData[0]);
+                                break;
+                                
                                 case 'input':
                                     // ignore silently because this should be 
                                     // handled at the file level

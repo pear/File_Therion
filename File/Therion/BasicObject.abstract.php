@@ -27,6 +27,7 @@
  * @link       http://pear.php.net/package/File_Therion/
  */
 abstract class File_Therion_BasicObject
+    extends File_Therion_EncodedData
 {
     
     /**
