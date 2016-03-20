@@ -1010,6 +1010,17 @@ class File_Therion implements Countable
      * @todo support relative URLs
      */
     public function evalInputCMD($lvls = null) {
+        // check params
+        if (!is_null($lvls) && !is_int($lvls)) {
+            throw new InvalidArgumentException(
+                'Invalid $lvls argument type ('
+                .gettype($lvls).', expected NULL or integer)');
+        }
+        if ($lvls < 0) {
+            throw new InvalidArgumentException(
+                'Invalid $lvls argument ('.$lvls.', expected >0)');
+        }
+        
         // check nesting limit
         if (!is_null($lvls)) {
             if ($lvls <= 0) {
