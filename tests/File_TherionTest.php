@@ -426,14 +426,16 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
         $th = new File_Therion($this->testdata_base_therion.'/basics/rabbit.th');
         $th->fetch();
         $th->evalInputCMD(); // interpret input commands (rabbit.th2)
-        $this->assertEquals(74+936, count($th), "parsed line number does not match sample");
+        // expect those lines minus one nested occurence of "encoding"
+        $this->assertEquals(74+936-1, count($th), "parsed line number does not match sample");
         
         // test recursing limit
         // @todo: this should be better tested with custom created nested data
         $th = new File_Therion($this->testdata_base_therion.'/basics/rabbit.th');
         $th->fetch();
         $th->evalInputCMD(1);
-        $this->assertEquals(74+936, count($th), "parsed line number does not match sample");
+        // expect those lines minus one nested occurence of "encoding"
+        $this->assertEquals(74+936-1, count($th), "parsed line number does not match sample");
         
         // test recursing limit
         // @todo: this should be better tested with custom created nested data

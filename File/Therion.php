@@ -466,6 +466,9 @@ class File_Therion implements Countable
      * Note that addLine() will not take care of wrapping; make sure
      * that the line content remains consistent.
      * 
+     * Be sure to use the right encoding for your data (-> {@link setEncoding()}
+     * and {@link encode()} for more details).
+     * 
      * Example:
      * <code>
      * // add a simple line (implicitely to the end):
@@ -954,7 +957,11 @@ class File_Therion implements Countable
      * This will tell what encoding to use.
      * The default assumed encoding is UTF-8.
      * 
-     * Only a small subset of encoding names are supported by therion,
+     * This method only signals which encoding the data should be in and will
+     * not actively change encoding. Make sure your data matches the encoding
+     * given!
+     * 
+     * Only a small subset of PHP encoding names are supported by therion,
      * see {@link $_supportedEncodings} for a list.
      * 
      * @param string $codeset
@@ -1154,13 +1161,32 @@ class File_Therion implements Countable
                 );
                 $this->addLine($commtdOri, $i+1, true);  // replace that line
                 
-                // add retrieved file lines to local buffer in place of $i
+                // add retrieved file lines to local buffer in place of $i;
+                // do not add "encoding" command in subfile but reencode the
+                // values there to that of the parent file.
                 $subLines = array_reverse($tmpFile->getLines());
                 foreach ($subLines as $subLine) {
-                    if (!is_null($subLine)) { // DBG: that should never happen!!!
+                    if (!preg_match('/encoding/', $subLine->getContent())) {
                         // adjust indenting to that of the sourcing file
-                        $subLine->setIndent(
-                            $curline->getIndent().$subLine->getIndent());
+                        $newIndent = $curline->getIndent().$subLine->getIndent();
+                        
+                        // get data and translate to proper encoding
+                        $newData = $this->encode(
+                                $subLine->getContent(),
+                                $this->getEncoding(),
+                                $tmpFile->getEncoding()
+                            );
+                        
+                        // get comment and translate to proper encoding
+                        $newComment = $this->encode(
+                                $subLine->getComment(),
+                                $this->getEncoding(),
+                                $tmpFile->getEncoding()
+                            );
+                        
+                        // create a new line object with new encoded content
+                        $subline = new File_Therion_Line(
+                            $newData, $newComment, $newIndent);
                             
                         // add the line to the sourcing file
                         if ($i+2 <= count($this->getLines())) {
