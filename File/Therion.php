@@ -16,7 +16,6 @@
  * Package includes.
  */
 require_once 'File/Therion/Exception.php';
-require_once 'File/Therion/EncodedData.php';
 require_once 'File/Therion/BasicObject.abstract.php';
 require_once 'File/Therion/Line.php';
 require_once 'File/Therion/Survey.php';
@@ -85,9 +84,7 @@ require_once 'File/Therion/DataTypes/Date.php';
  * @license    http://www.gnu.org/licenses/lgpl-3.0.txt LGPLv3
  * @link       http://pear.php.net/package/File_Therion/
  */
-class File_Therion
-    extends File_Therion_EncodedData
-    implements Countable
+class File_Therion implements Countable
 {
 
     /**
@@ -98,6 +95,13 @@ class File_Therion
      * @access protected
      */
     protected $_url = '';
+    
+    /**
+     * Encoding of this file.
+     * 
+     * @var string
+     */
+    protected $_encoding = 'UTF-8';
 
     /**
      * Lines of this file.
@@ -227,10 +231,9 @@ class File_Therion
                     foreach ($data as $line) {
                         if (!$line->isCommentOnly()) {
                             $lineData = $line->getDatafields();
-                            $command  = array_shift($lineData);
-                            switch ($command) {
+                            switch (strtolower($lineData[0])) {
                                 case 'encoding':
-                                    $this->setEncoding($lineData[0]);
+                                    $this->setEncoding($lineData[1]);
                                 break;
                                 
                                 //case 'join':
@@ -919,6 +922,35 @@ class File_Therion
             }
             return $r;
         }
+    }
+    
+    
+    /**
+     * Set encoding of input/output files.
+     * 
+     * This will tell what encoding to use.
+     * The default assumed encoding is utf8.
+     * 
+     * When {@link fetch()}ing a file, there is usually a 'encoding' therion
+     * command telling the encoding of the following code, so when reading in
+     * file data there is usually no need to call this explicitely.
+     * 
+     * @param string $codeset
+     * @todo currently not supported - does nothing
+     */
+    public function setEncoding($codeset)
+    {
+        $this->_encoding = $codeset;
+    }
+    
+    /**
+     * Get encoding of input/output files currently active.
+     * 
+     * @return string encoding
+     */
+    public function getEncoding()
+    {
+        return $this->_encoding;
     }
     
     

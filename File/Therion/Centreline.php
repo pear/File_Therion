@@ -217,10 +217,6 @@ class File_Therion_Centreline
                             $command  = strtolower(array_shift($lineData));
                             
                             switch ($command) {
-                                case 'encoding':
-                                    $centreline->setEncoding($lineData[0]);
-                                break;
-                                
                                 case 'input':
                                     // ignore silently because this should be 
                                     // handled at the file level
