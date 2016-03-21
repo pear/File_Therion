@@ -583,6 +583,20 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
         // TODO Implement me
         $this->markTestIncomplete("This test has not been implemented yet.");
     }
+    
+    public function testWriter()
+    {
+        $th = File_Therion::parse($this->testdata_base_therion.'/basics/rabbit.th', 0);
+        $th->setURL(__DIR__.'data/output/directWriter.rabbit.th');
+        
+        // test debug writer (dumps content to terminal)
+        // (this could be handy if i want to inspect generated content of file)
+        //$th->write(new File_Therion_DebugWriter());
+        
+        
+        // TODO test direct writer
+        //$th->write(); // implicit default writer
+    }
 
 }
 ?>

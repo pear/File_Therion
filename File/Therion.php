@@ -28,6 +28,9 @@ require_once 'File/Therion/Shot.php';
 require_once 'File/Therion/DataTypes/DataTypeInterface.php';
 require_once 'File/Therion/DataTypes/Person.php';
 require_once 'File/Therion/DataTypes/Date.php';
+require_once 'File/Therion/Writers/WriterInterface.php';
+require_once 'File/Therion/Writers/DirectWriter.php';
+require_once 'File/Therion/Writers/DebugWriter.php';
 
 
 /**
@@ -811,41 +814,22 @@ class File_Therion implements Countable
     /**
      * Write this therion file content to the file.
      *  
-     * This will overwrite the file denoted with {@link $_url}.
-     * Wrapping will be applied according the setting of {@link setWrapping()}.
+     * The writing will be carried out by the supplied writer object.
+     * If no writer was supplied, a new {@link DirectWriter} will be
+     * instantiated as default.
      *
-     * Will throw an appropriate exception if anything goes wrong.
-     * 
-     * The content will be converted to the current active encoding which
-     * corresponds to the encoding command of the file.
-     *
-     * @param  string|ressource $survey Therion_Survey object to write
-     * @param  array            $options Options for the writer
-     * @throws File_Therion_IOException 
-     * @todo write to target encoding
+     * @param  File_Therion_Writer $writer Writer to use.
+     * @throws File_Therion_IOException in case of IO error
+     * @throws File_Therion_Exception for other errors
      */
-    public function write()
+    public function write(File_Therion_Writer $writer = null)
     {
-        // go through all $_lines buffer objects and create writable string;
-        $stringContent = $this->toString();
+        if (is_null($writer)) {
+            $writer = new File_Therion_DirectWriter();
+        }
         
-        // convert stringContent from internal utf8 data to tgt encoding
-        // todo implement me
-         
-        // open filehandle in case its not already open
-        if (!is_resource($this->_url)) {
-            $fh = fopen ($this->_url, 'w');
-        } else {
-            $fh = $this->_url;
-        }
-        if (!is_writable($fh)) {
-           throw new File_Therion_IOException("'".$this->_url."' is not writable!");
-        }
-         
-        // then dump that string to the datasource:
-        if (!fwrite($fh, $stringContent)) {
-            throw new File_Therion_IOException("error writing to '".$this->_url."' !");
-        }
+        // write the file!
+        $writer->write($this);
     }
     
     /**
