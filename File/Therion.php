@@ -231,9 +231,10 @@ class File_Therion implements Countable
                     foreach ($data as $line) {
                         if (!$line->isCommentOnly()) {
                             $lineData = $line->getDatafields();
-                            switch (strtolower($lineData[0])) {
+                            $command  = array_shift($lineData);
+                            switch ($command) {
                                 case 'encoding':
-                                    $this->setEncoding($lineData[1]);
+                                    $this->setEncoding($lineData[0]);
                                 break;
                                 
                                 //case 'join':
