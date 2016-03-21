@@ -575,6 +575,12 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals(4, count($survey->getScraps()));
         
     }
+    
+    public function testEncodings()
+    {
+        // TODO Implement me
+        $this->markTestIncomplete("This test has not been implemented yet.");
+    }
 
 }
 ?>

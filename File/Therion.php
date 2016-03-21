@@ -102,6 +102,28 @@ class File_Therion implements Countable
      * @var string
      */
     protected $_encoding = 'UTF-8';
+    
+    /**
+     * Currently supported encodings by therion.
+     * 
+     * You can get an up-to date list with the command
+     * 'therion --print-encodings'. If there is a new encoding
+     * that is not reflected here, please contact me.
+     * 
+     * @var array
+     */
+    protected $_supportedEncodings = array(
+        'ASCII',
+        'CP1250',
+        'CP1251',
+        'CP1252',
+        'CP1253',
+        'ISO8859-1',
+        'ISO8859-2',
+        'ISO8859-5',
+        'ISO8859-7',
+        'UTF-8',
+    );
 
     /**
      * Lines of this file.
@@ -930,17 +952,20 @@ class File_Therion implements Countable
      * Set encoding of input/output files.
      * 
      * This will tell what encoding to use.
-     * The default assumed encoding is utf8.
+     * The default assumed encoding is UTF-8.
      * 
-     * When {@link fetch()}ing a file, there is usually a 'encoding' therion
-     * command telling the encoding of the following code, so when reading in
-     * file data there is usually no need to call this explicitely.
+     * Only a small subset of encoding names are supported by therion,
+     * see {@link $_supportedEncodings} for a list.
      * 
      * @param string $codeset
-     * @todo currently not supported - does nothing
+     * @throws InvalidArgumentException when unsupported encoding is used
      */
     public function setEncoding($codeset)
     {
+        if (!in_array($this->_getName($codeset), $this->_supportedEncodings)) {
+            throw new InvalidArgumentException(
+                "Encoding '$codeset' not supported");
+        }
         $this->_encoding = $codeset;
     }
     
@@ -952,6 +977,50 @@ class File_Therion implements Countable
     public function getEncoding()
     {
         return $this->_encoding;
+    }
+    
+    /**
+     * Encode data.
+     * 
+     * Will check encosingd supported by therion.
+     * 
+     * @param string $data
+     * @param string $toEncoding
+     * @param string $fromEncoding
+     * @return $data in toEncoding.
+     * @throws InvalidArgumentException in case encoding is not supported.
+     * @throws File_Therion_Exception when encoding fails.
+     */
+    public function encode($data, $toEncoding, $fromEncoding)
+    {
+        if (!in_array($this->_getName($fromEncoding), $this->_supportedEncodings)) {
+            throw new InvalidArgumentException(
+                "From-Encoding '$fromEncoding' not supported");
+        }
+        if (!in_array($this->_getName($toEncoding), $this->_supportedEncodings)) {
+            throw new InvalidArgumentException(
+                "To-Encoding '$toEncoding' not supported");
+        }
+            
+        $r = mb_convert_encoding($data, $toEncoding, $fromEncoding);
+        if ($r === false) {
+            throw new File_Therion_Exception(
+                "Encoding failure: '$data' ($fromEncoding -> $toEncoding)");
+        }
+        return $r;
+            
+    }
+    
+    
+    /**
+     * Get internal name of encoding name.
+     * 
+     * @param string $name
+     * @return string
+     */
+    protected function _getName($name)
+    {
+        return strtoupper($name);
     }
     
     
