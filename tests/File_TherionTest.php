@@ -454,7 +454,7 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
         $th->fetch();
         $this->assertEquals(0, count($th->getSurveys()));
         $this->assertEquals(74, count($th), "parsed line number does not match sample");
-        $this->assertEquals('iso8859-2', $th->getEncoding());
+        $this->assertEquals('ISO8859-2', $th->getEncoding());
         
         // parse file contents into php therion objects
         $th->updateObjects();

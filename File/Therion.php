@@ -962,11 +962,7 @@ class File_Therion implements Countable
      */
     public function setEncoding($codeset)
     {
-        if (!in_array($this->_getName($codeset), $this->_supportedEncodings)) {
-            throw new InvalidArgumentException(
-                "Encoding '$codeset' not supported");
-        }
-        $this->_encoding = $codeset;
+        $this->_encoding = $this->_getEncodingName($codeset);
     }
     
     /**
@@ -982,7 +978,7 @@ class File_Therion implements Countable
     /**
      * Encode data.
      * 
-     * Will check encosingd supported by therion.
+     * Will check encoding supported by therion.
      * 
      * @param string $data
      * @param string $toEncoding
@@ -993,16 +989,12 @@ class File_Therion implements Countable
      */
     public function encode($data, $toEncoding, $fromEncoding)
     {
-        if (!in_array($this->_getName($fromEncoding), $this->_supportedEncodings)) {
-            throw new InvalidArgumentException(
-                "From-Encoding '$fromEncoding' not supported");
-        }
-        if (!in_array($this->_getName($toEncoding), $this->_supportedEncodings)) {
-            throw new InvalidArgumentException(
-                "To-Encoding '$toEncoding' not supported");
-        }
-            
-        $r = mb_convert_encoding($data, $toEncoding, $fromEncoding);
+        // get normalized names (throws InvalidArgumentException when unknown)
+        $from = $this->_getEncodingName($fromEncoding);
+        $to   = $this->_getEncodingName($toEncoding);
+        
+        // perform encoding and check for errors
+        $r = iconv($from, $to.'//TRANSLIT', $data);
         if ($r === false) {
             throw new File_Therion_Exception(
                 "Encoding failure: '$data' ($fromEncoding -> $toEncoding)");
@@ -1017,10 +1009,16 @@ class File_Therion implements Countable
      * 
      * @param string $name
      * @return string
+     * @throws InvalidArgumentException in case encoding is not supported.
      */
-    protected function _getName($name)
+    protected function _getEncodingName($name)
     {
-        return strtoupper($name);
+        $normalizedName = strtoupper($name);
+        if (!in_array($normalizedName, $this->_supportedEncodings)) {
+            throw new InvalidArgumentException(
+                "Encoding '$normalizedName' not supported");
+        }
+        return $normalizedName;
     }
     
     
