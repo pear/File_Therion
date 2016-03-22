@@ -110,16 +110,42 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
         
         // adding many lines
         $sample = new File_Therion("no_file");
-        for ($i=0; $i<1000; $i++) {
+        for ($i=0; $i<500; $i++) {
             $sample->addLine(new File_Therion_Line("some content: $i"));
         }
-        $this->assertEquals(1000, count($sample));
+        $this->assertEquals(500, count($sample));
         
         // check that order stays constant:
         $lines = $sample->getLines();
-        for ($i=0; $i<1000; $i++) {
+        for ($i=0; $i<500; $i++) {
             $this->assertEquals(1, preg_match("/^some content: $i$/", $lines[$i]->toString()));
         }
+        
+        
+        // Check line continuation
+        $sample = new File_Therion("no_file");
+        $sample->addLine(new File_Therion_Line('some content: \\'));
+        $this->assertEquals(1, count($sample->getLines()));
+        $this->assertNotNull($sample->getLines()[0]);
+        $this->assertEquals(
+            'some content: '.PHP_EOL,
+            $sample->getLines()[0]->toString());
+        $this->assertTrue($sample->getLines()[0]->isContinued());
+        $sample->addLine(new File_Therion_Line('1\\'));
+        $this->assertEquals(1, count($sample->getLines()));
+        $this->assertNotNull($sample->getLines()[0]);
+        $this->assertEquals(
+            'some content: 1'.PHP_EOL,
+            $sample->getLines()[0]->toString());
+        $this->assertTrue($sample->getLines()[0]->isContinued());
+        $sample->addLine(new File_Therion_Line('2'));
+        $this->assertEquals(1, count($sample->getLines()));
+        $this->assertNotNull($sample->getLines()[0]);
+        $this->assertEquals(
+            'some content: 12'.PHP_EOL,
+            $sample->getLines()[0]->toString());
+        $this->assertFalse($sample->getLines()[0]->isContinued());
+        
         
         
         // Check insertion mode

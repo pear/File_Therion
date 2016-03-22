@@ -31,6 +31,8 @@ require_once 'File/Therion/DataTypes/Date.php';
 require_once 'File/Therion/Writers/WriterInterface.php';
 require_once 'File/Therion/Writers/DirectWriter.php';
 require_once 'File/Therion/Writers/ConsoleWriter.php';
+require_once 'File/Therion/Readers/ReaderInterface.php';
+require_once 'File/Therion/Readers/FileReader.php';
 
 
 /**
@@ -56,8 +58,8 @@ require_once 'File/Therion/Writers/ConsoleWriter.php';
  * 
  * There are two basic workflows:
  * <code>
- * // Read datasource and parse to objects:
- * $src = "some/local/file.th";  // may also be URL!
+ * // 1. Read datasource and parse to objects:
+ * $src = "some/local/file.th";  // physical filename
  * $th = new File_Therion($src); // Instanciate new datasource
  * $th->fetch();                 // Get contents (read)
  * $th->evalInputCMD();          // evaluate 'input' commands recursively
@@ -65,11 +67,14 @@ require_once 'File/Therion/Writers/ConsoleWriter.php';
  * $surveys = $th->getSurveys(); // example: retrieve parsed surveys
  * 
  * // The above can be summed up with:
- * $th = File_Therion::parse($url); // fetch url recursively
- * $surveys = $th->getSurveys();    // get surveys
+ * $th = File_Therion::parse($file); // fetch file recursively
+ * $surveys = $th->getSurveys();     // get surveys
  *
+ * // you may also supply a different Reader plugin to fetch from
+ * // other sources like internet URLs or even databases.
  * 
- * // Generate a .th Therion file out of data model:
+ * 
+ * // 2. Generate a .th Therion file out of data model:
  * $survey = new File_Therion_Survey();
  * // $survey->....  // do many things: craft data model
  * $tgt = "some/local/target.th"; // usually local file
@@ -91,13 +96,22 @@ class File_Therion implements Countable
 {
 
     /**
-     * Datasource/target of this file.
+     * Reader used for this file.
      * 
-     * This represents the real physical adress of the content
+     * This represents the real physical access of the content.
      * 
      * @access protected
      */
-    protected $_url = '';
+    protected $_reader = null;
+    
+    /**
+     * Filename and path of this file.
+     * 
+     * This represents the real physical adress of the content on the disk.
+     * 
+     * @access protected
+     */
+    protected $_filename = '';
     
     /**
      * Encoding of this file.
@@ -160,31 +174,33 @@ class File_Therion implements Countable
     
     
     /**
-     * Create a new therion file object representing content at $url.
+     * Create a new therion file object representing content at $filename.
      *
      * Use this to create a new interface for parsing existing files
      * or writing new ones.
      * 
-     * The $url is a pointer to a datasource (or target).
+     * The $filename tells the physical file name of the file.
      * Use {@link fetch()} if you want to read the source contents or
      * {@link write()} to write the current content to the target.
      * 
      * Example:
      * <code>
      * $thFile = new File_Therion('foobar.th'); // local file (r/w access)
-     * $thFile = new File_Therion('http://example.com/foo.th'); // web (r/o)
      * $thFile->fetch();  // get contents
      * $thFile->updateObjects();  // parse fetched contents
      * $surveys = $thFile->getObjects('File_Therion_Survey'); // get surveys
      * $all = $thFile->getObjects(); // get all parsed objects
      * </code>
      *
-     * @param string $url path or URL of the file
+     * @param string $filename Name of the file represented by this object
      * @throws File_Therion_Exception with wrapped lower level exception
      */
-    public function __construct($url)
+    public function __construct($filename)
     {
-           $this->setURL($url);
+           $this->setFilename($filename);
+           
+           // initalize default reader
+           $this->setReader(new File_Therion_FileReader());
     }
     
     /**
@@ -192,7 +208,7 @@ class File_Therion implements Countable
      * 
      * This will perform the following operations:
      * - create a new File_Therion object pointing to the datasource given
-     * - {@link fetch()} the datasource ($url)
+     * - {@link fetch()} the datasource
      * - {@link evalInputCMD()} optionally import referenced content ($lvls > 0)
      * - {@link updateObjects()} represented by the lines
      * 
@@ -209,15 +225,19 @@ class File_Therion implements Countable
      * 
      * @param string $url     path or URL of the file
      * @param int    $recurse restrict recursion
+     * @param File_Therion_Reader $reader optionally alternative reader
      * @return File_Therion object
      * @throws File_Therion_IOException in case of reading problems
      * @throws File_Therion_SyntaxException case of parsing/syntax errors
      * @throws File_Therion_Exception for generic errors
      */
-    public static function parse($url, $recurse=null)
+    public static function parse(
+        $url,
+        $recurse=null,
+        File_Therion_Reader $reader=null)
     {
         $th = new File_Therion($url);
-        $th->fetch();
+        $th->fetch($reader);
         $th->evalInputCMD($recurse);
         $th->updateObjects();
         return $th;
@@ -308,128 +328,48 @@ class File_Therion implements Countable
     
     
     /**
+     * Set default reader that is used to fetch file content.
+     * 
+     * @param File_Therion_Reader $reader
+     */
+    public function setReader(File_Therion_Reader $reader)
+    {
+        $this->_reader = $reader;
+    }
+    
+    /**
      * Update the internal line representation of this file from datasource.
      * 
-     * This will open the connection to the $url and read out its contents;
-     * parsing it to File_Therion_Line objects (and thereby validating syntax).
+     * This will use the supplied Reader to fetch therion file content.
+     * If no Reader was supplied (NULL/missing value), the internal
+     * default reader will be used ({@link File_Therion_FileReader}).
+     * The supplied reader will be also used for subsequent reads,
+     * like when resolving input commands.
      * 
-     * Be aware that this function clears the internal line buffer, so any
-     * changes made by {@link addLine()} get discarded.
+     * Be aware that the Reader usually clears the internal line buffer, so any
+     * changes made by {@link addLine()} get discarded. Please refer to
+     * the readers documentation if you want to avoid this.
      * 
      * After fetching physical content, you may call {@link updateObjects()
      * to generate Therion data model objects out of it.
+     * (Some Reader implementeations may already do this for you!)
      *
+     * @param File_Therion_Reader $reader Reader to use (NULL for default)
      * @throws File_Therion_IOException
      * @throws InvalidArgumentException
-     * @todo Honor input encoding
      */
-    public function fetch()
+    public function fetch(File_Therion_Reader $reader = null)
     {
-        $this->clearLines(); // clean existing line buffer as we fetch 'em fresh
-        
-        // read out datasource denoted by $url and call addLine()  
-        $data = array(); // raw file data      
-        switch (true) {
-            case (is_resource($this->_url) && get_resource_type($this->_url) == 'stream'):
-                // fetch data from handle
-                while (!feof($handle)) {
-                    $line = fgets($this->_url);
-                    $data[] = $line; // push to raw dataset
-                }
-                break;
-
-            case (is_array($this->_url)):
-                // just use it: either stringdata or already array of Therion_Line objects
-                // TODO better checks needed!
-                $data = $this->_url;
-                break;
-
-            case (is_string($this->_url)):
-                // check if the string is a filepath or URL
-                if (preg_match('?^\w+://?', $this->_url)) {
-                    // its a real URL ('http://...' or 'file://...')
-                    $fh = fopen ($this->_url, 'r');
-                    while (!feof($fh)) {
-                        $data[] = fgets($fh); // push to raw dataset
-                    }
-                    fclose($fh);
-                    
-                } else {
-                    // its not a real URL - see if there is such a file
-                    if (file_exists($this->_url)) {
-                        if (!is_readable($this->_url)) {
-                            throw new File_Therion_IOException(
-                                "File '".$this->_url."' is not readable!"
-                            );
-                        }
-                        
-                        // open and read out
-                        $fh = fopen ($this->_url, 'r');
-                        while (!feof($fh)) {
-                            $data[] = fgets($fh); // push to raw dataset
-                        }
-                        fclose($fh);
-                        
-                    } else {
-                        // bail out: invalid parameter
-                        throw new InvalidArgumentException(
-                          'fetch(): $url \''.$this->_url
-                          .'\' not readable nor a valid URL!');
-                    }
-                }
-                break;
-            
-
-            default:
-                // bail out: invalid parameter
-                throw new InvalidArgumentException(
-                    'fetch(): unsupported $url type!'.
-                    "passed type='".gettype($this->_url)."'"
-                );
-
+        // use default reader in case null parameter
+        if (is_null($reader)) {
+            $reader =& $this->_reader;
+        } else {
+            // store reader for later use (eg. evalInputCMD())
+            $this->setReader($reader);
         }
         
-        
-        // raw $data is now populated, lets parse it into proper line therion 
-        // objects, thereby set encoding if such a command arises.
-        foreach ($data as $dl) {
-            // Encoding: transfer raw dataline to internal utf8 representation
-            // todo implement me
-            
-            // parse raw line
-            $line = (!is_a($dl, 'File_Therion_Line'))
-                ? File_Therion_Line::parse($dl)  // parse raw data string
-                : $dl;                           // use Line object as-is
-            
-            // handle continuations:
-            // if this is the first line, pack it on the stack, otherwise see
-            // if the most current line expects additional content; append to it
-            // if that's the case, otherwise add as fresh line to the stack.
-            if (count($this) == 0) {
-                $this->addLine($line);
-            } else {
-                $priorLine =& $this->_lines[count($this->_lines)-1];
-                if ($line->isContinuation($priorLine)) {
-                    $priorLine->addPhysicalLine($line);
-                } else {
-                    $this->addLine($line);
-                }
-            }
-            
-            
-            // If the last line on the stack is complete now, we can
-            // investigate the line a little further
-            $mostCurrentLine     =& $this->_lines[count($this->_lines)-1];
-            $mostCurrentLineData =  $mostCurrentLine->getDatafields();
-            
-            
-            // set encoding if specified
-            if (isset($mostCurrentLineData[0])
-                && strtolower($mostCurrentLineData[0]) == 'encoding') {
-                $this->setEncoding($mostCurrentLineData[1]);
-            }
-            
-        }
+        // fetch the file!
+        $reader->fetch($this);
         
     }
     
@@ -496,6 +436,7 @@ class File_Therion implements Countable
      * @param bool $replace when true, the target line will be overwritten
      * @throws InvalidArgumentException
      * @throws OutOfBoundsException when requested index is not available
+     * @todo
      */
     public function addLine($line, $lineNumber=-1, $replace=false)
     {
@@ -532,6 +473,41 @@ class File_Therion implements Countable
         }
         
         
+        // Handle continuations (only in add mode when there are already lines);
+        // - target index == end:
+        //     see if the previous line expects a continuation, if so, add to it
+        // - target index != end but >= 1:
+        //     see if the target index expects more lines, if so, add to it
+        // other cases: just do a normal add/replace of the line object.
+        if (!$replace && count($this->_lines) > 0) {
+            $mostCurrentLine = null;
+            if ($lineNumber == -1) {
+                // end selected!
+                $mostCurrentLine =& $this->_lines[count($this->_lines)-1];
+                
+            } else {
+                $mostCurrentLine =& $this->_lines[$lineNumber];
+            }
+            
+            /* It happens that there are null-lines detected. this has something to
+             * do with the index selection. TODO Whats wrong??
+               if (is_null($mostCurrentLine)){
+                print_r(array("lineNumber"=>$lineNumber, "buffer"=>$this->_lines));
+            }*/
+            
+            if (!is_null($mostCurrentLine)
+                && $mostCurrentLine->isContinued() ) {
+                $mostCurrentLine->addPhysicalLine($line);
+                
+                // See if we had an finished encoding line
+                $this->handleEncodingLine();
+                return;
+            }
+            
+        }
+        
+        
+        // Normal add/replace
         if ($lineNumber != -1 && count($this->_lines) > 0) {
             // append/replace somewhere in the middle
             if ($lineNumber == 0) $lineNumber++; // correct index
@@ -552,6 +528,29 @@ class File_Therion implements Countable
                 $this->_lines[count($this->_lines)-1] = $line; // replace last entry
             } else {
                 $this->_lines[] = $line; // add line to internal buffer
+            }
+        }
+        
+        // See if we had an finished encoding line
+        $this->handleEncodingLine();
+    }
+    
+    /**
+     * Handle 'encoding' command in internal line buffer.
+     */
+    protected function handleEncodingLine()
+    {
+        // If the last line on the stack is complete now, we can
+        // investigate the line a little further...
+        $mostCurrentLine =& $this->_lines[count($this->_lines)-1];
+        $priorLine =& $this->_lines[count($this->_lines)-1];
+        if (!$mostCurrentLine->isContinued()) {
+            $mostCurrentLineData = $mostCurrentLine->getDatafields();
+            
+            // set file encoding if specified
+            if (isset($mostCurrentLineData[0])
+                && strtolower($mostCurrentLineData[0]) == 'encoding') {
+                $this->setEncoding($mostCurrentLineData[1]);
             }
         }
     }
@@ -866,31 +865,31 @@ class File_Therion implements Countable
     }
      
     /**
-     * Update datasource/target path.
+     * Set filename of this file object.
      * 
      * This will just change the path, no data will be read/written!
      * 
-     * @param string|ressource $url filename/url or handle
-     * @throws InvalidArgumentException in case $url is no string or ressource
+     * @param string $filename filename
+     * @throws InvalidArgumentException in case $filename is no string
      */
-    public function setURL($url)
+    public function setFilename($filename)
     {
-        if (!is_string($url) && !is_resource($url)) {
+        if (!is_string($filename)) {
             throw new InvalidArgumentException(
-                'Invalid datasource/target type supplied ('.gettype($url).')!'
+                'Invalid filename type supplied ('.gettype($filename).')!'
             );
         }
-        $this->_url = $url;
+        $this->_filename = $filename;
     }
       
     /**
-     * Get currently set datasource/target location.
+     * Get physical file name of this file object.
      * 
-     * @return string|ressource  filename/url or handle
+     * @return string  filename
      */
-    public function getURL()
+    public function getFilename()
     {
-         return $this->_url;
+         return $this->_filename;
     }
      
      
@@ -1042,21 +1041,17 @@ class File_Therion implements Countable
      * Scan local filebuffer for 'input' commands and execute them.
      * 
      * Therions 'input' statement will include the remote file content
-     * at the place of the input command. With remote files the function tries
-     * to guess the remote place. (see {@link enableInputCommand()}). This may
-     * fail with an exception (esp. if $url was initially a filehandle).
+     * at the place of the 'input <filename>' therion command.
      * 
      * This will try to interpret the given filepath in local context;
      * the input-parameter is always a filepath in a filesystem.
      * When the filename has no extension, ".th" is assumed.
      * 
-     * The argument to the input command will be treaten differently depending
-     * on the type of the File_Therions $url:
-     *  FILE: We can treat the url as file path relative to the current path.
-     *   URL: When we have fetched the current file from a web-url,
-     *        then most probably the denoted filepath is also a web url.
-     * OTHER: Filehandles, string/array data or handcrafted objects cannot
-     *        be automatically resolved.
+     * For actually fetching the content, the currently associated
+     * {@link File_Therion_Reader} implementation will be used
+     * (see {@link setReader()}).
+     * With the default FileReader this means that we will assume the filename
+     * to be relative to the local file on a local mounted disk.
      * 
      * To limit the number of possible nested levels you may specify the
      * $lvls parameter:
@@ -1068,7 +1063,6 @@ class File_Therion implements Countable
      * @throws InvalidArgumentException when input command is invalid pointer
      * @throws File_Therion_IOException in case of reading problems
      * @throws File_Therion_SyntaxException case of parsing/syntax errors
-     * @todo support relative URLs
      */
     public function evalInputCMD($lvls = null) {
         // check params
@@ -1096,38 +1090,31 @@ class File_Therion implements Countable
             $curline  =& $this->_lines[$i];
             $lineData = $curline->getDatafields();
             if (isset($lineData[0]) && $lineData[0] == 'input') {
-                // Try to guess datasource relative to
-                //   - url:    path is relative to local url
-                //   - string: path is either absolute or relative to current file
-                //   - other:  unable to handle -> exception
-                $remotePath = $lineData[1];
-                $localURL = $this->_url;
-                if (is_string($localURL) && preg_match('?^\w+://?', $localURL)) {
-                    // real URL: TODO
-                    throw new File_Therion_Exception("unsupported feature: input type URL");
-                } elseif (is_string($localURL)) {
-                    // its a plain string (file path)
-                    $remotePath = dirname($localURL).'/'.$remotePath;
-                    
-                } else {
-                    // other: we can't guess it
-                    throw new InvalidArgumentException('Invalid $url type!');
-                }
+                $remotePath = $lineData[1]; // get path argument from command
                 
-                // when $url basename has no filename extension, append ".th".
+                // expand the remote file argument as viewed from
+                // the local filename
+                $remotePath = dirname($this->_filename).'/'.$remotePath;
+                
+                // when file-basename has no filename extension, append ".th".
                 if (!preg_match('/\.\w+$/', $remotePath)) {
                     $remotePath .= '.th';
                 }
                 
                 
                 // setup new File-object with same options that we
-                // will use to conviniently fetch and collect the content
+                // will use to conviniently fetch and collect the content.
+                // (we assume the same encoding, but this may be overridden
+                //  with an 'encoding' command in the loaded file)
                 $tmpFile = new File_Therion($remotePath);
                 $tmpFile->setEncoding($this->_encoding);
     
                 // fetch datasource and eval input commands there
-                // may throw File_Therion_IOException, which bubbles up
-                $tmpFile->fetch();
+                // may throw File_Therion_IOException, which bubbles up.
+                // we use the currently available Reader implementation for this
+                if (!is_null($this->_reader)) {
+                    $tmpFile->fetch($this->_reader);
+                }
                 
                 // eval nested input commands in those lines;
                 // will do nothing when the nesting reached its limit.
