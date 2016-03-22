@@ -22,7 +22,7 @@
  * @license    http://www.gnu.org/licenses/lgpl-3.0.txt LGPLv3
  * @link       http://pear.php.net/package/File_Therion/
  */
-class File_Therion_DebugWriter implements File_Therion_Writer
+class File_Therion_ConsoleWriter implements File_Therion_Writer
 {
     /**
      * Write a Therion file structure.

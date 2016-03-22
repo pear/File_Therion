@@ -30,7 +30,7 @@ require_once 'File/Therion/DataTypes/Person.php';
 require_once 'File/Therion/DataTypes/Date.php';
 require_once 'File/Therion/Writers/WriterInterface.php';
 require_once 'File/Therion/Writers/DirectWriter.php';
-require_once 'File/Therion/Writers/DebugWriter.php';
+require_once 'File/Therion/Writers/ConsoleWriter.php';
 
 
 /**
