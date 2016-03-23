@@ -169,14 +169,15 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals(7, count($sample));
         $i = 0;
         foreach ($sample->getLines() as $l) {
-            if ($i == 3-1 && !stristr($tp, "INSERTED")) {
+            if ($i == 4-1 && !stristr($tp, "INSERTED")) {
                 // expect something else at that line!
                 $tp = "/^some content: INSERTED$/";
                 $i--; // because we inserted; will be adjustet to correct value below
             } else {
                  $tp = "/^some content: ".($i+1)."$/";
             }
-            $this->assertEquals(1, preg_match($tp, $l->toString()));
+            $this->assertEquals(1, preg_match($tp, $l->toString()),
+                "expected pattern='$tp'; got='".$l->toString()."'");
             $i++;
         }
         
@@ -192,14 +193,15 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals(6, count($sample));
         $i = 0;
         foreach ($sample->getLines() as $l) {
-            if ($i == 2 && !stristr($tp, "REPLACED")) {
+            if ($i == 4-1 && !stristr($tp, "REPLACED")) {
                 // expect something else at that line!
                 $tp = "/^some content: REPLACED/";
                 //$i--; COUNT ONWARDS because we replaced
             } else {
                  $tp = "/^some content: ".($i+1)."$/";
             }
-            $this->assertEquals(1, preg_match($tp, $l->toString()));
+            $this->assertEquals(1, preg_match($tp, $l->toString()),
+                "expected pattern='$tp'; got='".$l->toString()."'");
             $i++;
         }
 
@@ -622,7 +624,7 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
     public function testWriter()
     {
         $th = File_Therion::parse($this->testdata_base_therion.'/basics/rabbit.th', 0);
-        $th->setURL(__DIR__.'data/output/directWriter.rabbit.th');
+        $th->setFilename(__DIR__.'data/output/directWriter.rabbit.th');
         
         // test debug writer (dumps content to terminal)
         // (this could be handy if i want to inspect generated content of file)

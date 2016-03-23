@@ -431,13 +431,13 @@ class File_Therion implements Countable
      * </code>
      * 
      * @param File_Therion_Line $line Line to add
-     * @param int  $lineNumber At which logical position to add (-1=end, 0=first line, ...)
+     * @param int  $index At which logical position to add (-1=end, 0=first line, ...)
      * @param bool $replace when true, the target line will be overwritten
      * @throws InvalidArgumentException
      * @throws OutOfBoundsException when requested index is not available
      * @todo
      */
-    public function addLine($line, $lineNumber=-1, $replace=false)
+    public function addLine($line, $index=-1, $replace=false)
     {
         if (!is_a($line, 'File_Therion_Line')) {
             throw new InvalidArgumentException(
@@ -446,93 +446,108 @@ class File_Therion implements Countable
             );
         }
         
-        // synonyms+checks for lineNumber
-        if (is_string($lineNumber) && strtolower($lineNumber) == "start") {
-            $lineNumber = 0;
-        } elseif (is_string($lineNumber) && strtolower($lineNumber) == "end") {
-            $lineNumber = -1;
+        // synonyms+checks for index
+        if (is_string($index) && strtolower($index) == "start") {
+            $index = 0;
+        } elseif (
+            (is_string($index) && strtolower($index) == "end")
+            || $index === -1) {
+            $index = (count($this->_lines)>0)? count($this->_lines) : 0;
         } else {
-            if (!is_int($lineNumber)) {
+            if (!is_int($index)) {
                 throw new InvalidArgumentException(
-                    'addLine(): Invalid $lineNumber argument! '
+                    'addLine(): Invalid $index argument! '
                     ."int expected, or string 'start' or 'end'"
                 );
             }
         }
         
-        // test requested linenumber on internal state length
-        if ($lineNumber > count($this->_lines)) {
-            if ($replace) {
-                throw new OutOfBoundsException(
-                    "replace-lineNumber ".$lineNumber." is > ".count($this->_lines)."!");
-            } else {
-                throw new OutOfBoundsException(
-                    "add-lineNumber ".$lineNumber." is > ".count($this->_lines)."!"); 
-            }
+        
+        // Handle modification
+        // Note: $index is the logical line number
+        if ($index > count($this->_lines)) {
+            // index is bigger than current lines-length: error
+            throw new OutOfBoundsException(
+                "index ".$index." is > ".count($this->_lines)."!");
         }
         
-        
-        // Handle continuations (only in add mode when there are already lines);
-        // - target index == end:
-        //     see if the previous line expects a continuation, if so, add to it
-        // - target index != end but >= 1:
-        //     see if the target index expects more lines, if so, add to it
-        // other cases: just do a normal add/replace of the line object.
-        if (!$replace && count($this->_lines) > 0) {
-            $mostCurrentLine = null;
-            if ($lineNumber == -1) {
-                // end selected!
-                $mostCurrentLine =& $this->_lines[count($this->_lines)-1];
-                
-            } else {
-                $mostCurrentLine =& $this->_lines[$lineNumber];
+        if ($replace) {
+            // REPLACE MODE:
+            // $index is the index to replace or END+1
+            if ($index == count($this->_lines) && $index > 0) {
+                // index is next free index at the end:
+                // replace last known index, that is index-1
+                $index--;
             }
             
-            /* It happens that there are null-lines detected. this has something to
-             * do with the index selection. TODO Whats wrong??
-               if (is_null($mostCurrentLine)){
-                print_r(array("lineNumber"=>$lineNumber, "buffer"=>$this->_lines));
-            }*/
-            
-            if (!is_null($mostCurrentLine)
-                && $mostCurrentLine->isContinued() ) {
-                $mostCurrentLine->addPhysicalLine($line);
-                
-                // See if we had an finished encoding line
-                $this->handleEncodingLine();
-                return;
+            if (!array_key_exists($index, $this->_lines)) {
+                throw new OutOfBoundsException(
+                    "replace-index ".$index." is invalid!");
             }
             
-        }
-        
-        
-        // Normal add/replace
-        if ($lineNumber != -1 && count($this->_lines) > 0) {
-            // append/replace somewhere in the middle
-            if ($lineNumber == 0) $lineNumber++; // correct index
-            $insertion = ($replace)?
-                array($line) :
-                array($line, $this->_lines[$lineNumber-1] );
+            // replace 1 elements at index with $line
+            array_splice($this->_lines, $index, 1, array($line));
+         
             
-            // replace the index, either with just the new line
-            // or when adding, with the new line followed by ther old line
-            $offset = $lineNumber-1;
-            $length = 1; // fix replace one element
-            if ($offset <0) $offset = 0; // force correct offset (never needed?)
-            array_splice($this->_lines, $offset, $length, $insertion);
-                    
         } else {
-            // append/replace at end
-            if ($replace && count($this->_lines) > 0) {
-                $this->_lines[count($this->_lines)-1] = $line; // replace last entry
+            // ADD MODE:
+            // $index is the index to add or END+1
+       
+            if ($index == count($this->_lines)) {
+                // index is next free index at the end:
+                // just push to internal array
+                
+                // in case the prior line expects more content, $line is assumed
+                // to be its continuation.
+                if (count($this->_lines) > 0) {
+                    $priorLine = &$this->_lines[count($this->_lines)-1];
+                    if ($priorLine->isContinued()) {
+                        // add to the unfinished line
+                        $priorLine->addPhysicalLine($line);
+                    } else {
+                        // just normal add at end
+                        $this->_lines[] = $line;
+                    }
+                } else {
+                    // first line to add in this file: normal add
+                    $this->_lines[] = $line;
+                }
+                
             } else {
-                $this->_lines[] = $line; // add line to internal buffer
+                // index is smaller: add to this index, downpushing content
+                if (!array_key_exists($index, $this->_lines)) {
+                    throw new OutOfBoundsException(
+                        "add-index ".$index." is invalid!");
+                }
+                
+                if ($index == 0) {
+                    // the add occurs on line=0, we just add there as there is
+                    // never a prior line by definition
+                    array_splice($this->_lines, $index, 0, array($line));
+                    
+                } else {
+                    // in case the prior line to the existing line is continued,
+                    // this line represents a continuation of that line.
+                    $priorLine = &$this->_lines[$index-1];
+                    if ($priorLine->isContinued()) {
+                        // continuation: add the line to the existing one
+                        $priorLine->addPhysicalLine($line);
+                    } else {
+                        // replace 0 elements (=splice in) at index with $line
+                        array_splice($this->_lines, $index, 0, array($line));
+                    }
+                    
+                }
+               
             }
+            
         }
         
         // See if we had an finished encoding line
         $this->handleEncodingLine();
+        
     }
+    
     
     /**
      * Handle 'encoding' command in internal line buffer.
