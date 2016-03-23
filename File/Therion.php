@@ -392,13 +392,12 @@ class File_Therion implements Countable
     /**
      * Add a line to this file.
      * 
-     * The optional lineNumber parameter allows to adjust the insertion
+     * The optional index parameter allows to adjust the insertion
      * point; the line will be inserted at the index, pushing already
      * present content one line down (-1=end, 0=start, ...).
-     * When replacing, the selected index will be replaced; here 0 will
-     * be treated as 1 (replacing the first line).
+     * When replacing, the selected index will be replaced.
      * 
-     * Instead of $lineNumber 0 and -1 you can use the strings 'start'/'end',
+     * Instead of $index 0 and -1 you can use the strings 'start'/'end',
      * this will make your code more readable.
      * Using <code>addLine(..., $lln - 1)</code> will use logical line number
      * instead of the index (logical = index+1).

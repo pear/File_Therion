@@ -101,6 +101,15 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
              $exception = $e;
         }
         $this->assertInstanceOf('InvalidArgumentException', $exception);
+        
+        $exception = null;
+        try {
+            $sample = new File_Therion("no_file");
+            $sample->addLine(null);
+        } catch (Exception $e) {
+            $exception = $e;
+        }
+        $this->assertInstanceOf('InvalidArgumentException', $exception);
                 
         
         // adding a line
@@ -150,7 +159,7 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
         
         // Check insertion mode
         // we expect the inserted line at index 3(=line 4), pushing existing content down.
-        // Insert @-1=END, @0=start, @1=after 1, etc
+        // Insert @-1=END, @0=start, @1=at 1 pushing old 1 down, etc
         $sample = new File_Therion("no_file");
         for ($i=0; $i<6; $i++) {
             $sample->addLine(new File_Therion_Line("some content: ".($i+1).""));
