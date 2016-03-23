@@ -134,10 +134,8 @@ class File_Therion_Line implements Countable
                 throw new InvalidArgumentException(
                     'addPhysicalLine(): Invalid $line type!');
             }
-            //foreach ($line->_content as $cl) {
-            //    $this->addData($cl['indent'], $cl['data'], $cl['comment']);
-            //}
             $this->addData($line->getIndent(), $line->getContent(), $line->getComment());
+            if ($line->isContinued()) $this->expectMoreLines();
         }
     }
     
@@ -147,7 +145,6 @@ class File_Therion_Line implements Countable
      * @param string  $data    data string of the line
      * @param string  $comment comment of the line
      * @param string  $indent  intent characters
-     * @param boolean $indent  in case the line expects further data
      * @throws File_Therion_SyntaxException in case the Line did not expect additional wrapped content
      * @throws InvalidArgumentException
      */
@@ -165,7 +162,7 @@ class File_Therion_Line implements Countable
             throw new InvalidArgumentException(
                 "Invalid $comment argument! passed type='".gettype($file)."'");
         }
-                 
+                
         // Detect if this line expects further lines...
         /* thbook says on p.12: "each line ending with a backslash (\) is
         *  considered to continue on the next line, as if there was neither
@@ -181,7 +178,7 @@ class File_Therion_Line implements Countable
             
             $wrapDetected = true;
         }
-        
+
         // see, if $data has trailing whitespace, followed by comment;
         // if so, set the comment separator to that characters:
         $matches = array();
@@ -212,12 +209,14 @@ class File_Therion_Line implements Countable
     /**
      * Let the Line know that it should expect an additional wrapped line.
      * 
+     * Do not confuse this with {@link isContinued()}!
+     * 
      * @param boolean $yesno set to false to explicitely revert
      */
     public function expectMoreLines($yesno = true)
     {
         // reset all fields:
-        // only update the alst field
+        // only update the last field
         $c = count($this->_content);
         for ($i=0; $i<$c; $i++) {
             $y = ($c > 1)? true : false;    // all elements...
