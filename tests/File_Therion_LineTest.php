@@ -613,6 +613,14 @@ class File_Therion_LineTest extends PHPUnit_Framework_TestCase
                 'animal' => '',
                 'catch'  => 'rats'),
             $sample->extractOptions());
+            
+        // test parsing of scrap line; that is:
+        // test proper handling of escaped negative numeric arguments
+        $sample = $sample = new File_Therion_Line(
+            'scrap ps2 -scale [295.0 203.0 995.0 207.5 0.0 0.0 0 -36 m]');
+        $this->assertEquals(
+            array('scale'  => '295.0 203.0 995.0 207.5 0.0 0.0 0 -36 m'),
+            $sample->extractOptions());
     }
 }
 ?>
