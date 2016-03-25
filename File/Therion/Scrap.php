@@ -43,6 +43,11 @@ class File_Therion_Scrap
      */
     protected $_options = array(
         //todo: 'title' => "",
+        'scale'      => "", // 4 forms possible
+        'projection' => "",
+        'author'     => array(), // <date> <persons>
+        'flip'       => ""
+        
     );
     
     
@@ -132,11 +137,10 @@ class File_Therion_Scrap
         //
         // todo: implement parsing code
         //
-        
+    
         return $scrap;
         
     }
-    
     
     
     /**
