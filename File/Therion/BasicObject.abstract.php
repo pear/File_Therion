@@ -142,7 +142,10 @@ abstract class File_Therion_BasicObject
             }
             
             $this->_verify('_options', $option, $value);
-            $this->_options[$option] = $value;
+            if (!$this->handleCommonOption($option, $value)) {
+                // option was not handled specially
+                $this->_options[$option] = $value;
+            }
             
         } else {
             // multi mode
@@ -165,6 +168,47 @@ abstract class File_Therion_BasicObject
           return $this->_options[$option];
      }
      
+     
+     
+    /**
+     * Handle known options supported by several objects.
+     * 
+     * Some options are common to several objects and need enhanced parsing.
+     * This is centralized here.
+     * Note that this funcion should only be used after a call to
+     * {@link _verify()} so it is assured the key exists in the specific class.
+     * 
+     * @param string $option to try to handle
+     * @param mixed $value value to handle
+     * @return boolean true = handling performed, no further action needed.
+     * @throws File_Therion_SyntaxException on syntax errors (eg missing values)
+     */
+    protected function handleCommonOption($option, $value=null)
+    {
+        // Handle options;
+        // each case branch must return TRUE on success
+        $option = strtolower($option);
+        switch ($option) {
+            case 'author':
+                if (is_array($value)) {
+                    // author with year: parse into person object
+                    $value[1] = File_Therion_Person::parse($value[1]);
+                } else {
+                    $value = array("", File_Therion_Person::parse($value));
+                }
+                $this->_options[$option] = $value;
+                return true;
+            break;
+            
+            // TODO: There are more common options!
+            
+            
+            default:
+                return false; // signal: "not handled"
+                
+        }
+            
+    }
      
     /**
      * Set some simple data of this object.
