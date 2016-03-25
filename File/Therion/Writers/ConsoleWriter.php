@@ -38,9 +38,7 @@ class File_Therion_ConsoleWriter implements File_Therion_Writer
 
         // go through all $_lines buffer objects and create writable string;
         $stringContent = $file->toString();
-        print __CLASS__." writing:\n";
         print $stringContent;
-        print __CLASS__." done!\n";
         
     }
     
