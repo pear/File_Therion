@@ -47,6 +47,10 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
      */
     protected function setUp()
     {
+        // create data output directory if not existing
+        if (!file_exists($this->testdata_base_out)) {
+            mkdir($this->testdata_base_out);
+        }
     }
 
     /**
