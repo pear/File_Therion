@@ -294,10 +294,14 @@ class File_Therion_Line implements Countable
      * //Line = 'survey foo -title "bar foo passage"'
      * $options = $line->extractOptions();
      * print $options['title']; // -> "bar foo passage"
+     * 
+     * //Line = 'scrap bar -author 2016 "Some One"'
+     * $options = $line->extractOptions();
+     * print $options['author']; // -> array("2016", "Some One")
      * </code>
      * 
      * @return array
-     * @todo: see if there are multiarg options allowed and if so, support them
+     * @todo i dont know if this is valid in therion or syntaxerror
      */
     public function extractOptions()
     {
@@ -306,8 +310,31 @@ class File_Therion_Line implements Countable
         for ($i=0; $i<count($data); $i++) {
             $m = array();
             if (preg_match('/^-(.+)/', $data[$i], $m)) {
-                // this data field is an option
-                $r[$m[1]] = $data[$i+1];
+                // this data field is an option:
+                // see if there are more arguments following
+                $opt  = $m[1]; // option name
+                $args = array();
+                for ($y=$i+1; $y<count($data); $y++) {
+                    // add following fields as argument until
+                    // end or new option starts
+                    if (!preg_match('/^-(.+)/', $data[$y])) {
+                        $args[] = $data[$y]; // add as arg
+                    } else {
+                        $i = $y-1; // correct i to reevaluate next option
+                        break; // end investigation/adding
+                    }
+                }
+                
+                // add $args to option key
+                if (count($args) == 1) {
+                    $r[$m[1]] = array_shift($args); // one key as string
+                } elseif (count($args) > 1) {
+                    $r[$m[1]] = $args; // several keys as array
+                } else {
+                    $r[$m[1]] = ""; // no args: empty string
+                    //NOTE option without arg may be an syntax error...
+                }
+                
             }
         }
         
