@@ -145,7 +145,7 @@ class File_Therion implements Countable
     /**
      * Lines of this file.
      * 
-     * will be populated by {@link parse()} or {@link updateLines()}
+     * will be populated by {@link parse()} or {@link updateLines()}.
      * 
      * @access protected
      * @var array of data (File_Therion_Line objects)
@@ -435,7 +435,6 @@ class File_Therion implements Countable
      * @param bool $replace when true, the target line will be overwritten
      * @throws InvalidArgumentException
      * @throws OutOfBoundsException when requested index is not available
-     * @todo
      */
     public function addLine($line, $index=-1, $replace=false)
     {
