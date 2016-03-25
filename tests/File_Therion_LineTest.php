@@ -576,50 +576,74 @@ class File_Therion_LineTest extends PHPUnit_Framework_TestCase
         // one option
         $sample = $sample = new File_Therion_Line(
             'survey foo -title "bar foo passage"');
-        $this->assertEquals(array('title'=> 'bar foo passage'),
+        $this->assertEquals(array('title'=> array('bar foo passage')),
             $sample->extractOptions());
             
         // one option without arg
-        // (TODO: i dont know if this is valid in therion or syntaxerror)
-        $sample = $sample = new File_Therion_Line(
-            'survey foo -someSwitch');
-        $this->assertEquals(array('someSwitch'=> ''),
-            $sample->extractOptions());
+        // (this is illegal according to thbook)
+        $sample = new File_Therion_Line('survey foo -someSwitch');
+        $exception = null;
+        try {
+            $sample->extractOptions();
+        } catch (Exception $e) {
+            $exception = $e;
+        }
+        $this->assertInstanceOf('File_Therion_SyntaxException', $exception);
         
         // multiple options
         $sample = $sample = new File_Therion_Line(
             'survey foo -title "bar foo passage" -animal cats -catch rats');
         $this->assertEquals(array(
-                'title'  => 'bar foo passage',
-                'animal' => 'cats',
-                'catch'  => 'rats'),
+                'title'  => array('bar foo passage'),
+                'animal' => array('cats'),
+                'catch'  => array('rats')),
             $sample->extractOptions());
         
         // multiple options with multiple args
         $sample = $sample = new File_Therion_Line(
             'survey foo -title "bar passage" -animal cat "brown fox" -catch rats');
         $this->assertEquals(array(
-                'title'  => 'bar passage',
-                'animal' => array('cat', 'brown fox'),
-                'catch'  => 'rats'),
+                'title'  => array('bar passage'),
+                'animal' => array(array('cat', 'brown fox')),
+                'catch'  => array('rats')),
             $sample->extractOptions());
             
+        // multiple options with multiple args several times
+        $sample = $sample = new File_Therion_Line(
+            'survey foo -title "bar passage" -animal cat "brown fox" '
+                .'-catch rats -animal dog -catch mice trap');
+        $this->assertEquals(
+                array(
+                    'title'  => array('bar passage'),
+                    'animal' => array(
+                        array('cat', 'brown fox'),
+                        'dog'
+                    ),
+                    'catch'  => array(
+                        'rats',
+                        array('mice', 'trap')
+                    )
+                ),
+                $sample->extractOptions() );
+            
         // multiple options with multiple args but one without arg
-        // (TODO: i dont know if this is valid in therion or syntaxerror)
+        // (this is illegal according to thbook)
         $sample = $sample = new File_Therion_Line(
             'survey foo -title "bar passage" -animal -catch rats');
-        $this->assertEquals(array(
-                'title'  => 'bar passage',
-                'animal' => '',
-                'catch'  => 'rats'),
-            $sample->extractOptions());
+        $exception = null;
+        try {
+            $sample->extractOptions();
+        } catch (Exception $e) {
+            $exception = $e;
+        }
+        $this->assertInstanceOf('File_Therion_SyntaxException', $exception);
             
         // test parsing of scrap line; that is:
         // test proper handling of escaped negative numeric arguments
         $sample = $sample = new File_Therion_Line(
             'scrap ps2 -scale [295.0 203.0 995.0 207.5 0.0 0.0 0 -36 m]');
         $this->assertEquals(
-            array('scale'  => '295.0 203.0 995.0 207.5 0.0 0.0 0 -36 m'),
+            array('scale'  => array('295.0 203.0 995.0 207.5 0.0 0.0 0 -36 m')),
             $sample->extractOptions());
     }
 }

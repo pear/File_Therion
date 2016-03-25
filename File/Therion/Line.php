@@ -287,21 +287,33 @@ class File_Therion_Line implements Countable
     /**
      * Extract options given to a command in this line.
      * 
-     * Returns associative array of set options.
+     * Returns associative array of set options with key=option.
+     * The value is an array containing the values whose items can have the
+     * following forms:
+     * - empty string with no arguments
+     * - string when one argument was given
+     * - array with strings with multiple arguments
+     * 
+     * When an option is given more than once, value(s) will be appended to
+     * the already existing key like described above.
      * 
      * Example:
      * <code>
      * //Line = 'survey foo -title "bar foo passage"'
      * $options = $line->extractOptions();
-     * print $options['title']; // -> "bar foo passage"
+     * print $options['title']; // -> array("bar foo passage")
      * 
      * //Line = 'scrap bar -author 2016 "Some One"'
      * $options = $line->extractOptions();
-     * print $options['author']; // -> array("2016", "Some One")
+     * print $options['author']; // -> array(array("2016", "Some One"))
+     * 
+     * //Line = 'scrap bar -author 2016 "Some One" -author "Someone Else"'
+     * $options = $line->extractOptions();
+     * print $options['author']; // -> array(array("2016", "Some One"), "Someone Else")
      * </code>
      * 
      * @return array
-     * @todo i dont know if this is valid in therion or syntaxerror
+     * @throws File_Therion_SyntaxException in case of missing option arguments
      */
     public function extractOptions()
     {
@@ -320,21 +332,35 @@ class File_Therion_Line implements Countable
                     if (!preg_match('/^-(.+)/', $data[$y])) {
                         $args[] = $data[$y]; // add as arg
                     } else {
-                        $i = $y-1; // correct i to reevaluate next option
+                        $i = $y-1; // adjust $i to reevaluate next option
                         break; // end investigation/adding
                     }
                 }
                 
-                // add $args to option key
-                if (count($args) == 1) {
-                    $r[$m[1]] = array_shift($args); // one key as string
-                } elseif (count($args) > 1) {
-                    $r[$m[1]] = $args; // several keys as array
-                } else {
-                    $r[$m[1]] = ""; // no args: empty string
-                    //NOTE option without arg may be an syntax error...
+                if (count($args) == 0) {
+                    // according to thbook, any option needs at least
+                    // one argument ("-<option> <arg1>")!
+                    throw new File_Therion_SyntaxException(
+                        "Missing argument for option '$opt'!"
+                    );
                 }
                 
+                // format $args:
+                // - one item:   fetch content
+                // - more items: leave in array, so they remain linked
+                if (count($args) == 1) {
+                    $args = array_shift($args);
+                }
+                
+                // add $args to option key
+                if (array_key_exists($opt, $r)) {
+                    // some other value is already present: add this args
+                    $r[$opt][] = $args;
+                } else {
+                    // create fresh key
+                    $r[$opt] = array($args);
+                }
+
             }
         }
         

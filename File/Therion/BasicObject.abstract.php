@@ -131,6 +131,16 @@ abstract class File_Therion_BasicObject
     {
         if (!is_array($option)) {
             // single mode
+            
+            // When the option accepts non-array and we got an array with just
+            // a single value, we just fetch it. Most probably this comes from
+            // Line->extractOptions() and this will always return an array.
+            if (is_array($value) && count($value) == 1
+                && array_key_exists($option, $this->_options)
+                && !is_array($this->_options[$option])) {
+                $value = array_shift($value);
+            }
+            
             $this->_verify('_options', $option, $value);
             $this->_options[$option] = $value;
             
