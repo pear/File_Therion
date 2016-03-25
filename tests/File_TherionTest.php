@@ -32,6 +32,13 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
      */
     protected $testdata_base_own = __DIR__.'/data/samples_own/';
     
+    /**
+     * Base location of test output
+     * 
+     * @var string
+     */
+    protected $testdata_base_out = __DIR__.'/testoutput/';
+    
     
     /**
      * setup test case, called before a  test is executed.
@@ -621,18 +628,37 @@ class File_TherionTest extends PHPUnit_Framework_TestCase {
         $this->markTestIncomplete("This test has not been implemented yet.");
     }
     
-    public function testWriter()
+    public function testDefaultWriter()
     {
-        $th = File_Therion::parse($this->testdata_base_therion.'/basics/rabbit.th', 0);
-        $th->setFilename(__DIR__.'data/output/directWriter.rabbit.th');
+        $srcFile = $this->testdata_base_therion.'/basics/rabbit.th';
+        $th = File_Therion::parse($srcFile, 0);
         
-        // test debug writer (dumps content to terminal)
+        // test console writer (dumps content to terminal)
         // (this could be handy if i want to inspect generated content of file)
-        //$th->write(new File_Therion_DebugWriter());
+        //$th->write(new File_Therion_ConsoleWriter());
+        
+        // setup clean outfile
+        $tgtFile = $this->testdata_base_out.'/directWriter.rabbit.th';
+        if (file_exists($tgtFile)) unlink($tgtFile); // clean outfile
+        
+        // write!
+        $th->setFilename($tgtFile);
+        $th->write(); // implicit default writer
         
         
-        // TODO test direct writer
-        //$th->write(); // implicit default writer
+        // check if input file equals output file
+        // TODO: There is currently one newline too much produced.
+        //       This should be investigated... but is not critical.
+        $srcData = file($srcFile);
+        $tgtData = file($tgtFile);
+        // Adjust for the TODO bug
+        $this->assertEquals(count($srcData)+1, count($tgtData), // bug: one too
+            "Newline-too-much-bug probably fixed?");       // much newline...
+        $lastTGTLine = array_pop($tgtData);        // ...(verify that it really
+        $this->assertEquals("\n", $lastTGTLine);   //     was a newline there!)
+        
+        $this->assertEquals($srcData, $tgtData); // check that content is same
+
     }
 
 }
