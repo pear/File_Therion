@@ -42,29 +42,55 @@ class File_Therion_Scrap
      * @var array assoc array
      */
     protected $_options = array(
-        //todo: 'title' => "",
-        'scale'      => "", // 4 forms possible
-        'projection' => "",
-        'author'     => array(), // <date> <persons>
-        'flip'       => ""
-        
+        'title'         => "",
+        'scale'         => "", // 4 forms possible
+        'projection'    => "",
+        'author'        => array(), // array of arrays(<date>,<persons>)
+        'flip'          => "",
+        'cs'            => "", // coord system
+        'stations'      => array(), // list of station names (to be plotted)
+        'scetch'        => array(), // <filename> <x> <y>
+        'walls'         => "",
+        'station-names' => array(), // <prefix> <suffix> (like in centreline)
+        'copyright'     => array()  // <date> <string>
     );
     
     
     /**
      * Basic data elements.
      * 
-     * @var array  
+     * @var array
      */
     protected $_data = array(
-        // todo
+        'join' => array(),
     );
+    
+    /**
+     * Line objects of this scrap.
+     * 
+     * @var array of File_Therion_ScrapLine objects
+     */
+    protected $_lines = array();
+    
+    /**
+     * Point objects of this scrap.
+     * 
+     * @var array of File_Therion_ScrapPoint objects
+     */
+    protected $_points = array();
+    
+    /**
+     * Area objects of this scrap.
+     * 
+     * @var array of File_Therion_ScrapArea objects
+     */
+    protected $_areas = array();
     
     
     /**
-     * Create a new therion Map object.
+     * Create a new therion Scrap object.
      *
-     * @param string $id Name/ID of the map
+     * @param string $id Name/ID of the scrap
      * @todo Restrict naming convention, not all characters are allowed!
      */
     public function __construct($id, $options = array())
@@ -136,7 +162,9 @@ class File_Therion_Scrap
          */
         //
         // todo: implement parsing code
-        //
+        //       with areas we should collect raw line references and add create
+        //       the area once parsing is complete, this way we can a) check
+        //       existence of references and b) add object-references to the area
     
         return $scrap;
         
@@ -154,6 +182,13 @@ class File_Therion_Scrap
     }
     
     
+    /**
+     * Add an area definition to this scrap.
+     * 
+     */
+    //public function addArea()
+    //{
+    //}
 }
 
 ?>
