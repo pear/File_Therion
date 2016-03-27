@@ -433,12 +433,14 @@ class File_Therion_Shot
      
      
     /**
-     * Get from (source) station.
+     * Get from (source) station name.
      * 
-     * @param boolean $raw If set to true, no pre-/postfix will be applied.
+     * Optionally the centrelines station pre-/postfix can be applied.
+     * 
+     * @param boolean $raw If set to false, pre-/postfix will be applied.
      * @return string
      */
-    public function getFrom($raw = false)
+    public function getFrom($raw = true)
     {
         if ($raw) {
             return $this->_data['from'];
@@ -450,12 +452,14 @@ class File_Therion_Shot
     }
     
     /**
-     * Get to (targeted) station.
+     * Get to (targeted) station name.
      * 
-     * @param boolean $raw If set to true, no pre-/postfix will be applied.
+     * Optionally the centrelines station pre-/postfix can be applied.
+     * 
+     * @param boolean $raw If set to false, pre-/postfix will be applied.
      * @return string
      */
-    public function getTo($raw = false)
+    public function getTo($raw = true)
     {
         if ($raw) {
             return $this->_data['to'];
