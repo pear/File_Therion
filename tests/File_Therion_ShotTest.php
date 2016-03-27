@@ -11,34 +11,14 @@
  * @license    http://www.gnu.org/licenses/lgpl-3.0.txt LGPLv3
  * @link       http://pear.php.net/package/File_Therion/
  */
-require_once 'File/Therion.php';  //includepath is loaded by phpUnit from phpunit.xml
+ 
+//includepath is loaded by phpUnit from phpunit.xml
+require_once 'tests/File_TherionTestBase.php';
 
 /**
  * PHPUnit test class for testing various datatypes.
  */
-class File_Therion_ShotTest extends PHPUnit_Framework_TestCase {
-    
-    
-    /**
-     * setup test case, called before a  test is executed.
-     *
-     * @access protected
-     */
-    protected function setUp()
-    {
-    }
-
-    /**
-     * Tears down the fixture, for example, close a network connection.
-     * This method is called after a test is executed.
-     *
-     * @access protected
-     */
-    protected function tearDown()
-    {
-    }
-
-
+class File_Therion_ShotTest extends File_TherionTestBase {
 
 
 /* ---------- TESTS ---------- */
