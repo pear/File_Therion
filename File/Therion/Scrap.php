@@ -93,7 +93,7 @@ class File_Therion_Scrap
      */
     public function __construct($id, $options = array())
     {
-        $this->_name = $id;
+        $this->setName($id);
         $this->setOption($options);
     }
     
@@ -225,6 +225,27 @@ class File_Therion_Scrap
         
         return $scrap;
         
+    }
+    
+    /**
+     * Get name (id) of this scrap.
+     * 
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->_name;
+    }
+    
+    /**
+     * Change name (id) of this scrap.
+     * 
+     * @return string
+     * @todo implement parameter checks
+     */
+    public function setName($id)
+    {
+        $this->_name = $id;
     }
     
     

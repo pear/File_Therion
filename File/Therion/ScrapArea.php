@@ -316,7 +316,7 @@ class File_Therion_ScrapArea
     /**
      * Get referenced lines.
      *
-     * @return array of File_Therion_ScrapLine objects
+     * @return array of string-referenced object id's
      */
     public function getLines()
     {

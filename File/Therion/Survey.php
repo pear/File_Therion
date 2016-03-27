@@ -586,7 +586,7 @@ class File_Therion_Survey
      * 
      * @return array of File_Therion_Surface objects
      */
-    public function getSurface()
+    public function getSurfaces()
     {
         return $this->_surface;
     }
