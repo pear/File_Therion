@@ -108,6 +108,7 @@ class File_Therion_Centreline
      * Centreline stations.
      * 
      * Stations may alter some of the shots or introduce supplementary data.
+     * station <station> <comment> [<flags>]
      *
      * @var array with File_Therion_Station objects.
      */
@@ -398,7 +399,7 @@ class File_Therion_Centreline
                 
                 default:
                     throw new File_Therion_SyntaxException(
-                        "unsupported multiline command '$type'"
+                        "unsupported multiline centreline command '$type'"
                     );
             }
         } 
@@ -502,10 +503,11 @@ class File_Therion_Centreline
     /**
      * Get survey date.
      * 
-     * When the returned array contains two date objects, this means a date
-     * interval.
+     * When no date is set, NULL will be returned.
+     * Otherwise a date object is returned OR if there is a date interval,
+     * an array containing two date objectsreturned.
      * 
-     * @return array array containing either one or two date objects
+     * @return null|array|File_Therion_Date therion date
      */
     public function getDate()
     {
@@ -555,6 +557,10 @@ class File_Therion_Centreline
     
     /**
      * Get exploration date.
+     * 
+     * When no date is set, NULL will be returned.
+     * Otherwise a date object is returned OR if there is a date interval,
+     * an array containing two date objectsreturned.
      * 
      * @return null|array|File_Therion_Date therion date
      */
