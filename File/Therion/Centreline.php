@@ -458,7 +458,10 @@ class File_Therion_Centreline
     /**
      * Get survey date.
      * 
-     * @return null|File_Therion_Date therion date
+     * When the returned array contains two date objects, this means a date
+     * interval.
+     * 
+     * @return array array containing either one or two date objects
      */
     public function getDate()
     {
