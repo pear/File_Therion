@@ -34,7 +34,28 @@ class File_Therion_ScrapLine
      * @var array assoc array
      */
     protected $_options = array(
-        'id' => "",
+        'id'          => "",
+        'subtype'     => "", // main subtype of line
+        
+        'close'       => "",
+        'outline'     => "",
+        'orientation' => "",
+        'reverse'     => "",
+        'size'        => 0,
+        'r-size'      => 0,
+        'l-size'      => 0,
+        'place'       => "", // <bottom/default/top>
+        'clip'        => "", // <on/off>
+        'visibility'  => "",
+        'context'     => array(), // <point/line/area> <symbol-type>
+        
+        'altitude'    => "", // only wall type
+        'border'      => "", // only slope type: <on/off>
+        'direction'   => "", // only direction type: <begin/end/both/none/point>
+        'gradient'    => "", // only contour type: <none/center/point>
+        'head'        => "", // only arrow type: <begin/end/both/none>
+        'text'        => "", // only label type
+        'height'      => "", // only pit or wall:pit types
     );
     
     
@@ -44,8 +65,20 @@ class File_Therion_ScrapLine
      * @var array  
      */
     protected $_data = array(
-        'type' => "",
+        'type' => "",  // main type of line
     );
+    
+    /**
+     * Points of this line.
+     * 
+     * Each array index holds a single point.
+     * Point order matters.
+     * The array is defined as following:
+     * - TODO: specify; most important: order and command like options for this point
+     *
+     * @var array
+     */
+    protected $_points = array();
     
     
     /**
@@ -123,7 +156,7 @@ class File_Therion_ScrapLine
          */
         //
         // todo: implement parsing code
-        //
+        //       Add points to this line and apply correct flags/subdata etc
         
         return $scrapline;
         
