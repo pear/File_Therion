@@ -108,26 +108,10 @@ class File_Therion_Centreline
      * Centreline stations.
      * 
      * Stations may alter some of the shots or introduce supplementary data.
-     * station <station> <comment> [<flags>]
      *
      * @var array with File_Therion_Station objects.
      */
     protected $_stations = array();
-    
-    /**
-     * Centreline station fixes.
-     * 
-     * This links stations to a fixed coordinate on the surface.
-     *
-     * Content is an associative array:
-     * - The key is the name of the station
-     * - The value is an associative array containing 'coords' and 'sd'
-     * - the value of 'coords' is coordinates array(x,y,z)
-     * - the value of 'sd' is standard deviation values for the coordinate values
-     *
-     * @var array
-     */
-    protected $_fixes = array();
     
     /**
      * Create a new therion centreline object.
@@ -148,7 +132,8 @@ class File_Therion_Centreline
      * @return File_Therion_Centreline Centreline object
      * @throws InvalidArgumentException
      * @throws File_Therion_SyntaxException
-     * @todo implement me
+     * @todo implement me fully (with tests)
+     * @todo better handling for parsing stations/fix: With duplicate stations it would be nice if we reused the same station object.
      */
     public static function parse($lines)
     {
@@ -270,46 +255,17 @@ class File_Therion_Centreline
                                 
                                 
                                 case 'station':
-                                   // todo
+                                case 'fix':
+                                    // add station definition
+                                    $centreline->addStation(
+                                        File_Therion_Station::parse($line)
+                                    );  
                                 break;
                                 
                                 case 'station-names':
                                     $centreline->setStationNames(
                                         $lineData[0], $lineData[1]
                                     );
-                                break;
-                                
-                                case 'fix':
-                                    $station = array_shift($lineData);
-                                    switch (count($lineData)) {
-                                        case 6:
-                                            // stddev was given
-                                            $centreline->addStationFix(
-                                                $station,
-                                                $lineData[0],
-                                                $lineData[1],
-                                                $lineData[2],
-                                                $lineData[3],
-                                                $lineData[4],
-                                                $lineData[5]
-                                            );
-                                        break;
-                                        case 3:
-                                            // stddev was NOT given
-                                            $centreline->addStationFix(
-                                                $station,
-                                                $lineData[0],
-                                                $lineData[1],
-                                                $lineData[2]
-                                            );
-                                        break;
-                                        default:
-                                          throw new File_Therion_SyntaxException(
-                                            "wrong arg count (".count($linedata)
-                                            .") for fix command"
-                                          );
-                                    }
-                                            
                                 break;
                                 
                                 case 'flags':
@@ -636,54 +592,59 @@ class File_Therion_Centreline
         return $this->getData('station-names');
     }
     
+    
     /**
-     * Add station fix (fix station to known surface coordinates).
+     * Add station to centreline.
      * 
-     * The coordinates are in the given coordinate system (see 'cs').
+     * This is useful to tell the centreline to fix stations or to add
+     * station comments/flags.
+     * To define fixes and/or comments/flags, adjust the relevant station.
      * 
-     * If the station already exists, it will get overwritten.
-     * 
-     * @param string $station Station Name to fix
-     * @param float $x X value of coordinate
-     * @param float $y Y value of coordinate
-     * @param float $z Z (height) value of coordinate
-     * @param float $stdX standard deviation for X
-     * @param float $stdY standard deviation for Y
-     * @param float $stdZ standard deviation for Z
-     * @todo: parameter checks
-     * @todo: add docblock reference to setCoordinatesystem function
+     * @param File_Therion_Station $station
      */
-    public function addStationFix($station, $x, $y, $z, $stdX=0, $stdY=0, $stdZ=0)
+    public function addStation(File_Therion_Station $station)
     {
-        $this->_fixes[$station] = array(
-            'coords' => array($x, $y, $z),
-            'std'    => array($stdX, $stdY, $stdZ)
-        );
+        $this->_stations[] = $station;
     }
     
     /**
-     * Clear all station fixes.
+     * Clear all stations.
+     * 
+     * This will essentially remove all station fixes and station flags.
      */
-    public function clearStationFixes()
+    public function clearStations()
     {
-        $this->_fixes = array();
+        $this->_stations = array();
     }
     
     /**
-     * Get all station fixes.
+     * Get all station objects.
      * 
-     * This returns all station fixes as associative array:
-     * - The key is the name of the station
-     * - The value is an associative array containing 'coords' and 'sd'
-     * - the value of 'coords' is coordinates array(x,y,z)
-     * - the value of 'std' is standard deviation values for the coordinate values
-     * 
-     * @return associative array
+     * You may query for a station name in which case either the station is
+     * returned or throws an OutOfBoundsException when not found. 
+     *
+     * @param string $station Query for named station
+     * @return array of File_Therion_Station objects
+     * @throws OutOfBoundsException if no named station is found.
      */
-    public function getStationFixes()
+    public function getStations($station = null)
     {
-        return $this->_fixes;
+        if (is_null($station)) {
+            // return all stations
+            return $this->_stations;
+            
+        } else {
+            // search for station
+            foreach ($this->getStations() as $s) {
+                if ($s->getName() === $station) return $s;
+            }
+        
+            // in case no such station defined:
+            throw new OutOfBoundsException("No such station: ".$station);
+        }
     }
+    
+    
     
     
     /**

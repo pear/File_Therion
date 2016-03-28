@@ -399,6 +399,7 @@ class File_Therion_Shot
      * 
      * @param string $prefix
      * @param string $postfix
+     * @obsolete Station names are only useful in centreline context and in this case, the centreline should be consultated.
      */
     public function setStationNames($prefix, $postfix)
     {
@@ -418,6 +419,7 @@ class File_Therion_Shot
      * Get station-names (pre-/postfix).
      * 
      * @return array: [0]=prefix, [1]=postfix
+     * @obsolete Station names are only useful in centreline context and in this case, the centreline should be consultated.
      */
     public function getStationNames()
     {
@@ -439,6 +441,7 @@ class File_Therion_Shot
      * 
      * @param boolean $raw If set to false, pre-/postfix will be applied.
      * @return string
+     * @obsolete Station names are only useful in centreline context and in this case, the centreline should be consultated.
      */
     public function getFrom($raw = true)
     {
@@ -458,6 +461,7 @@ class File_Therion_Shot
      * 
      * @param boolean $raw If set to false, pre-/postfix will be applied.
      * @return string
+     * @obsolete Station names are only useful in centreline context and in this case, the centreline should be consultated.
      */
     public function getTo($raw = true)
     {

@@ -146,14 +146,16 @@ class File_TherionUseCaseTest extends File_TherionTestBase {
             )
         );
         
+        $stations = $centreline->getStations();
+        $this->assertEquals(1, count($stations));
+        $station_15 = $centreline->getStations("15");
+        $this->assertEquals(true, $station_15->isFixed());
         $this->assertEquals(
             array(
-                "15" => array(
-                    'coords' => array(20, 40, 646.23),
-                    'std'    => array(0, 0, 0)
-                    )
+                'coords' => array(20, 40, 646.23),
+                'std'    => array(0, 0, 0)
             ),
-            $centreline->getStationFixes()
+            $station_15->getFix()
         );
         
         // TODO: Extends not implemented yet!
