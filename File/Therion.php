@@ -305,14 +305,35 @@ class File_Therion implements Countable
                     }
                 break;
                 
+                // Multiline commands:
+                // walk each line collection and parse it using subparser
                 case 'survey':
-                case 'centreline':
-                case 'scrap':
-                case 'map':
-                case 'surface':
-                    // walk each line collection and parse it using subparser
                     foreach ($data as $ctxLines) {
                         $ctxObj = File_Therion_Survey::parse($ctxLines);
+                        $this->addObject($ctxObj);
+                    }
+                break;
+                case 'centreline':
+                    foreach ($data as $ctxLines) {
+                        $ctxObj = File_Therion_Centreline::parse($ctxLines);
+                        $this->addObject($ctxObj);
+                    }
+                break;
+                case 'scrap':
+                    foreach ($data as $ctxLines) {
+                        $ctxObj = File_Therion_Scrap::parse($ctxLines);
+                        $this->addObject($ctxObj);
+                    }
+                break;
+                case 'map':
+                    foreach ($data as $ctxLines) {
+                        $ctxObj = File_Therion_Map::parse($ctxLines);
+                        $this->addObject($ctxObj);
+                    }
+                break;
+                case 'surface':
+                    foreach ($data as $ctxLines) {
+                        $ctxObj = File_Therion_Surface::parse($ctxLines);
                         $this->addObject($ctxObj);
                     }
                 break;
