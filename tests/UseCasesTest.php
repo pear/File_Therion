@@ -158,10 +158,17 @@ class File_TherionUseCaseTest extends File_TherionTestBase {
             $station_15->getFix()
         );
         
-        // TODO: Extends not implemented yet!
-        //       missing underlying code...
         // extend ignore 5
         // extend ignore 12
+        $extends = $centreline->getExtends();
+        $this->assertEquals(2, count($extends));
+        $this->assertEquals('ignore', $extends[0]['spec']);
+        $this->assertInstanceOf('File_Therion_Station', $extends[0]['obj']);
+        $this->assertEquals('5', $extends[0]['obj']->getName());
+        
+        $this->assertEquals('ignore', $extends[1]['spec']);
+        $this->assertInstanceOf('File_Therion_Station', $extends[1]['obj']);
+        $this->assertEquals('12', $extends[1]['obj']->getName());
         
         
         // assert joins of survey

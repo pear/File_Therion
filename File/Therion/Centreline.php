@@ -114,6 +114,21 @@ class File_Therion_Centreline
     protected $_stations = array();
     
     /**
+     * Extend definitions.
+     * 
+     * Controls how extended elevation is rendered.
+     *
+     * Contains array with associative array:
+     * - key 'obj':  value is relevant object (Shot or Station)
+     * - key 'spec': value is specification 
+     * 
+     * @var array
+     */
+    protected $_extend = array();
+    
+    
+    
+    /**
      * Create a new therion centreline object.
      *
      * @param array $options Optional associative options array
@@ -287,7 +302,33 @@ class File_Therion_Centreline
                                 break;
                                 
                                 case 'extend':
-                                    // todo
+                                    // try to get established station or shot
+                                    // out of centreline
+                                    $spec = array_shift($lineData);
+                                    switch (count($lineData)) {
+                                        case 1:
+                                            // station spec: get station
+                                            try {
+                                                $obj = $centreline->getStations($lineData[0]);
+                                            } catch (OutOfBoundsException $e) {
+                                                // no such station: instanciate fresh one
+                                                $obj = new File_Therion_Station($lineData[0]);
+                                            }
+                                        break;
+                                        case 2:
+                                            // shot spec: get shot
+                                            // note that we cannot create a fresh shot here.
+                                            $obj = $centreline->getShots(
+                                                $lineData[0], $lineData[1]);
+                                        break;
+                                        default:
+                                            throw new File_Therion_SyntaxException(
+                                                "Wrong extend arg count "
+                                                .count($lineData));
+                                    }
+                                    
+                                    $centreline->setExtend($spec, $obj);
+                                    
                                 break;
                                 
                                 
@@ -645,6 +686,81 @@ class File_Therion_Centreline
     }
     
     
+    /**
+     * Modify extend definition of centreline.
+     * 
+     * This controls how the centreline extended elevation will be rendered.
+     * 
+     * $spec may be one of the following:
+     * - "normal"/"reverse"
+     * - "left"/"right"
+     * - "vertical"
+     * - "start"
+     * - "ignore"
+     * - "hide"
+     * 
+     * If $spec is NULL, the centreline extend specification will be cleared.
+     * 
+     * @param null|string $spec 
+     * @param File_Therion_Station|File_Therion_Shot $stationOrShot
+     */
+    public function setExtend($spec, $stationOrShot)
+    {
+        $supported = array(
+            'normal','reverse','left','right','vertical',
+            'start','ignore','hide');
+            
+        if (!in_array($spec, $supported)) {
+            throw new InvalidArgumentException(
+                "Unsupported extend specification '".$spec."'" );
+        }
+        if (!is_a($stationOrShot, 'File_Therion_Station')
+            && !is_a($stationOrShot, 'File_Therion_Shot')) {
+            throw new InvalidArgumentException(
+                "Unsupported extend type '".gettype($stationOrShot)."'" );
+        }
+        
+        
+        // if spec exists: update; otherwise add
+        $found = false;
+        foreach ($this->_extend as $ei => $e) {
+            if ($e['obj'] == $stationOrShot) {
+                $found = true;
+                break;
+            }
+        }
+        if ($found) {
+            $this->_extend[$ei]['spec'] = $spec;
+        } else {
+            $this->_extend[] = array(
+                'obj'  => $stationOrShot,
+                'spec' => $spec
+            );
+        }
+    }
+    
+    /**
+     * Get extend definitions of centreline.
+     * 
+     * Returns array with associative array:
+     * - key 'obj':  value is relevant object (Shot or Station)
+     * - key 'spec': value is specification
+     * 
+     * @return array
+     * @see {@link setExtend()}
+     */
+    public function getExtends()
+    {
+        return $this->_extend;
+    }
+    
+    /**
+     * Clear all extend definitions of centreline.
+     */
+    public function clearExtends()
+    {
+        $this->_extend = array();
+    }
     
     
     /**
