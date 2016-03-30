@@ -119,8 +119,8 @@ class File_Therion_ShotTest extends File_TherionTestBase {
                 -10
             ),
             array(
-                $sample->getFrom(),
-                $sample->getTo(),
+                $sample->getFrom()->getName(),
+                $sample->getTo()->getName(),
                 $sample->getLength(),
                 $sample->getBearing(),
                 $sample->getGradient(),

@@ -113,8 +113,8 @@ class File_TherionUseCaseTest extends File_TherionTestBase {
                 array(false, false, false, false)
             ),
             array(
-                $shots[8]->getFrom(),
-                $shots[8]->getTo(),
+                $shots[8]->getFrom()->getName(),
+                $shots[8]->getTo()->getName(),
                 $shots[8]->getBearing(),
                 $shots[8]->getGradient(),
                 $shots[8]->getLength(),
@@ -132,8 +132,8 @@ class File_TherionUseCaseTest extends File_TherionTestBase {
                 array(true, false, false, false)
             ),
             array(
-                $shots[13]->getFrom(),
-                $shots[13]->getTo(),
+                $shots[13]->getFrom()->getName(),
+                $shots[13]->getTo()->getName(),
                 $shots[13]->getBearing(),
                 $shots[13]->getGradient(),
                 $shots[13]->getLength(),

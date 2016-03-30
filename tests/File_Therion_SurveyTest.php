@@ -276,7 +276,7 @@ class File_Therion_SurveyTest extends File_TherionTestBase {
         );
         $sample = File_Therion_Survey::parse($sampleLines);
         $this->assertInstanceOf('File_Therion_Survey', $sample);
-        $this->assertEquals(1, count($sample->getSurface()));
+        $this->assertEquals(1, count($sample->getSurfaces()));
         
         $sample->clearMaps();
         $this->assertEquals(array(), $sample->getMaps());

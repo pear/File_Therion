@@ -474,7 +474,7 @@ class File_TherionTest extends File_TherionTestBase {
         $this->assertEquals(3, count($survey->getJoins()));
         $this->assertEquals(0, count($survey->getEquates()));
         $this->assertEquals(2, count($survey->getMaps()));
-        $this->assertEquals(1, count($survey->getSurface()));
+        $this->assertEquals(1, count($survey->getSurfaces()));
 
         // inspect centreline
         $centreline = array_shift($survey->getCentrelines());
@@ -565,7 +565,7 @@ class File_TherionTest extends File_TherionTestBase {
         $this->assertEquals(3, count($survey->getJoins()));
         $this->assertEquals(0, count($survey->getEquates()));
         $this->assertEquals(2, count($survey->getMaps()));
-        $this->assertEquals(1, count($survey->getSurface()));
+        $this->assertEquals(1, count($survey->getSurfaces()));
         $this->assertEquals(0, count($th->getScraps()));
         
         // Recursive parse: recurse endlessly
@@ -576,7 +576,7 @@ class File_TherionTest extends File_TherionTestBase {
         $this->assertEquals(3, count($survey->getJoins()));
         $this->assertEquals(0, count($survey->getEquates()));
         $this->assertEquals(2, count($survey->getMaps()));
-        $this->assertEquals(1, count($survey->getSurface()));
+        $this->assertEquals(1, count($survey->getSurfaces()));
         $this->assertEquals(4, count($survey->getScraps()));
         
     }
