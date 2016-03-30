@@ -699,7 +699,8 @@ class File_Therion_Centreline
      * - "ignore"
      * - "hide"
      * 
-     * If $spec is NULL, the centreline extend specification will be cleared.
+     * $stationOrShot is a Station or Shot object. If an extend command for a
+     * given object already exists, its $spec will be updated, otherwise added.
      * 
      * @param null|string $spec 
      * @param File_Therion_Station|File_Therion_Shot $stationOrShot
