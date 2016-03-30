@@ -660,11 +660,51 @@ class File_Therion_Centreline
     /**
      * Get all shots of this centreline.
      * 
+     * @param string $fromStation Optionally filter by from-station
+     * @param string $fromStation Optionally filter by to-station
      * @return array array of File_Therion_Shot objects.
+     * @throws OutOfBoundsException in case filtering of unset shot requested
      */
-    public function getShots()
+    public function getShots($fromStation=null, $toStation=null)
     {
-        return $this->_shots;
+        if (!$fromStation && !$toStation) {
+            // no filter requested: return all
+            return $this->_shots;
+             
+        } else {
+            // filter by from and to
+            $r = array();
+            if ($fromStation) {
+                $fromFound = false;
+                foreach ($this->getShots() as $s) {
+                    if ($s->getFrom()->getName() == $fromStation) {
+                        $r[] = $s;
+                        $fromFound = true;
+                    }
+                }
+                if (!$fromFound) {
+                    // in case no such shot found:
+                    throw new OutOfBoundsException(
+                        "No such shot with from-station: ".$fromStation);
+                }
+            }
+            if ($toStation) {
+                $toFound = false;
+                foreach ($this->getShots() as $s) {
+                    if ($s->getTo()->getName() == $toStation) {
+                        $r[] = $s;
+                        $toFound = true;
+                    }
+                }
+                if (!$toFound) {
+                    // in case no such shot found:
+                    throw new OutOfBoundsException(
+                        "No such shot with to-station: ".$toStation);
+                }
+            }
+        }
+        return $r;
+       
     }
     
     /**
