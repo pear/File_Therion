@@ -232,8 +232,17 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
         $sample = File_Therion_Centreline::parse($sampleLines);
         $this->assertInstanceOf('File_Therion_Centreline', $sample);
         $this->assertEquals(3, count($sample));  // SPL count shots
+        $this->assertEquals(array("pre", "post"), $sample->getStationNames());        
         
         $shots = $sample->getShots();
+        
+        // test getting raw value (implicit default)
+        $this->assertEquals('0',  $shots[0]->getFrom());
+        $this->assertEquals('1',  $shots[0]->getTo());
+        $this->assertEquals('1',  $shots[1]->getFrom());
+        $this->assertEquals('2',  $shots[1]->getTo());
+        $this->assertEquals('2',  $shots[2]->getFrom());
+        $this->assertEquals('3',  $shots[2]->getTo());
         
         // test getting raw value
         $this->assertEquals('0',  $shots[0]->getFrom(true));
@@ -244,20 +253,15 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
         $this->assertEquals('3',  $shots[2]->getTo(true));
         
         // test getting explicit adjusted pre/postfixed stations
-        $this->assertEquals('pre0post',  $shots[0]->getFrom(false));
-        $this->assertEquals('pre1post',  $shots[0]->getTo(false));
-        $this->assertEquals('pre1post',  $shots[1]->getFrom(false));
-        $this->assertEquals('pre2post',  $shots[1]->getTo(false));
-        $this->assertEquals('pre2post',  $shots[2]->getFrom(false));
-        $this->assertEquals('pre3post',  $shots[2]->getTo(false));
-        
-        // test getting raw value (implicit default)
-        $this->assertEquals('0',  $shots[0]->getFrom());
-        $this->assertEquals('1',  $shots[0]->getTo());
-        $this->assertEquals('1',  $shots[1]->getFrom());
-        $this->assertEquals('2',  $shots[1]->getTo());
-        $this->assertEquals('2',  $shots[2]->getFrom());
-        $this->assertEquals('3',  $shots[2]->getTo());
+        // for this, we apply the station names
+        $sample->applyStationNames();
+        $this->assertEquals(array("", ""), $sample->getStationNames());
+        $this->assertEquals('pre0post',  $shots[0]->getFrom());
+        $this->assertEquals('pre1post',  $shots[0]->getTo());
+        $this->assertEquals('pre1post',  $shots[1]->getFrom());
+        $this->assertEquals('pre2post',  $shots[1]->getTo());
+        $this->assertEquals('pre2post',  $shots[2]->getFrom());
+        $this->assertEquals('pre3post',  $shots[2]->getTo());
         
     }
     

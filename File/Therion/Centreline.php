@@ -664,13 +664,6 @@ class File_Therion_Centreline
      */
     public function getShots()
     {
-        // update all shots prefix/postfix with station-names param
-        // 'station-names' => array("",""), // <prefix> <postfix>
-        $s_names = $this->getData('station-names');
-        foreach ($this->_shots as $s) {
-            $s->setStationNames($s_names[0], $s_names[1]);
-        }
-        
         return $this->_shots;
     }
     
@@ -681,6 +674,30 @@ class File_Therion_Centreline
     public function clearShots()
     {
         $this->_shots = array();
+    }
+    
+    /**
+     * Apply station-names to all shots of this centreline.
+     * 
+     * This will apply the current prefix/postfix given with
+     * {@link setStationNames()} to the shots contained in this centreline.
+     * The station-names will be reset afterwards.
+     * Shot objects will report the fully qualified name afterwards.
+     */
+    public function applyStationNames()
+    {
+        // get current station names
+        $prefix  = $this->getStationNames()[0];
+        $postfix = $this->getStationNames()[1];
+        
+        // apply them to each shot
+        foreach ($this->_shots as $s) {
+            $s->setFrom($prefix.$s->getFrom().$postfix);
+            $s->setTo($prefix.$s->getTo().$postfix);
+        }
+        
+        // reset station names
+        $this->setStationNames("", "");
     }
     
     
