@@ -692,8 +692,11 @@ class File_Therion_Centreline
         
         // apply them to each shot
         foreach ($this->_shots as $s) {
-            $s->setFrom($prefix.$s->getFrom().$postfix);
-            $s->setTo($prefix.$s->getTo().$postfix);
+            $from = $s->getFrom();
+            $from->setName($prefix.$from->getName().$postfix);
+            
+            $to = $s->getTo();
+            $to->setName($prefix.$to->getName().$postfix);
         }
         
         // reset station names

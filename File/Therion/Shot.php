@@ -396,10 +396,7 @@ class File_Therion_Shot
     /**
      * Get from (source) station name.
      * 
-     * Optionally the centrelines station pre-/postfix can be applied.
-     * 
-     * @param boolean $raw If set to false, pre-/postfix will be applied.
-     * @return string
+     * @return File_Therion_Station station object
      */
     public function getFrom()
     {
@@ -409,12 +406,9 @@ class File_Therion_Shot
     /**
      * Get to (targeted) station name.
      * 
-     * Optionally the centrelines station pre-/postfix can be applied.
-     * 
-     * @param boolean $raw If set to false, pre-/postfix will be applied.
-     * @return string
+     * @return File_Therion_Station station object
      */
-    public function getTo($raw = true)
+    public function getTo()
     {
         return $this->_data['to'];
     }
@@ -500,28 +494,48 @@ class File_Therion_Shot
      * Set from (source) station.
      * 
      * When station name is "-" or ".", then the splay flag is set implicitely.
+     * If the passed argument is string, a new station object will be created.
      * 
-     * @param string $station
+     * @param string|File_Therion_Station $station
      */
     public function setFrom($station)
     {
-        if (!is_string($station)) {
-            throw new InvalidArgumentException("Invalid argument type");
+        if (is_string($station)) {
+            $station = new File_Therion_Station($station);
+        }
+
+        if (!is_a($station, 'File_Therion_Station')) {
+            throw new InvalidArgumentException("Invalid station argument type");
         }
         $this->_data['from'] = $station;
+        
+        if ($station->getName() == "." || $station->getName() == "-") {
+            $this->setFlag('splay');
+        }
     }
     
     /**
      * Set to (targeted) station.
      * 
-     * @param string $station
+     * When station name is "-" or ".", then the splay flag is set implicitely.
+     * If the passed argument is string, a new station object will be created.
+     * 
+     * @param string|File_Therion_Station $station
      */
     public function setTo($station)
     {
-        if (!is_string($station)) {
-            throw new InvalidArgumentException("Invalid argument type");
+        if (is_string($station)) {
+            $station = new File_Therion_Station($station);
+        }
+
+        if (!is_a($station, 'File_Therion_Station')) {
+            throw new InvalidArgumentException("Invalid station argument type");
         }
         $this->_data['to'] = $station;
+        
+        if ($station->getName() == "." || $station->getName() == "-") {
+            $this->setFlag('splay');
+        }
     }
     
     /**

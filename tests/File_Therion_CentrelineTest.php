@@ -194,20 +194,20 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
         $this->assertEquals(3, count($sample));  // SPL count shots
         
         $shots = $sample->getShots();
-        $this->assertEquals('0',  $shots[0]->getFrom());
-        $this->assertEquals('1',  $shots[0]->getTo());
+        $this->assertEquals('0',  $shots[0]->getFrom()->getName());
+        $this->assertEquals('1',  $shots[0]->getTo()->getName());
         $this->assertEquals(200,  $shots[0]->getBearing());
         $this->assertEquals(-5,   $shots[0]->getGradient());
         $this->assertEquals(6.4,  $shots[0]->getLength());
         
-        $this->assertEquals('1',  $shots[1]->getFrom());
-        $this->assertEquals('2',  $shots[1]->getTo());
+        $this->assertEquals('1',  $shots[1]->getFrom()->getName());
+        $this->assertEquals('2',  $shots[1]->getTo()->getName());
         $this->assertEquals(73,   $shots[1]->getBearing());
         $this->assertEquals(8,    $shots[1]->getGradient());
         $this->assertEquals(5.2,  $shots[1]->getLength());
         
-        $this->assertEquals('2',  $shots[2]->getFrom());
-        $this->assertEquals('3',  $shots[2]->getTo());
+        $this->assertEquals('2',  $shots[2]->getFrom()->getName());
+        $this->assertEquals('3',  $shots[2]->getTo()->getName());
         $this->assertEquals(42,   $shots[2]->getBearing());
         $this->assertEquals(0,    $shots[2]->getGradient());
         $this->assertEquals(2.09, $shots[2]->getLength());
@@ -236,32 +236,24 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
         
         $shots = $sample->getShots();
         
-        // test getting raw value (implicit default)
-        $this->assertEquals('0',  $shots[0]->getFrom());
-        $this->assertEquals('1',  $shots[0]->getTo());
-        $this->assertEquals('1',  $shots[1]->getFrom());
-        $this->assertEquals('2',  $shots[1]->getTo());
-        $this->assertEquals('2',  $shots[2]->getFrom());
-        $this->assertEquals('3',  $shots[2]->getTo());
-        
-        // test getting raw value
-        $this->assertEquals('0',  $shots[0]->getFrom(true));
-        $this->assertEquals('1',  $shots[0]->getTo(true));
-        $this->assertEquals('1',  $shots[1]->getFrom(true));
-        $this->assertEquals('2',  $shots[1]->getTo(true));
-        $this->assertEquals('2',  $shots[2]->getFrom(true));
-        $this->assertEquals('3',  $shots[2]->getTo(true));
+        // test getting stations
+        $this->assertEquals('0',  $shots[0]->getFrom()->getName());
+        $this->assertEquals('1',  $shots[0]->getTo()->getName());
+        $this->assertEquals('1',  $shots[1]->getFrom()->getName());
+        $this->assertEquals('2',  $shots[1]->getTo()->getName());
+        $this->assertEquals('2',  $shots[2]->getFrom()->getName());
+        $this->assertEquals('3',  $shots[2]->getTo()->getName());
         
         // test getting explicit adjusted pre/postfixed stations
         // for this, we apply the station names
         $sample->applyStationNames();
         $this->assertEquals(array("", ""), $sample->getStationNames());
-        $this->assertEquals('pre0post',  $shots[0]->getFrom());
-        $this->assertEquals('pre1post',  $shots[0]->getTo());
-        $this->assertEquals('pre1post',  $shots[1]->getFrom());
-        $this->assertEquals('pre2post',  $shots[1]->getTo());
-        $this->assertEquals('pre2post',  $shots[2]->getFrom());
-        $this->assertEquals('pre3post',  $shots[2]->getTo());
+        $this->assertEquals('pre0post',  $shots[0]->getFrom()->getName());
+        $this->assertEquals('pre1post',  $shots[0]->getTo()->getName());
+        $this->assertEquals('pre1post',  $shots[1]->getFrom()->getName());
+        $this->assertEquals('pre2post',  $shots[1]->getTo()->getName());
+        $this->assertEquals('pre2post',  $shots[2]->getFrom()->getName());
+        $this->assertEquals('pre3post',  $shots[2]->getTo()->getName());
         
     }
     
@@ -290,38 +282,38 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
         $this->assertEquals(6, count($sample));  // SPL count shots
         
         $shots = $sample->getShots();
-        $this->assertEquals('0',  $shots[0]->getFrom());
-        $this->assertEquals('1',  $shots[0]->getTo());
+        $this->assertEquals('0',  $shots[0]->getFrom()->getName());
+        $this->assertEquals('1',  $shots[0]->getTo()->getName());
         $this->assertEquals(200,  $shots[0]->getBearing());
         $this->assertEquals(-5,   $shots[0]->getGradient());
         $this->assertEquals(6.4,  $shots[0]->getLength());
         
-        $this->assertEquals('1',  $shots[1]->getFrom());
-        $this->assertEquals('2',  $shots[1]->getTo());
+        $this->assertEquals('1',  $shots[1]->getFrom()->getName());
+        $this->assertEquals('2',  $shots[1]->getTo()->getName());
         $this->assertEquals(73,   $shots[1]->getBearing());
         $this->assertEquals(8,    $shots[1]->getGradient());
         $this->assertEquals(5.2,  $shots[1]->getLength());
         
-        $this->assertEquals('2',  $shots[2]->getFrom());
-        $this->assertEquals('3',  $shots[2]->getTo());
+        $this->assertEquals('2',  $shots[2]->getFrom()->getName());
+        $this->assertEquals('3',  $shots[2]->getTo()->getName());
         $this->assertEquals(42,   $shots[2]->getBearing());
         $this->assertEquals(0,    $shots[2]->getGradient());
         $this->assertEquals(2.09, $shots[2]->getLength());
         
-        $this->assertEquals('3',  $shots[3]->getFrom());
-        $this->assertEquals('4',  $shots[3]->getTo());
+        $this->assertEquals('3',  $shots[3]->getFrom()->getName());
+        $this->assertEquals('4',  $shots[3]->getTo()->getName());
         $this->assertEquals(200,  $shots[3]->getBearing());
         $this->assertEquals(-5,   $shots[3]->getGradient());
         $this->assertEquals(6.4,  $shots[3]->getLength());
         
-        $this->assertEquals('4',  $shots[4]->getFrom());
-        $this->assertEquals('5',  $shots[4]->getTo());
+        $this->assertEquals('4',  $shots[4]->getFrom()->getName());
+        $this->assertEquals('5',  $shots[4]->getTo()->getName());
         $this->assertEquals(73,   $shots[4]->getBearing());
         $this->assertEquals(8,    $shots[4]->getGradient());
         $this->assertEquals(5.2,  $shots[4]->getLength());
         
-        $this->assertEquals('5',  $shots[5]->getFrom());
-        $this->assertEquals('6',  $shots[5]->getTo());
+        $this->assertEquals('5',  $shots[5]->getFrom()->getName());
+        $this->assertEquals('6',  $shots[5]->getTo()->getName());
         $this->assertEquals(42,   $shots[5]->getBearing());
         $this->assertEquals(0,    $shots[5]->getGradient());
         $this->assertEquals(2.09, $shots[5]->getLength());
