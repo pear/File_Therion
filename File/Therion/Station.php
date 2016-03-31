@@ -410,6 +410,54 @@ class File_Therion_Station
     }
     
     
+    /**
+     * Generate "fix ..." string for this station.
+     * 
+     * @return string Empty, if no fix is set
+     */
+    public function toFixString()
+    {
+        if (!$this->isFixed()) {
+            return "";
+        } else {
+            $fixdata = $this->getFix();
+            $fixstring = implode(" ", $fixdata['coords']);
+            if (count($fixdata['std']) > 0) {
+                $fixstring .= " ".implode(" ", $fixdata['std']);
+            }
+            return "fix ".$fixstring;
+        }
+    }
+    
+    /**
+     * Generate "station ..." string for this station.
+     * 
+     * @return string "station <station> <comment> <flags>"
+     */
+    public function toStationString()
+    {
+        $stationStr = "station";
+        $stationStr .= " ".File_Therion_Line::escape($this->getName());
+        $stationStr .= " ".File_Therion_Line::escape($this->getComment());
+        
+        foreach ($this->getAllFlags() as $flag => $value) {
+            if ($flag == 'attr') {
+                // add each cutsom flag
+                foreach ($value as $ck => $cv) {
+                    $stationStr .= " ".$flag
+                        ." ".File_Therion_Line::escape($ck)
+                        ." ".File_Therion_Line::escape($cv);
+                }
+            } else {
+                // add normal flag
+                $not = ($value)? "": "not ";
+                $stationStr .= " ".$not.$flag;
+            }
+        }
+        
+        return $stationStr;
+    }
+    
 }
 
 ?>
