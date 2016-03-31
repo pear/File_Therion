@@ -99,8 +99,9 @@ class File_Therion_Survey
      */
     protected $_options = array(
         'title'       => "",
-        'declination' => 0.0,
-        'entrance'    => "",   // name of station
+        'declination' => null, // different string forms possible, including []
+        'entrance'    => "",   // name of station: "survey ... -entrance 1.0"
+        'namespace'   => ""
     );
     
     
@@ -327,7 +328,7 @@ class File_Therion_Survey
         foreach ($merged as $j) {
             if (!is_string($j)) {
                 throw new File_Therion_SyntaxException(
-                    "addEquate(): Invalid argument expected string");
+                    "addEquate(): Invalid argument, expected string");
             }
         }
         
