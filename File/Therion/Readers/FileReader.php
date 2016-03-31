@@ -5,7 +5,7 @@
  * PHP version 5
  *
  * @category   file
- * @package    File_Therion
+ * @package    File_Therion_Readers
  * @author     Benedikt Hallinger <beni@php.net>
  * @copyright  2016 Benedikt Hallinger
  * @license    http://www.gnu.org/licenses/lgpl-3.0.txt LGPLv3
@@ -16,7 +16,7 @@
  * Reader class that reads disk files (filepaths)
  *
  * @category   file
- * @package    File_Therion
+ * @package    File_Therion_Readers
  * @author     Benedikt Hallinger <beni@php.net>
  * @copyright  2016 Benedikt Hallinger
  * @license    http://www.gnu.org/licenses/lgpl-3.0.txt LGPLv3

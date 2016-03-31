@@ -5,7 +5,7 @@
  * PHP version 5
  *
  * @category   file
- * @package    File_Therion
+ * @package    File_Therion_Writers
  * @author     Benedikt Hallinger <beni@php.net>
  * @copyright  2016 Benedikt Hallinger
  * @license    http://www.gnu.org/licenses/lgpl-3.0.txt LGPLv3
@@ -16,7 +16,7 @@
  * The writer just prints the content to the terminal.
  *
  * @category   file
- * @package    File_Therion
+ * @package    File_Therion_Writers
  * @author     Benedikt Hallinger <beni@php.net>
  * @copyright  2016 Benedikt Hallinger
  * @license    http://www.gnu.org/licenses/lgpl-3.0.txt LGPLv3
