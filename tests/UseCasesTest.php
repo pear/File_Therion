@@ -56,8 +56,6 @@ class File_TherionUseCaseTest extends File_TherionTestBase {
         $this->assertEquals("ISO8859-2", $th->getEncoding());
         $this->assertEquals(1, count($th->getSurveys()));
         $this->assertEquals(0, count($th->getCentrelines()));
-// NOT IMPLEMENTED        $this->assertEquals(0, count($th->getJoins()));
-// NOT IMPLEMENTED        $this->assertEquals(0, count($th->getEquates()));
         $this->assertEquals(0, count($th->getMaps()));
         $this->assertEquals(0, count($th->getSurfaces()));
         $this->assertEquals(0, count($th->getScraps()));

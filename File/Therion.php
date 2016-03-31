@@ -802,50 +802,6 @@ class File_Therion implements Countable
         return $this->getObjects('File_Therion_Surface');
     }
     
-    /**
-     * Get all directly associated join definitions of this file.
-     * 
-     * Note that this kind of object is usually not "lone" in a file but 
-     * commonly part of a survey. This function returns only "lone" objects
-     * without parent structure.
-     * 
-     * Example:
-     * <code>
-     * $allJoins = $thFile->getJoins();
-     * </code>
-     *
-     * @return array of join definitions (or empty array)
-     * @todo IMPLEMENT ME
-     */
-    public function getJoins()
-    {
-        // note: don't forget addJoin; probably implement this in addObject()
-        throw new File_Therion_Exception(
-            __METHOD__.': FEATURE NOT IMPLEMENTED');
-    }
-    
-    /**
-     * Get all directly associated equate definitions of this file.
-     * 
-     * Note that this kind of object is usually not "lone" in a file but 
-     * commonly part of a survey. This function returns only "lone" objects
-     * without parent structure.
-     * 
-     * Example:
-     * <code>
-     * $allEquates = $thFile->getEquates();
-     * </code>
-     *
-     * @return array of join definitions (or empty array)
-     * @todo IMPLEMENT ME
-     */
-    public function getEquates()
-    {
-        // note: don't forget addEquate; probably implement this in addObject()
-        throw new File_Therion_Exception(
-            __METHOD__.': FEATURE NOT IMPLEMENTED');
-    }
-    
      
     /**
      * Write this therion file content to the file.
