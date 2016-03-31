@@ -157,6 +157,9 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
             File_Therion_Line::parse('  team "Baz Fooz" tape'),
             File_Therion_Line::parse('  '),
             File_Therion_Line::parse('  date 1997.08.10'),
+            File_Therion_Line::parse('  cs UTM33 # Austria: UTM33-T'),
+            File_Therion_Line::parse('  fix 1 20 40 646.23'),
+            File_Therion_Line::parse('  extend ignore 2'),
             File_Therion_Line::parse('endcentreline'),            
         );
         $sample = File_Therion_Centreline::parse($sampleLines);
@@ -172,6 +175,21 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
         $this->assertEquals("Baz", $team[1]->getGivenname());
         $this->assertEquals("Fooz", $team[1]->getSurname());
         $this->assertEquals(array('tape'), $sample->getTeamRoles($team[1]));
+        $this->assertEquals('UTM33', $sample->getCoordinateSystem());
+        $this->assertEquals(
+            array(
+                'coords' => array(20, 40, 646.23),
+                'std'    => array(0, 0, 0)
+            ),
+            $sample->getStations("1")->getFix()
+        );
+        $this->assertEquals(
+            array('ignore', '2'),
+            array(
+                $sample->getExtends()[0]['spec'],
+                $sample->getExtends()[0]['obj']->getName()
+            )
+        );
         
     }
 

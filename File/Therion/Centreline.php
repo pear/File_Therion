@@ -57,6 +57,7 @@ class File_Therion_Centreline
         'grid-angle'  => array(), // (<value> <units>)
         'sd'          => array(), // assoc: [<quantity>]=(<value> <units>)
         'units'       => array(), // assoc: [<quantity>]=(<factor> <units>)
+        'cs'          => "",      // <coordinate system>
         'station-names' => array("",""), // <prefix> <postfix>
     );
     
@@ -351,6 +352,17 @@ class File_Therion_Centreline
                                         $unit = $lineData[count($lineData)-1];
                                         $lastSeenUnits[$type] = $unit;
                                     }
+                                break;
+                                
+                                case 'cs':
+                                    // coordinate system specification
+                                    if (count($lineData) != 1) {
+                                        throw new File_Therion_SyntaxException(
+                                                "Wrong cs arg count "
+                                                .count($lineData));
+                                    }
+                                    $centreline->setCoordinateSystem(
+                                        $lineData[0]);
                                 break;
                                 
                                 
@@ -858,6 +870,30 @@ class File_Therion_Centreline
         
         // reset station names
         $this->setStationNames("", "");
+    }
+    
+    /**
+     * Sets the coordinate system that is used for fixing stations.
+     * 
+     * Fixing stations coordinates is only meaningful defining a coordinate
+     * system for the coordinates given.
+     * 
+     * @param string
+     * @todo: check on possible values accoring to thbook p.14
+     */
+    public function setCoordinateSystem($cs)
+    {
+        $this->setData('cs', $cs);
+    }
+    
+    /**
+     * Returns the coordinate system used for fixing stations.
+     * 
+     * @return string (empty string if not set so far)
+     */
+    public function getCoordinateSystem()
+    {
+        return $this->getData('cs');
     }
     
     

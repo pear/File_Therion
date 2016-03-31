@@ -351,7 +351,6 @@ class File_Therion_Station
      * @param float $stdY standard deviation for Y
      * @param float $stdZ standard deviation for Z
      * @todo: parameter checks
-     * @todo: add docblock reference to setCoordinatesystem function (function neccessary??)
      */
     public function setFix($x, $y, $z, $stdX=0, $stdY=0, $stdZ=0)
     {
@@ -410,19 +409,6 @@ class File_Therion_Station
         $this->_fixes = array();
     }
     
-    /**
-     * Sets the coordinate system that is used for fix.
-     * 
-     * Fixing stations is only meaningful
-     * 
-     * @param string
-     * @todo: check on possible values
-     * @todo: params check on type
-     */
-    public function setCoordinateSystem($cs)
-    {
-        $this->_cs = $cs;
-    }
     
 }
 
