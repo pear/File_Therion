@@ -275,6 +275,148 @@ class File_Therion_Survey
         
     }
     
+    
+    /**
+     * Generate line content from this object.
+     * 
+     * @return array File_Therion_Line objects
+     * @todo finish implementation, implement proper escaping
+     */
+    public function toLines()
+    {
+        $lines = array();
+        
+        /*
+         * create header
+         */
+        $hdr = "survey ".$this->getName();
+        if ($this->getOption('title')) {
+            $hdr .= " -title ".$this->getOption('title');
+        }
+
+        if (!is_null($this->getOption('declination'))) {
+            // this may be [] for empty string, or other string
+            $decl = $this->getOption('declination');
+            $hdr .= " -declination [".$this->getOption('declination')."]";
+        }
+        $lines[] = new File_Therion_Line($hdr, "", "");
+        
+        if ($this->getOption('entrance')) {
+            $hdr .= " -entrance ".$this->getOption('entrance');
+        }
+        
+        
+        /*
+         * create subobjects lines
+         */
+        $baseIndent = "\t";
+
+        // centrelines
+        foreach ($this->getCentrelines() as $sobj) {
+            foreach ($cl->toLines() as $l) {
+                $l->setIndent($baseIndent.$l->getIndent());
+                $lines[] = $l;
+            }
+            unset($l);
+        }
+        unset($sobj);
+        
+        // stations (fixed, normal)
+        foreach ($this->getStations() as $sobj) {
+            foreach ($sobj as $s) {
+                
+                // comment and/or flags
+                if ($s->getComment() != "" || count($s->getAllFlags() > 0)) {
+                    $lines[] = new File_Therion_Line(
+                        $s->toStationString(),"", $baseIndent);
+                }
+                
+                // fixes
+                if ($s->isFixed()) {
+                    $lines[] = new File_Therion_Line(
+                        $s->toFixString(),"", $baseIndent);
+                }
+                
+            }
+            unset($s);
+        }
+        unset($sobj);
+        
+        // equates
+        foreach ($this->getEquates() as $sobj) {
+            foreach ($sobj as $j) {
+                $lines[] = new File_Therion_Line(
+                    "equate ".implode(" ", $j),
+                    "", $baseIndent);
+            }
+            unset($j);
+        }
+        unset($sobj);
+        
+        // scraps
+        foreach ($this->getScraps() as $sobj) {
+            foreach ($sobj->toLines() as $l) {
+                $l->setIndent($baseIndent.$l->getIndent());
+                $lines[] = $l;
+            }
+            unset($l);
+        }
+        unset($sobj);
+        
+        // joins
+        foreach ($this->getJoins() as $sobj) {
+            foreach ($sobj as $j) {
+                $lines[] = new File_Therion_Line(
+                    "join ".implode(" ", $j),
+                    "", $baseIndent);
+            }
+            unset($j);
+        }
+        unset($sobj);
+        
+        // maps
+        foreach ($this->getMaps() as $sobj) {
+            foreach ($sobj->toLines() as $l) {
+                $l->setIndent($baseIndent.$l->getIndent());
+                $lines[] = $l;
+            }
+            unset($l);
+        }
+        unset($sobj);
+        
+
+        // surfaces
+        foreach ($this->getSurfaces() as $sobj) {
+            foreach ($sobj->toLines() as $l) {
+                $l->setIndent($baseIndent.$l->getIndent());
+                $lines[] = $l;
+            }
+            unset($l);
+        }
+        unset($sobj);
+        
+        // subsurveys
+        foreach ($this->getSurveys() as $sobj) {
+            foreach ($sobj->toLines() as $l) {
+                $l->setIndent($baseIndent.$l->getIndent());
+                $lines[] = $l;
+            }
+            unset($l);
+        }
+        unset($sobj);
+        
+        
+        /*
+         *  create footer
+         */
+        $footr = "endsurvey ".$this->getName();
+        $lines[] = new File_Therion_Line($footr, "", "");
+        
+        // done, go home
+        return $lines;
+    }
+    
+    
     /**
      * Get name (id) of this survey.
      * 
