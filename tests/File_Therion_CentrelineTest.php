@@ -337,6 +337,40 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
         $this->assertEquals(2.09, $shots[5]->getLength());
         
     }
+    
+    /**
+     * test Line generation
+     */
+    public function testToLinesSimple()
+    {
+        // simple example: hull without anything
+        $sample = new File_Therion_Centreline();
+        $sampleLines = $sample->toLines();
+        $this->assertEquals(2, count($sampleLines));
+        $this->assertEquals(
+            array(
+                File_Therion_Line::parse('centreline'),
+                File_Therion_Line::parse('endcentreline'),
+            ),
+            $sampleLines
+        );
+        
+        // simple example: hull with options
+        $sample = new File_Therion_Centreline(
+            array(
+                'id'   => "Foo_ID"
+            )
+        );
+        $sampleLines = $sample->toLines();
+        $this->assertEquals(2, count($sampleLines));
+        $this->assertEquals(
+            array(
+                File_Therion_Line::parse('centreline -id Foo_ID'),
+                File_Therion_Line::parse('endcentreline'),
+            ),
+            $sampleLines
+        );
+    }
 
 }
 ?>

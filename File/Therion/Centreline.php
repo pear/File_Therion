@@ -512,7 +512,7 @@ class File_Therion_Centreline
      * 
      * When no date is set, NULL will be returned.
      * Otherwise a date object is returned OR if there is a date interval,
-     * an array containing two date objectsreturned.
+     * an array containing two date objects is returned.
      * 
      * @return null|array|File_Therion_Date therion date
      */
@@ -536,6 +536,7 @@ class File_Therion_Centreline
      * 
      * @param array|File_Therion_Date $date therion date or array for date interval
      * @throws InvalidArgumentException
+     * @todo: unsure if proper syntax is invocating "date <singledate>" several times instead!
      */
     public function setDate($date)
     {
@@ -894,6 +895,48 @@ class File_Therion_Centreline
         return $this->getData('cs');
     }
     
+    /**
+     * Sets copyright remark.
+     * 
+     * @param int    $year
+     * @param string $text
+     */
+    public function setCopyright($year, $text)
+    {
+        $this->setData('copyright', array($year, $text));
+    }
+    
+    /**
+     * Return copyright.
+     * 
+     * @return array, 0=year, 1=text
+     */
+    public function getCopyright()
+    {
+        return $this->getData('copyright');
+    }
+    
+    /**
+     * Sets author remark.
+     * 
+     * @param int    $year
+     * @param string $text
+     */
+    public function setAuthor($year, $text)
+    {
+        $this->setData('author', array($year, $text));
+    }
+    
+    /**
+     * Return author.
+     * 
+     * @return array, 0=year, 1=Person object
+     */
+    public function getAuthor()
+    {
+        return $this->getData('author');
+    }
+    
     
     /**
      * Count number of shots of this centreline (SPL Countable).
@@ -905,6 +948,206 @@ class File_Therion_Centreline
         return count($this->_shots);
     }
     
+    
+    /**
+     * Generate line content from this object.
+     * 
+     * @return array File_Therion_Line objects
+     * @todo finish implementation, implement proper escaping
+     */
+    public function toLines()
+    {
+        $lines = array();
+        
+        /*
+         * create header
+         */
+        $hdr = "centreline"; // start
+        $hdr .= $this->getOptionsString(); // add options
+        $lines[] = new File_Therion_Line($hdr, "", "");
+        
+        
+        /*
+         * Basic data
+         */
+        $baseIndent = "\t";
+        
+        // copyright
+        $copyright = $this->getData('copyright');
+        if (count($copyright) > 0) {
+            $lines[] = new File_Therion_Line(
+                "copyright "
+                .File_Therion_Line::escape($copyright[0])
+                ." ".File_Therion_Line::escape($copyright[1]),
+                "", $baseIndent);
+        }
+        
+        // author
+        $author = $this->getData('author');
+        if (count($author) > 0) {
+            $lines[] = new File_Therion_Line(
+                "author "
+                .File_Therion_Line::escape($author[0])
+                ." ".$author[1]->toString(),
+                "", $baseIndent);
+        }
+        
+        // explo-date
+        // TODO: im not sure if thbook means it like this, or if there are several
+        // invocations of date commands with single date objects are expected.
+        if (!is_null($this->getExploDate())) {
+            $ds = "";
+            if (is_array($this->getExploDate())) {
+                // date interval: "date <date1> <date2>"
+                $ds .= $this->getExploDate()[0]->toString();
+                $ds .= " ".$this->getExploDate()[1]->toString();
+            } elseif (is_object($this->getExploDate())) {
+                $ds .= $this->getExploDate()->toString();
+            }
+            
+            if ($ds) {
+                $lines[] = new File_Therion_Line($ds, "", $baseIndent);
+            }
+        }
+        
+        // explo-team
+        foreach ($this->getExploTeam() as $tm) {
+            $lines[] = new File_Therion_Line($tm->toString(), "", $baseIndent);
+        }
+        
+        
+        // date
+        // TODO: im not sure if thbook means it like this, or if there are several
+        // invocations of date commands with single date objects are expected.
+        if (!is_null($this->getDate())) {
+            $ds = "";
+            if (is_array($this->getDate())) {
+                // date interval: "date <date1> <date2>"
+                $ds .= $this->getDate()[0]->toString();
+                $ds .= " ".$this->getDate()[1]->toString();
+            } elseif (is_object($this->getDate())) {
+                $ds .= $this->getDate()->toString();
+            }
+            
+            if ($ds) {
+                $lines[] = new File_Therion_Line($ds, "", $baseIndent);
+            }
+        }
+        
+        // team
+        foreach ($this->getTeam() as $tm) {
+            $lines[] = new File_Therion_Line(
+                trim($tm->toString()." ".implode(" ", $this->getTeamRoles($tm))),
+                "", $baseIndent);
+        }
+        
+        
+        
+        /*
+         * create subobjects lines
+         */
+
+        // shots, units and data definitions.
+        // this comes from the shot objects.
+        if (count($this->getShots()) > 0) {
+            $units = $this->getShots()[0]->getUnits();
+            $style = $this->getShots()[0]->getStyle();
+            $order = $this->getShots()[0]->getOrder();
+            $flags = array(
+               'surface'     => false,
+               'splay'       => false,
+               'duplicate'   => false,
+               'approximate' => false,
+            );
+            
+            // print default units if non-standard
+            foreach ($units as $u => $v) {
+                if ($v != 'meters' && $v != 'degrees') {
+                    $lines[] = new File_Therion_Line(
+                        "units ".$u." ".$v,
+                        "",
+                        $baseIndent
+                    );
+                }
+            }
+            
+            // print ordering of first shot
+            $lines[] = new File_Therion_Line(
+                "data ".$style." ".implode(" ", $order),
+                "", $baseIndent);
+            
+
+            // dump shots:
+            foreach ($this->getShots() as $sobj) {
+                // see if flags changed
+                $objFlags = $sobj->getAllFlags();
+                $flagStr = "";
+                foreach ($flags as $f => $fv) {
+                    $nfv = $objFlags[$f]; // new flag value
+                    if ($nfv != $fv) {
+                        // flag differs: print new state and adjust seen one
+                        $not = ($nfv)? "": "not "; // new state == negated
+                        $flagStr .= " ".$not.$f; // add this flag as string
+                        $flags[$f] = $nfv; // store new state
+                    }
+                }
+                if ($flagStr) {
+                    // print flag adjusting line with all flags
+                     $lines[] = new File_Therion_Line(
+                        "flags ".trim($flagStr), "", $baseIndent);
+                }
+                
+                // print ordered shot data
+                // TODO when ordering or style changes, we need a new datadef line
+                $orderedData = $sobj->getOrderedData();
+                $dataStr = "";
+                foreach ($orderedData as $od) {
+                    if (is_a($od, 'File_Therion_Station')) {
+                        $dataStr .= " "
+                            .File_Therion_Line::escape($od->getName());
+                    } else {
+                        $dataStr .= " ".File_Therion_Line::escape($od);
+                    }
+                }
+                if ($dataStr) {
+                    $lines[] = new File_Therion_Line(
+                        trim($dataStr), "", $baseIndent);
+                }
+            }
+            unset($sobj);
+        }
+        
+        
+        // stations (fixed, normal)
+        foreach ($this->getStations() as $sobj) {
+            foreach ($sobj as $s) {
+                
+                // comment and/or flags
+                if ($s->getComment() != "" || count($s->getAllFlags() > 0)) {
+                    $lines[] = new File_Therion_Line(
+                        $s->toStationString(),"", $baseIndent);
+                }
+                
+                // fixes
+                if ($s->isFixed()) {
+                    $lines[] = new File_Therion_Line(
+                        $s->toFixString(),"", $baseIndent);
+                }
+                
+            }
+            unset($s);
+        }
+        unset($sobj);
+        
+        
+        /*
+         *  create footer
+         */
+        $lines[] = new File_Therion_Line("endcentreline", "", "");
+        
+        // done, go home
+        return $lines;
+    }
     
 }
 
