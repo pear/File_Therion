@@ -65,13 +65,6 @@ class File_Therion_Survey
     protected $_equates = array();
     
     /**
-     * Associated stations
-     * 
-     * @var array of station objects
-     */
-    protected $_stations = array();
-    
-    /**
      * Associated maps
      * 
      * @var array of map objects
@@ -114,6 +107,11 @@ class File_Therion_Survey
      */
     public function __construct($id, $options = array())
     {
+        if (!is_string($id) || $id == "") {
+            throw new InvalidArgumentException(
+                "survey ID must be nonempty string!");
+        }
+        
         $this->_name = $id;
         $this->setOption($options);
     }
@@ -318,27 +316,6 @@ class File_Therion_Survey
                 $lines[] = $l;
             }
             unset($l);
-        }
-        unset($sobj);
-        
-        // stations (fixed, normal)
-        foreach ($this->getStations() as $sobj) {
-            foreach ($sobj as $s) {
-                
-                // comment and/or flags
-                if ($s->getComment() != "" || count($s->getAllFlags() > 0)) {
-                    $lines[] = new File_Therion_Line(
-                        $s->toStationString(),"", $baseIndent);
-                }
-                
-                // fixes
-                if ($s->isFixed()) {
-                    $lines[] = new File_Therion_Line(
-                        $s->toFixString(),"", $baseIndent);
-                }
-                
-            }
-            unset($s);
         }
         unset($sobj);
         
