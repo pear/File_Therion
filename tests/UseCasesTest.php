@@ -203,6 +203,7 @@ class File_TherionUseCaseTest extends File_TherionTestBase {
     
         // assert surface
         $surfaces = $survey->getSurfaces();
+        $this->assertEquals(1, count($surfaces));
         // TODO: surface checks not implemented!
         //       missing underlying code...
         
