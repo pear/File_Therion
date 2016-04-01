@@ -249,6 +249,26 @@ class File_Therion_ShotTest extends File_TherionTestBase {
     }
     
     /**
+     * Test getting data based on order
+     */
+    public function testGetOrderedData()
+    {
+        $order  = array('from', 'to', 'length', 'bearing', 'gradient');
+        $data   = array('1.1', '1.2', 10, 234, -10);
+        $sample = File_Therion_Shot::parse($data, $order);
+        $from   = $sample->getFrom();
+        $to     = $sample->getTo();
+        
+        // swap order
+        $sample->setOrder(array_reverse($order));
+        
+        $this->assertEquals(
+            array(-10, 234, 10, $to, $from),
+            $sample->getOrderedData()
+        );
+    }
+    
+    /**
      * Test units calculations
      * 
      * @todo just raw tests implemented, more needed

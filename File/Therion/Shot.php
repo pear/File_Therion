@@ -256,6 +256,18 @@ class File_Therion_Shot
         }
     }
     
+    /**
+     * Get all active shot flags.
+     * 
+     * This returns an associative array of all flags.
+     * 
+     * @return array
+     */
+    public function getAllFlags()
+    {
+        return $this->_flags;
+    }
+    
     
     /**
      * Get data definition style of this shot
@@ -372,17 +384,21 @@ class File_Therion_Shot
     /**
      * Get current unit for measurement.
      * 
-     * @param string $type Measurement type ('clino', 'bearing', ...)
-     * @return string Unit: degrees; grads, ...
+     * @param string $type Measurement type ('clino', 'bearing', ...) or 'all'
+     * @return string|array Unit: degrees; grads, ...; array when $type='all'
      */
     public function getUnit($type)
     {
-        $ntype = File_Therion_Shot::unaliasField($type);
-        if (!array_key_exists($ntype, $this->_units)) {
-            throw new InvalidArgumentException(
-                "Unsupported unit type '$type'" );
+        if ($type == 'all') {
+            return $this->_units;
+        } else {
+            $ntype = File_Therion_Shot::unaliasField($type);
+            if (!array_key_exists($ntype, $this->_units)) {
+                throw new InvalidArgumentException(
+                    "Unsupported unit type '$type'" );
+            }
+            return $this->_units[$ntype];
         }
-        return $this->_units[$ntype];
     }
       
     
@@ -796,6 +812,21 @@ class File_Therion_Shot
         return (array_key_exists($name, $reversedAliases))
             ? $reversedAliases[$name]
             : $name;
+    }
+    
+    /**
+     * Returns array with data fields ordered by current order.
+     * 
+     * @return array with data elements
+     */
+    public function getOrderedData()
+    {
+        $r = array();
+        foreach ($this->getOrder(true) as $o) {
+            $rv  = $this->_data[$o]; // resolve value
+            $r[] = $rv; // append
+        }
+        return $r;
     }
     
     /**
