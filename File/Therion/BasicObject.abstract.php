@@ -256,6 +256,64 @@ abstract class File_Therion_BasicObject
           return $this->_data[$key];
      }
     
+    
+    /**
+     * Generate basic options string.
+     * 
+     * For options that are not null a string will be added with the value:
+     * "-<option> <value>"
+     * - string value: will be escaped and added unless empty
+     * - array value: will be joined with space and then escaped as single value unless empty
+     * 
+     * @return string
+     */
+    public function getOptionsString()
+    {
+        // DEV note:
+        // it may be a good idea to let outside code supply callbacks
+        // (array('optionname' => CALLBACK)) that generate values, so
+        // special option formats can be handled nicely from the calling class
+        
+        $options = ""; // the finalized options string
+        
+        // walk each option and try to parse it to string
+        foreach (array_keys($this->_options) as $opt) {
+            $optval = $this->getOption($opt);
+            $o = "";
+            switch (gettype($optval)) {
+                case 'NULL':
+                    // ignore silently - default value!
+                    continue;
+                break;
+                
+                case 'string':
+                    if ($optval != "") {
+                        $o = $optval;
+                    }
+                break;
+                
+                case 'array':
+                    if (count($optval > 0)) {
+                        $o = implode(" ", $optval);
+                    }
+                break;
+                
+                
+                default:
+                    throw new File_Therion_Exception(
+                        "option type ".getType($optval)." could not be"
+                        ."converted to optionString: unsupported!");
+            }
+            
+            if ($o != "") {
+                // generate option string out of value if value was parsed
+                $options .= " -".$opt." ".File_Therion_Line::escape($o);
+            }
+            
+        }
+        
+        return $options;
+    }
 }
 
 ?>
