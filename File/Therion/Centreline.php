@@ -1006,13 +1006,13 @@ class File_Therion_Centreline
             }
             
             if ($ds) {
-                $lines[] = new File_Therion_Line($ds, "", $baseIndent);
+                $lines[] = new File_Therion_Line("explo-date ".$ds, "", $baseIndent);
             }
         }
         
         // explo-team
         foreach ($this->getExploTeam() as $tm) {
-            $lines[] = new File_Therion_Line($tm->toString(), "", $baseIndent);
+            $lines[] = new File_Therion_Line("explo-team ".$tm->toString(), "", $baseIndent);
         }
         
         
@@ -1030,14 +1030,14 @@ class File_Therion_Centreline
             }
             
             if ($ds) {
-                $lines[] = new File_Therion_Line($ds, "", $baseIndent);
+                $lines[] = new File_Therion_Line("date ".$ds, "", $baseIndent);
             }
         }
         
         // team
         foreach ($this->getTeam() as $tm) {
             $lines[] = new File_Therion_Line(
-                trim($tm->toString()." ".implode(" ", $this->getTeamRoles($tm))),
+                "team ".trim($tm->toString()." ".implode(" ", $this->getTeamRoles($tm))),
                 "", $baseIndent);
         }
         
@@ -1050,7 +1050,7 @@ class File_Therion_Centreline
         // shots, units and data definitions.
         // this comes from the shot objects.
         if (count($this->getShots()) > 0) {
-            $units = $this->getShots()[0]->getUnits();
+            $units = $this->getShots()[0]->getUnit('all');
             $style = $this->getShots()[0]->getStyle();
             $order = $this->getShots()[0]->getOrder();
             $flags = array(
@@ -1103,10 +1103,10 @@ class File_Therion_Centreline
                 $dataStr = "";
                 foreach ($orderedData as $od) {
                     if (is_a($od, 'File_Therion_Station')) {
-                        $dataStr .= " "
+                        $dataStr .= "\t"
                             .File_Therion_Line::escape($od->getName());
                     } else {
-                        $dataStr .= " ".File_Therion_Line::escape($od);
+                        $dataStr .= "\t".File_Therion_Line::escape($od);
                     }
                 }
                 if ($dataStr) {
