@@ -89,8 +89,7 @@ class File_Therion_Date
      * Set therion date.
      * 
      * Specification in a format:
-     * - 'YYYY.MM.DD@HH:MM:SS.SS'
-     * - 'YYYY.MM.DD@HH:MM:SS.SS - YYYY.MM.DD@HH:MM:SS.SS'
+     * - 'YYYY[.MM[.DD[@HH[:MM[:SS[.SS]]]]'
      * - or ‘-’ to leave a date unspecified.
      * 
      * @param string $date valid date string
