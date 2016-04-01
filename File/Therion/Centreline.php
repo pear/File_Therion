@@ -50,13 +50,11 @@ class File_Therion_Centreline
         'title'       => "",
         'date'        => array(),
         'explo-date'  => array(),
-        'units'       => array(),
         'instrument'  => array(), // assoc: [<quantity>]=<description>
         'infer'       => array(), // assoc: [<what>]=<boolean>
         'declination' => array(), // 0=value, 1=unit; eg. (0.0 grad)
         'grid-angle'  => array(), // (<value> <units>)
         'sd'          => array(), // assoc: [<quantity>]=(<value> <units>)
-        'units'       => array(), // assoc: [<quantity>]=(<factor> <units>)
         'cs'          => "",      // <coordinate system>
         'station-names' => array("",""), // <prefix> <postfix>
     );
