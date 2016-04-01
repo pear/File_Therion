@@ -287,22 +287,9 @@ class File_Therion_Survey
         /*
          * create header
          */
-        $hdr = "survey ".$this->getName();
-        if ($this->getOption('title')) {
-            $hdr .= " -title ".$this->getOption('title');
-        }
-
-        if (!is_null($this->getOption('declination'))) {
-            // this may be [] for empty string, or other string
-            $decl = $this->getOption('declination');
-            $hdr .= " -declination [".$this->getOption('declination')."]";
-        }
+        $hdr = "survey ".$this->getName(); // start
+        $hdr .= $this->getOptionsString(); // add options
         $lines[] = new File_Therion_Line($hdr, "", "");
-        
-        if ($this->getOption('entrance')) {
-            $hdr .= " -entrance ".$this->getOption('entrance');
-        }
-        
         
         /*
          * create subobjects lines
@@ -311,7 +298,7 @@ class File_Therion_Survey
 
         // centrelines
         foreach ($this->getCentrelines() as $sobj) {
-            foreach ($cl->toLines() as $l) {
+            foreach ($sobj->toLines() as $l) {
                 $l->setIndent($baseIndent.$l->getIndent());
                 $lines[] = $l;
             }

@@ -369,7 +369,75 @@ class File_Therion_SurveyTest extends File_TherionTestBase {
         
     }
     
+    /**
+     * test Line generation
+     */
+    public function testToLinesSimple()
+    {
+        // simple example: hull without anything
+        $sample = new File_Therion_Survey("testSurvey");
+        $sampleLines = $sample->toLines();
+        $this->assertEquals(2, count($sampleLines));
+        $this->assertEquals(
+            array(
+                File_Therion_Line::parse('survey testSurvey'),
+                File_Therion_Line::parse('endsurvey testSurvey'),
+            ),
+            $sampleLines
+        );
+        
+        // simple example: hull with options
+        $sample = new File_Therion_Survey("testSurvey", array(
+                'title'       => "Foo bar",
+                'declination' => "3.0 grads",
+                'namespace'   => "on"
+            ));
+        $sampleLines = $sample->toLines();
+        $this->assertEquals(2, count($sampleLines));
+        $this->assertEquals(
+            array(
+                File_Therion_Line::parse(
+                    'survey testSurvey -title "Foo bar"'
+                    .' -declination [3.0 grads]'
+                    .' -namespace on'),
+                File_Therion_Line::parse('endsurvey testSurvey'),
+            ),
+            $sampleLines
+        );
+    }
     
+    /**
+     * test Line generation with subsurvey
+     */
+    public function testToLinesWithSubsurvey()
+    {
+        // outer hull without anything
+        $sample = new File_Therion_Survey("outherSurvey");
+        
+        // inner example: hull with options
+        $sample2 = new File_Therion_Survey("innerSurvey", array(
+                'title'       => "Foo bar",
+                'declination' => "3.0 grads",
+                'namespace'   => "on"
+            ));
+            
+        $sample->addSurvey($sample2);
+        
+        $sampleLines = $sample->toLines();
+        $this->assertEquals(4, count($sampleLines));
+        $this->assertEquals(
+            array(
+                File_Therion_Line::parse('survey outherSurvey'),
+                File_Therion_Line::parse(
+                    "\tsurvey innerSurvey -title \"Foo bar\""
+                    .' -declination [3.0 grads]'
+                    .' -namespace on'),
+                File_Therion_Line::parse("\tendsurvey innerSurvey"),
+                File_Therion_Line::parse('endsurvey outherSurvey'),
+            ),
+            $sampleLines
+        );
+    }
 
 }
 ?>
