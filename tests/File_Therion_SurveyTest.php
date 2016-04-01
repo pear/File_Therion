@@ -350,10 +350,10 @@ class File_Therion_SurveyTest extends File_TherionTestBase {
             File_Therion_Line::parse('    survey lvl_2_3'),
             File_Therion_Line::parse('      survey lvl_2_1'),
             File_Therion_Line::parse('        # content'),
-            File_Therion_Line::parse('      endsurvey'),
+            File_Therion_Line::parse('      endsurvey lvl_2_1'),
             File_Therion_Line::parse('    endsurvey'),
             File_Therion_Line::parse('  endsurvey'),
-            File_Therion_Line::parse('endsurvey'),
+            File_Therion_Line::parse('endsurvey lvl_1'),
         );
         $sample = File_Therion_Survey::parse($sampleLines);
         $this->assertInstanceOf('File_Therion_Survey', $sample);
