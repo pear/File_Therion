@@ -406,8 +406,12 @@ class File_Therion_LineTest extends File_TherionTestBase
         // test white space
         $this->assertEquals('"foo bar"', File_Therion_Line::escape("foo bar"));
         $this->assertEquals("[1. 23]", File_Therion_Line::escape("1. 23"));
+        $this->assertEquals("[1.23 5.43]", File_Therion_Line::escape("1.23 5.43"));
+        $this->assertEquals("[1.23 degrees]", File_Therion_Line::escape("1.23 degrees"));
         $this->assertEquals("foo bar", File_Therion_Line::unescape('"foo bar"'));
         $this->assertEquals("1. 23", File_Therion_Line::unescape("[1. 23]"));
+        $this->assertEquals("1.23 5.43", File_Therion_Line::unescape("[1.23 5.43]"));
+        $this->assertEquals("1.23 degrees", File_Therion_Line::unescape("[1.23 degrees]"));
         
         // test nested escaping
         $this->assertEquals('"""foo bar"""', File_Therion_Line::escape('"foo bar"'));
