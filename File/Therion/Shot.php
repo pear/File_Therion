@@ -720,15 +720,94 @@ class File_Therion_Shot
      */
     public function setDownDimension($down)
     {
-        // convert to explicit type
-        $down = (is_string($down)||is_int($down))? floatval($down) : $down;
-        
-        if (!is_float($down)) {
-            throw new InvalidArgumentException("Invalid argument type");
+        if ($down !== "-") {
+            // convert to explicit type
+            $down = (is_string($down)||is_int($down))? floatval($down) : $down;
+            
+            if (!is_float($down)) {
+                throw new InvalidArgumentException("Invalid argument type");
+            }
         }
+        
         $this->_data['down'] = $down;
     }
     
+    
+    /**
+     * Return formatted datafields as Therion Line in current order.
+     * 
+     * @return File_Therion_Line containing data items
+     */
+    public function toLines()
+    {
+        $strItems = array();
+        foreach ($this->getOrderedData() as $od) {
+            if (is_a($od, 'File_Therion_Station')) {
+                // resolve station objects to string names
+                $strItems[] = File_Therion_Line::escape($od->getName());
+            } else {
+                $strItems[] = File_Therion_Line::escape($od);
+            }
+        }
+        
+        // todo: maybe use better formatting for nicer table output
+        $data_str = implode("\t", $strItems);
+        return new File_Therion_Line($data_str, "", "\t\t");
+    }
+
+    
+    /**
+     * Return formatted datadefinition as Therion Line.
+     * 
+     * @return File_Therion_Line containing "data normal x y z ..."
+     */
+    public function toLinesDataDef()
+    {
+        // todo: maybe use better formatting for nicer table output
+        $order_str = implode("\t", $this->getOrder());
+        return new File_Therion_Line(
+            "data\t".$this->getStyle()."\t".$order_str
+        );
+    }
+    
+    /**
+     * Return formatted units definitions for data defintion as Therion Line(s).
+     * 
+     * In default mode, only units deviating from the therion default are
+     * reported. Currently that is meters for lengths and degrees for angles.
+     * If no default unit was changed, an empty array is returned.
+     * Otherwise (or if $all was selected) Lines will be generated.
+     * 
+     * @param boolean $all If true, return also default units (that is: all)
+     * @return array with File_Therion_Line objects (or empty)
+     * @todo support unit factor: string like [factor]
+     */
+    public function toLinesUnitsDef($all=false)
+    {
+        $unitsStrings = array(); // unit to instruments
+        // walk each unit setting and add in case of deviation
+        foreach ($this->getOrder() as $inst) {
+            // skip if station: from, to
+            if (in_array($inst, array('from', 'to'))) continue;
+            
+            $unit = $this->getUnit($inst);
+            if ($all || ($unit != 'meters' && $unit != 'degrees')) {
+                if (!array_key_exists($unit, $unitsStrings)) {
+                    $unitsStrings[$unit] = array($inst);
+                } else {
+                    $unitsStrings[$unit][] = $inst;
+                }
+            }
+        }
+        
+        // build distinct units lines as neccessary
+        $retLines = array();
+        foreach ($unitsStrings as $u => $i) {
+            $retLines[] =
+                new File_Therion_Line("units ".implode(" ", $i)." ".$u);
+        }
+        return $retLines;
+    }
     
     
     /**
