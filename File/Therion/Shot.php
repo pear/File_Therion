@@ -193,6 +193,8 @@ class File_Therion_Shot
                 
                 // TODO: Support more fields from the book
                 
+                // TODO: Also know that survex supports explicitely NEWLINE...
+                
                 // ignored field: ignore :)
                 // ignoreall field: ignore and stop parsing
                 case 'ignore':
