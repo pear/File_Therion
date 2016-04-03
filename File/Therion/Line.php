@@ -618,6 +618,39 @@ class File_Therion_Line implements Countable
         $this->_eol = $eol;
     }
     
+    
+    
+    /*
+     * Utility functions
+     */
+     
+    /**
+    * Filter empty Therion data lines out of array.
+    * 
+    * Returns the lines that are not only commentary or empty;
+    * that is: lines with real content.
+    * 
+    * @param array
+    * @return int
+    * @throws InvalidArgumentException in case element is not a line object
+    */
+    public static function filterNonEmpty(array $arrayToCount)
+    {
+        $filtered = array();
+        for ($i=0; $i < count($arrayToCount); $i++) {
+            $a = $arrayToCount[$i];
+            if (!is_a($a, 'File_Therion_Line')) {
+                throw new InvalidArgumentException(
+                    "countNonEmpty() @$i: invalid object type ".gettype($a));
+            }
+            
+            if (! $a->isCommentOnly()) {
+                $filtered[] = $a;
+            }
+        }
+        
+        return $filtered;
+    }
 }
     
 ?>
