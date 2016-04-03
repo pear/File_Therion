@@ -266,7 +266,7 @@ class File_Therion_Line implements Countable
         // string tokens.
         // this pattern is still insufficient as it will not get ""foo"" etc,
         // however it should already grep most of the possible combinations.
-        $p ='((?:\[[\s\w\d.\-]+\])|(?:"(?:""|[\s\w.:-_\-])+")|(?:[\d\w.:\-_]+))';
+        $p ='((?:\[[\s\w\d.\-]+\])|(?:"(?:""|[\s\w.:-_\-])+")|(?:[\d\w.:\-_]+)|(?:"")|(?:\[\]))';
         $r = array();
         $pr = preg_match_all($p, $c, $r);
         if ($pr === false) throw new File_Therion_SyntaxException(

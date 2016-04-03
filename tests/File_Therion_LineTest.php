@@ -466,6 +466,12 @@ class File_Therion_LineTest extends File_TherionTestBase
         $sample = File_Therion_Line::parse('one "foo bar"');
         $this->assertEquals(array("one", "foo bar"), $sample->getDatafields());
         
+        $sample = File_Therion_Line::parse(
+            'one "foo bar" emptyString "" emptyData []');
+        $this->assertEquals(
+            array("one", "foo bar", "emptyString", "", "emptyData", ""),
+            $sample->getDatafields());
+        
         $sample = File_Therion_Line::parse('one "foo ""bar baz"" bar" end');
         $this->assertEquals(
             array("one", 'foo "bar baz" bar', "end"),
