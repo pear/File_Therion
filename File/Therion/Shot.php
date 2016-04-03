@@ -146,6 +146,12 @@ class File_Therion_Shot
             $lastParsedOrder = $o; // just for the record
             
             $value = array_shift($data); // get next corresponding value
+            
+            if (is_null($value)) {
+                // no such data left:
+                // The use case coming to mind is missing LRUD data.
+                $value = "-"; // survex manual says so!
+            }
 
             // Determine parsing action and carry it out
             switch ($o) {
@@ -562,10 +568,12 @@ class File_Therion_Shot
     public function setLength($length)
     {
         // convert to explicit type
-        $length = (is_string($length)||is_int($length))? floatval($length) : $length;
-        
-        if (!is_float($length)) {
-            throw new InvalidArgumentException("Invalid argument type");
+        if ($length !== "-") {
+            $length = (is_string($length)||is_int($length))? floatval($length) : $length;
+            
+            if (!is_float($length)) {
+                throw new InvalidArgumentException("Invalid argument type");
+            }
         }
         $this->_data['length'] = $length;
     }
@@ -579,31 +587,32 @@ class File_Therion_Shot
      */
     public function setBearing($bearing)
     {
-        // convert to explicit type
-        $bearing = (is_string($bearing)||is_int($bearing))? floatval($bearing) : $bearing;
-        
-        if (!is_float($bearing)) {
-            throw new InvalidArgumentException("Invalid argument type");
-        }
-        
-        // basic sanity checks and adjustments
-        if ($this->getUnit('bearing') == 'degrees'
-            && ($bearing <0 || $bearing > 360)) {
-            throw new InvalidArgumentException(
-                "bearing out of range: $bearing (0->360 degrees)"
-            );
-            $bearing = ($bearing==360)? 0.0 : $bearing; // treat 360 as float(0)
-        }
-        if ($this->getUnit('bearing') == 'grads'
-            && ($bearing <0 || $bearing > 400)) {
-            throw new InvalidArgumentException(
-                "bearing out of range: $bearing (0->400 grads)"
-            );
+        if ($bearing !== "-") {
+            // convert to explicit type
+            $bearing = (is_string($bearing)||is_int($bearing))? floatval($bearing) : $bearing;
             
-            $bearing = ($bearing==400)? 0.0 : $bearing; // treat 400 as float(0)
-        }            
-        // TODO: support other units too
-        
+            if (!is_float($bearing)) {
+                throw new InvalidArgumentException("Invalid argument type");
+            }
+            
+            // basic sanity checks and adjustments
+            if ($this->getUnit('bearing') == 'degrees'
+                && ($bearing <0 || $bearing > 360)) {
+                throw new InvalidArgumentException(
+                    "bearing out of range: $bearing (0->360 degrees)"
+                );
+                $bearing = ($bearing==360)? 0.0 : $bearing; // treat 360 as float(0)
+            }
+            if ($this->getUnit('bearing') == 'grads'
+                && ($bearing <0 || $bearing > 400)) {
+                throw new InvalidArgumentException(
+                    "bearing out of range: $bearing (0->400 grads)"
+                );
+                
+                $bearing = ($bearing==400)? 0.0 : $bearing; // treat 400 as float(0)
+            }            
+            // TODO: support other units too
+        }
         
         $this->_data['bearing'] = $bearing;
     }
@@ -617,29 +626,30 @@ class File_Therion_Shot
      */
     public function setGradient($gradient)
     {
-        // convert to explicit type
-        $gradient = (is_string($gradient)||is_int($gradient))? floatval($gradient) : $gradient;
-        
-        if (!is_float($gradient)) {
-            throw new InvalidArgumentException(
-                "Invalid argument type (".gettype($gradient).") gradient=$gradient");
-        }
-        if ($this->getUnit('gradient') == 'degrees'
-            && ($gradient <-90 || $gradient > 90)) {
+        if ($gradient !== "-") {
+            // convert to explicit type
+            $gradient = (is_string($gradient)||is_int($gradient))? floatval($gradient) : $gradient;
             
-            throw new InvalidArgumentException(
-                "gradient out of range: $gradient (-90->+90 degrees)"
-            );
+            if (!is_float($gradient)) {
+                throw new InvalidArgumentException(
+                    "Invalid argument type (".gettype($gradient).") gradient=$gradient");
+            }
+            if ($this->getUnit('gradient') == 'degrees'
+                && ($gradient <-90 || $gradient > 90)) {
+                
+                throw new InvalidArgumentException(
+                    "gradient out of range: $gradient (-90->+90 degrees)"
+                );
+            }
+            if ($this->getUnit('gradient') == 'grad'
+                && ($gradient <-100 || $gradient > 100)) {
+                
+                throw new InvalidArgumentException(
+                    "gradient out of range: $gradient (-90->+90 grads)"
+                );
+            }
+            // TODO: support other units too
         }
-        if ($this->getUnit('gradient') == 'grad'
-            && ($gradient <-100 || $gradient > 100)) {
-            
-            throw new InvalidArgumentException(
-                "gradient out of range: $gradient (-90->+90 grads)"
-            );
-        }
-        // TODO: support other units too
-        
         
         $this->_data['gradient'] = $gradient;
     }
@@ -651,12 +661,15 @@ class File_Therion_Shot
      */
     public function setLeftDimension($left)
     {
-        // convert to explicit type
-        $left = (is_string($left)||is_int($left))? floatval($left) : $left;
-        
-        if (!is_float($left)) {
-            throw new InvalidArgumentException("Invalid argument type");
+        if ($left !== "-") {
+            // convert to explicit type
+            $left = (is_string($left)||is_int($left))? floatval($left) : $left;
+            
+            if (!is_float($left)) {
+                throw new InvalidArgumentException("Invalid argument type");
+            }
         }
+            
         $this->_data['left'] = $left;
     }
     
@@ -667,12 +680,15 @@ class File_Therion_Shot
      */
     public function setRightDimension($right)
     {
-        // convert to explicit type
-        $right = (is_string($right)||is_int($right))? floatval($right) : $right;
-        
-        if (!is_float($right)) {
-            throw new InvalidArgumentException("Invalid argument type");
+        if ($right !== "-") {
+            // convert to explicit type
+            $right = (is_string($right)||is_int($right))? floatval($right) : $right;
+            
+            if (!is_float($right)) {
+                throw new InvalidArgumentException("Invalid argument type");
+            }
         }
+        
         $this->_data['right'] = $right;
     }
     
@@ -683,12 +699,15 @@ class File_Therion_Shot
      */
     public function setUpDimension($up)
     {
-        // convert to explicit type
-        $up = (is_string($up)||is_int($up))? floatval($up) : $up;
-        
-        if (!is_float($up)) {
-            throw new InvalidArgumentException("Invalid argument type");
+        if ($up !== "-") {
+            // convert to explicit type
+            $up = (is_string($up)||is_int($up))? floatval($up) : $up;
+            
+            if (!is_float($up)) {
+                throw new InvalidArgumentException("Invalid argument type");
+            }
         }
+        
         $this->_data['up'] = $up;
     }
     
