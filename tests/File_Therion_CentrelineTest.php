@@ -346,13 +346,13 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
         // simple example: hull without anything
         $sample = new File_Therion_Centreline();
         $sampleLines = $sample->toLines();
-        $this->assertEquals(2, count($sampleLines));
+        $this->assertEquals(2, count(File_Therion_Line::filterNonEmpty($sampleLines)));
         $this->assertEquals(
             array(
                 File_Therion_Line::parse('centreline'),
                 File_Therion_Line::parse('endcentreline'),
             ),
-            $sampleLines
+            File_Therion_Line::filterNonEmpty($sampleLines)
         );
         
         // simple example: hull with options
@@ -362,14 +362,46 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
             )
         );
         $sampleLines = $sample->toLines();
-        $this->assertEquals(2, count($sampleLines));
+        $this->assertEquals(2, count(File_Therion_Line::filterNonEmpty($sampleLines)));
         $this->assertEquals(
             array(
                 File_Therion_Line::parse('centreline -id Foo_ID'),
                 File_Therion_Line::parse('endcentreline'),
             ),
-            $sampleLines
+            File_Therion_Line::filterNonEmpty($sampleLines)
         );
+    }
+    
+    /**
+     * test complex Line generation
+     */
+    public function testToLinesComplex()
+    {
+        // complex centreline with several shots
+        $sampleLines = array(
+            File_Therion_Line::parse('centreline'),
+            File_Therion_Line::parse('  date 2016'),
+            File_Therion_Line::parse('  team "Beni Hallinger"'),
+            File_Therion_Line::parse('  team "Foo Bar" Dog'),
+            File_Therion_Line::parse('  explo-date 2015'),
+            File_Therion_Line::parse('  explo-team "Benedikt Hallinger"'),
+            File_Therion_Line::parse(''),
+            File_Therion_Line::parse('  units compass clino grads'),
+            File_Therion_Line::parse('  data normal from to compass clino tape'),
+            File_Therion_Line::parse('  station-names "pre" ""'),
+            File_Therion_Line::parse('  0     1   200       -5      6.4 '),
+            File_Therion_Line::parse('  1     2    73        8      5.2 '),
+            File_Therion_Line::parse('  2     3    42        0      2.09'),
+            File_Therion_Line::parse('endcentreline'),            
+        );
+        $sample = File_Therion_Centreline::parse($sampleLines);
+        
+        // Check if its the same
+        $lines = $sample->toLines();
+        foreach ($sampleLines as $l) {print $l->toString();}
+        foreach ($lines as $l) {print $l->toString();}
+        //$this->assertEquals($sampleLines, $lines);
+        
     }
 
 }

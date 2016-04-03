@@ -992,6 +992,8 @@ class File_Therion_Centreline
                 "", $baseIndent);
         }
         
+        $lines[] = new File_Therion_Line(""); // add line spacer
+        
         // explo-date
         // TODO: im not sure if thbook means it like this, or if there are several
         // invocations of date commands with single date objects are expected.
@@ -1014,7 +1016,6 @@ class File_Therion_Centreline
         foreach ($this->getExploTeam() as $tm) {
             $lines[] = new File_Therion_Line("explo-team ".$tm->toString(), "", $baseIndent);
         }
-        
         
         // date
         // TODO: im not sure if thbook means it like this, or if there are several
@@ -1041,44 +1042,55 @@ class File_Therion_Centreline
                 "", $baseIndent);
         }
         
+        $lines[] = new File_Therion_Line(""); // add line spacer
         
-        
-        /*
-         * create subobjects lines
-         */
+
+        // station prefix/postfix
+        $stationNames = $this->getStationNames();
+        if ($stationNames != array("", "")) {
+            $lines[] = new File_Therion_Line(
+                    "station-names "
+                    .File_Therion_Line::escape($stationNames[0])
+                    ." "
+                    .File_Therion_Line::escape($stationNames[1]), 
+                "", $baseIndent);
+        }
 
         // shots, units and data definitions.
         // this comes from the shot objects.
         if (count($this->getShots()) > 0) {
-            $units = $this->getShots()[0]->getUnit('all');
-            $style = $this->getShots()[0]->getStyle();
-            $order = $this->getShots()[0]->getOrder();
-            $flags = array(
+            $unitsdef = array(); // array of Line objects with units
+            $datadef  = null;    // line object with last seen order def
+            $flags    = array(
                'surface'     => false,
                'splay'       => false,
                'duplicate'   => false,
                'approximate' => false,
             );
             
-            // print default units if non-standard
-            foreach ($units as $u => $v) {
-                if ($v != 'meters' && $v != 'degrees') {
-                    $lines[] = new File_Therion_Line(
-                        "units ".$u." ".$v,
-                        "",
-                        $baseIndent
-                    );
-                }
-            }
-            
-            // print ordering of first shot
-            $lines[] = new File_Therion_Line(
-                "data ".$style." ".implode(" ", $order),
-                "", $baseIndent);
-            
 
-            // dump shots:
+            // Generate Lines for all shots:
             foreach ($this->getShots() as $sobj) {
+                // see if units changed (the case at least at start of loop!)
+                $unitsdefNew = $sobj->toLinesUnitsDef();
+                if ($unitsdef != $unitsdefNew) {
+                    foreach ($unitsdefNew as $nu) {
+                        $nlu = clone $nu; // clone for indenting
+                        $nlu->setIndent($baseIndent.$nlu->getIndent());
+                        $lines[] = $nlu;
+                    }
+                    $unitsdef = $unitsdefNew;
+                }
+                
+                // see if data definition changed (again at least at loop start)
+                $datadefNew = $sobj->toLinesDataDef();
+                if ($datadef != $datadefNew) {
+                    $ndd = clone $datadefNew;
+                    $ndd->setIndent($baseIndent.$ndd->getIndent());
+                    $lines[] = $ndd;
+                    $datadef = $datadefNew;
+                }
+                
                 // see if flags changed
                 $objFlags = $sobj->getAllFlags();
                 $flagStr = "";
@@ -1093,26 +1105,15 @@ class File_Therion_Centreline
                 }
                 if ($flagStr) {
                     // print flag adjusting line with all flags
-                     $lines[] = new File_Therion_Line(
+                    $lines[] = new File_Therion_Line(
                         "flags ".trim($flagStr), "", $baseIndent);
                 }
                 
-                // print ordered shot data
-                // TODO when ordering or style changes, we need a new datadef line
-                $orderedData = $sobj->getOrderedData();
-                $dataStr = "";
-                foreach ($orderedData as $od) {
-                    if (is_a($od, 'File_Therion_Station')) {
-                        $dataStr .= "\t"
-                            .File_Therion_Line::escape($od->getName());
-                    } else {
-                        $dataStr .= "\t".File_Therion_Line::escape($od);
-                    }
-                }
-                if ($dataStr) {
-                    $lines[] = new File_Therion_Line(
-                        trim($dataStr), "", $baseIndent);
-                }
+                // finally add ordered shot data
+                $shotLine = $sobj->toLines();
+                $shotLine->setIndent($baseIndent.$shotLine->getIndent());
+                $lines[] = $shotLine;
+                
             }
             unset($sobj);
         }
