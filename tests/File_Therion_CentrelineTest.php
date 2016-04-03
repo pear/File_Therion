@@ -339,6 +339,94 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
     }
     
     /**
+     * Parsing centreline flags
+     */
+    public function testParsingShotFlags()
+    {
+        $sampleLines = array(
+            File_Therion_Line::parse('centreline'),
+            File_Therion_Line::parse('  units compass clino grads'),
+            File_Therion_Line::parse('  data normal from to compass clino tape'),
+            File_Therion_Line::parse('  0     1   200       -5      6.4 '),
+            File_Therion_Line::parse(' flags duplicate'),
+            File_Therion_Line::parse('  1     2    73        8      5.2 '),
+            File_Therion_Line::parse(' flags not duplicate'),
+            File_Therion_Line::parse('  2     3    42        0      2.09'),
+            File_Therion_Line::parse('  3     4    10       10      10'),
+            File_Therion_Line::parse('  4     .    10       10      10'),
+            File_Therion_Line::parse('  4     5    10       10      10'),
+            File_Therion_Line::parse('  5     -    10       10      10'),
+            File_Therion_Line::parse('  5     6    10       10      10'),
+            File_Therion_Line::parse(' flags splay'),
+            File_Therion_Line::parse('  6     7    10       10      10'),
+            File_Therion_Line::parse(' flags not splay'),
+            File_Therion_Line::parse('  5     6    10       10      10'),
+            File_Therion_Line::parse(' flags surface'),
+            File_Therion_Line::parse('  5     6    10       10      10'),
+            File_Therion_Line::parse('endcentreline'),            
+        );
+        $sample = File_Therion_Centreline::parse($sampleLines);
+        $this->assertInstanceOf('File_Therion_Centreline', $sample);
+        
+        $shots = $sample->getShots();
+        $this->assertFalse($shots[0]->getFlag('duplicate'));
+        $this->assertFalse($shots[0]->getFlag('splay'));
+        $this->assertFalse($shots[0]->getFlag('approximate'));
+        $this->assertFalse($shots[0]->getFlag('surface'));
+        
+        $this->assertTrue($shots[1]->getFlag('duplicate'));
+        $this->assertFalse($shots[1]->getFlag('splay'));
+        $this->assertFalse($shots[1]->getFlag('approximate'));
+        $this->assertFalse($shots[1]->getFlag('surface'));
+        
+        $this->assertFalse($shots[2]->getFlag('duplicate'));
+        $this->assertFalse($shots[2]->getFlag('splay'));
+        $this->assertFalse($shots[2]->getFlag('approximate'));
+        $this->assertFalse($shots[2]->getFlag('surface'));
+        
+        $this->assertFalse($shots[3]->getFlag('duplicate'));
+        $this->assertFalse($shots[3]->getFlag('splay'));
+        $this->assertFalse($shots[3]->getFlag('approximate'));
+        $this->assertFalse($shots[3]->getFlag('surface'));
+        
+        $this->assertTrue($shots[4]->getFlag('duplicate')); // implicit
+        $this->assertFalse($shots[4]->getFlag('splay'));
+        $this->assertFalse($shots[4]->getFlag('approximate'));
+        $this->assertFalse($shots[4]->getFlag('surface'));
+        
+        $this->assertFalse($shots[5]->getFlag('duplicate'));
+        $this->assertFalse($shots[5]->getFlag('splay'));
+        $this->assertFalse($shots[5]->getFlag('approximate'));
+        $this->assertFalse($shots[5]->getFlag('surface'));
+        
+        $this->assertTrue($shots[6]->getFlag('duplicate')); // implicit
+        $this->assertFalse($shots[6]->getFlag('splay'));
+        $this->assertFalse($shots[6]->getFlag('approximate'));
+        $this->assertFalse($shots[6]->getFlag('surface'));
+        
+        $this->assertFalse($shots[7]->getFlag('duplicate'));
+        $this->assertFalse($shots[7]->getFlag('splay'));
+        $this->assertFalse($shots[7]->getFlag('approximate'));
+        $this->assertFalse($shots[7]->getFlag('surface'));
+        
+        $this->assertTrue($shots[8]->getFlag('duplicate')); // explicit
+        $this->assertFalse($shots[8]->getFlag('splay'));
+        $this->assertFalse($shots[8]->getFlag('approximate'));
+        $this->assertFalse($shots[8]->getFlag('surface'));
+        
+        $this->assertFalse($shots[9]->getFlag('duplicate'));
+        $this->assertFalse($shots[9]->getFlag('splay'));
+        $this->assertFalse($shots[9]->getFlag('approximate'));
+        $this->assertFalse($shots[9]->getFlag('surface'));
+        
+        $this->assertFalse($shots[10]->getFlag('duplicate'));
+        $this->assertFalse($shots[10]->getFlag('splay'));
+        $this->assertFalse($shots[10]->getFlag('approximate'));
+        $this->assertTrue($shots[10]->getFlag('surface'));
+    }
+        
+    
+    /**
      * test Line generation
      */
     public function testToLinesSimple()
@@ -392,6 +480,23 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
             File_Therion_Line::parse('  0     1   200       -5      6.4 '),
             File_Therion_Line::parse('  1     2    73        8      5.2 '),
             File_Therion_Line::parse('  2     3    42        0      2.09'),
+            File_Therion_Line::parse(' flags duplicate'),
+            File_Therion_Line::parse('  2     2a    30       55     5'),
+            File_Therion_Line::parse(' flags not duplicate'),
+            File_Therion_Line::parse('  3     4    130       -10    23.3'),
+            File_Therion_Line::parse(' flags surface'),
+            File_Therion_Line::parse('  4     4a    10       80    13'),
+            File_Therion_Line::parse(' flags splay'),
+            File_Therion_Line::parse('  4a    4splay 30       20    1'),
+            File_Therion_Line::parse(' flags not splay #implicit splay follow'),
+            File_Therion_Line::parse('  4a    4b    10       80    13'),
+            File_Therion_Line::parse('  4a    .     60        0    0.3'),
+            File_Therion_Line::parse('  4a    -    180        0    0.6'),
+            File_Therion_Line::parse(' flags duplicate'),
+            File_Therion_Line::parse('  4a    -    180        0    0.6'),
+            File_Therion_Line::parse(' flags not duplicate'),
+            File_Therion_Line::parse(' flags not surface'),
+            File_Therion_Line::parse('  4    5     25       -13   130'),
             File_Therion_Line::parse('endcentreline'),            
         );
         $sample = File_Therion_Centreline::parse($sampleLines);

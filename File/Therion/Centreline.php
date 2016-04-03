@@ -1096,7 +1096,7 @@ class File_Therion_Centreline
                 $flagStr = "";
                 foreach ($flags as $f => $fv) {
                     $nfv = $objFlags[$f]; // new flag value
-                    if ($nfv != $fv) {
+                    if ($nfv !== $fv) {
                         // flag differs: print new state and adjust seen one
                         $not = ($nfv)? "": "not "; // new state == negated
                         $flagStr .= " ".$not.$f; // add this flag as string
@@ -1105,6 +1105,7 @@ class File_Therion_Centreline
                 }
                 if ($flagStr) {
                     // print flag adjusting line with all flags
+                    // TODO: suppress splay-flags if to-/from-name is '.' or '-'
                     $lines[] = new File_Therion_Line(
                         "flags ".trim($flagStr), "", $baseIndent);
                 }
