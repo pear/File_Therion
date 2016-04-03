@@ -534,7 +534,7 @@ class File_Therion_Shot
         $this->_data['from'] = $station;
         
         if ($station->getName() == "." || $station->getName() == "-") {
-            $this->setFlag('splay');
+            $this->setFlag('splay', true);
         }
     }
     
@@ -558,7 +558,7 @@ class File_Therion_Shot
         $this->_data['to'] = $station;
         
         if ($station->getName() == "." || $station->getName() == "-") {
-            $this->setFlag('splay');
+            $this->setFlag('splay', true);
         }
     }
     

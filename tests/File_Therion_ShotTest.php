@@ -126,6 +126,23 @@ class File_Therion_ShotTest extends File_TherionTestBase {
                 $sample->getGradient(),
             )
         );
+        
+        // test splay detection
+        $data   = array('1.1', '.', 10, 234, -10);
+        $sample = File_Therion_Shot::parse($data, $order);
+        $this->assertTrue($sample->getFlag('splay'));
+        $data   = array('1.1', '-', 10, 234, -10);
+        $sample = File_Therion_Shot::parse($data, $order);
+        $this->assertTrue($sample->getFlag('splay'));
+        $data   = array('.', '1.1', 10, 234, -10);
+        $sample = File_Therion_Shot::parse($data, $order);
+        $this->assertTrue($sample->getFlag('splay'));
+        $data   = array('-', '1.1', 10, 234, -10);
+        $sample = File_Therion_Shot::parse($data, $order);
+        $this->assertTrue($sample->getFlag('splay'));
+        $data   = array('1.0', '1.1', 10, 234, -10);
+        $sample = File_Therion_Shot::parse($data, $order);
+        $this->assertFalse($sample->getFlag('splay'));
     }
     
     
