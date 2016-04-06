@@ -389,8 +389,8 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
         $this->assertFalse($shots[3]->getFlag('approximate'));
         $this->assertFalse($shots[3]->getFlag('surface'));
         
-        $this->assertTrue($shots[4]->getFlag('duplicate')); // implicit
-        $this->assertFalse($shots[4]->getFlag('splay'));
+        $this->assertFalse($shots[4]->getFlag('duplicate')); 
+        $this->assertTrue($shots[4]->getFlag('splay'));     // implicit
         $this->assertFalse($shots[4]->getFlag('approximate'));
         $this->assertFalse($shots[4]->getFlag('surface'));
         
@@ -399,8 +399,8 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
         $this->assertFalse($shots[5]->getFlag('approximate'));
         $this->assertFalse($shots[5]->getFlag('surface'));
         
-        $this->assertTrue($shots[6]->getFlag('duplicate')); // implicit
-        $this->assertFalse($shots[6]->getFlag('splay'));
+        $this->assertFalse($shots[6]->getFlag('duplicate')); 
+        $this->assertTrue($shots[6]->getFlag('splay'));       // implicit
         $this->assertFalse($shots[6]->getFlag('approximate'));
         $this->assertFalse($shots[6]->getFlag('surface'));
         
@@ -409,8 +409,8 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
         $this->assertFalse($shots[7]->getFlag('approximate'));
         $this->assertFalse($shots[7]->getFlag('surface'));
         
-        $this->assertTrue($shots[8]->getFlag('duplicate')); // explicit
-        $this->assertFalse($shots[8]->getFlag('splay'));
+        $this->assertFalse($shots[8]->getFlag('duplicate')); 
+        $this->assertTrue($shots[8]->getFlag('splay'));  // explicit
         $this->assertFalse($shots[8]->getFlag('approximate'));
         $this->assertFalse($shots[8]->getFlag('surface'));
         
@@ -470,7 +470,7 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
             File_Therion_Line::parse('centreline'),
             File_Therion_Line::parse('  date 2016'),
             File_Therion_Line::parse('  team "Beni Hallinger"'),
-            File_Therion_Line::parse('  team "Foo Bar" Dog'),
+            File_Therion_Line::parse('  team "Foo Bar" dog'),
             File_Therion_Line::parse('  explo-date 2015'),
             File_Therion_Line::parse('  explo-team "Benedikt Hallinger"'),
             File_Therion_Line::parse(''),
@@ -488,7 +488,8 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
             File_Therion_Line::parse('  4     4a    10       80    13'),
             File_Therion_Line::parse(' flags splay'),
             File_Therion_Line::parse('  4a    4splay 30       20    1'),
-            File_Therion_Line::parse(' flags not splay #implicit splay follow'),
+            File_Therion_Line::parse(' flags not splay'),
+            File_Therion_Line::parse('  #implicit splay shots following'),
             File_Therion_Line::parse('  4a    4b    10       80    13'),
             File_Therion_Line::parse('  4a    .     60        0    0.3'),
             File_Therion_Line::parse('  4a    -    180        0    0.6'),
@@ -501,11 +502,32 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
         );
         $sample = File_Therion_Centreline::parse($sampleLines);
         
-        // Check if its the same
-        $lines = $sample->toLines();
-        foreach ($sampleLines as $l) {print $l->toString();}
-        foreach ($lines as $l) {print $l->toString();}
-        //$this->assertEquals($sampleLines, $lines);
+        // Check if data content is the same
+        // we do this quick and dirty: create trimmed string and strip obsolete
+        // spaces in data, then sort (order may be legally modified) and compare
+        $oriStrings = array();
+        foreach ($sampleLines as $l) {
+            if ($l->isCommentOnly()) continue;
+            $oriStrings[] = preg_replace('/\s+/'," ", trim($l->toString()));
+            //print (count($oriStrings)-1)."\t".$oriStrings[count($oriStrings)-1].PHP_EOL;
+        }
+        
+        // adjust oriStrings for known legal modifications
+        $oriStrings[8] = preg_replace('/"pre"/', 'pre', $oriStrings[8]);
+        $oriStrings[26] = "flags not surface not duplicate";
+            unset($oriStrings[27]);
+        
+        $outStrings = array();
+        foreach ($sample->toLines() as $l) {
+            if ($l->isCommentOnly()) continue;
+            $outStrings[] = preg_replace('/\s+/'," ", trim($l->toString()));
+            //print (count($outStrings)-1)."\t".$outStrings[count($outStrings)-1].PHP_EOL;
+        }
+        
+        // sort and compare
+        sort($oriStrings);
+        sort($outStrings);
+        $this->assertEquals($oriStrings, $outStrings);
         
     }
 

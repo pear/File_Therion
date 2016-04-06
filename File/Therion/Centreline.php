@@ -1095,6 +1095,12 @@ class File_Therion_Centreline
                 $objFlags = $sobj->getAllFlags();
                 $flagStr = "";
                 foreach ($flags as $f => $fv) {
+                    if ($f == 'splay' && $sobj->hasSplayStation()) {
+                        // skip the flag printing and adjusting of seen value in
+                        // case splay flag is examined and shot has splaystation
+                        continue;
+                    }
+                    
                     $nfv = $objFlags[$f]; // new flag value
                     if ($nfv !== $fv) {
                         // flag differs: print new state and adjust seen one
