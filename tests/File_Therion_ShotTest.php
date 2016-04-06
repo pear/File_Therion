@@ -94,6 +94,50 @@ class File_Therion_ShotTest extends File_TherionTestBase {
             $this->assertEquals($v, $sample->getFlag($f));
         }
         
+        // test for splay flag implicitely by station name
+        // also test for renaming to "." with and without active flag
+        $sample = new File_Therion_Shot();
+        $this->assertFalse($sample->getFlag('splay'));
+        $sample->setFrom("1");
+        $sample->setTo("2");
+        $this->assertFalse($sample->getFlag('splay'));
+        $sample->setFrom(".");
+        $this->assertTrue($sample->getFlag('splay'));
+        $sample->setTo(".");
+        $this->assertTrue($sample->getFlag('splay'));
+        $sample->setFrom("1");
+        $this->assertTrue($sample->getFlag('splay'));
+        $sample->setTo("2");
+        $this->assertFalse($sample->getFlag('splay'));
+        $sample->setTo(".");
+        $this->assertTrue($sample->getFlag('splay'));
+        $sample->setFlag('splay', false);
+        $this->assertTrue($sample->getFlag('splay'));
+        $sample->setFlag('splay', true);
+        $this->assertTrue($sample->getFlag('splay'));
+    
+        // test for splay flag set explicitely
+        $sample = new File_Therion_Shot();
+        $sample->setFrom("1");
+        $sample->setTo("2");
+        $this->assertFalse($sample->getFlag('splay'));
+        $sample->setFlag('splay', false);
+        $this->assertFalse($sample->getFlag('splay'));
+        $sample->setFlag('splay', true);
+        $this->assertTrue($sample->getFlag('splay'));
+        $sample->setFlag('splay', false);
+        $this->assertFalse($sample->getFlag('splay'));
+        
+        // test for splay flag explicitely and then renamed station
+        $sample->setFlag('splay', true);
+        $this->assertTrue($sample->getFlag('splay'));
+        $sample->setTo(".");
+        $this->assertTrue($sample->getFlag('splay'));
+        $sample->setTo("2");
+        $this->assertTrue($sample->getFlag('splay'));
+        $sample->setFlag('splay', false);
+        $this->assertFalse($sample->getFlag('splay'));
+        
         
         // TODO: test wrong invocatios
         

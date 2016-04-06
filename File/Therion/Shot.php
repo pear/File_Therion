@@ -80,8 +80,8 @@ class File_Therion_Shot
      * @var array  
      */
     protected $_data = array(
-        'from'      => "", // Station
-        'to'        => "", // Station
+        'from'      => null, // Station
+        'to'        => null, // Station
         'length'    => 0.0,
         'bearing'   => 0.0,
         'gradient'  => 0.0,
@@ -245,9 +245,13 @@ class File_Therion_Shot
     }
     
     /**
-     * Get shot flag.
+     * Get a shot flag.
+     * 
+     * Note that the shot is flagged implicitely as splay when one of from- 
+     * or to-stations name is a dot ('.').
      * 
      * @param string  $flag  name of the flag.
+     * @return boolean
      * @throws InvalidArgumentException
      */
     public function getFlag($flag)
@@ -257,7 +261,17 @@ class File_Therion_Shot
             $flag = "approximate";
         }
         if (array_key_exists($flag, $this->_flags)) {
-            return $this->_flags[$flag];
+            
+            // return splay flag true, when station name indicates splay
+            if ($flag == "splay" && $this->hasSplayStation()) {
+                return true;
+                
+            } else {
+                // other cases: other flag or no splay station
+                // return flag value
+                return $this->_flags[$flag];
+            }
+           
         } else {
             throw new InvalidArgumentException(
                 "Invalid flag $flag; flag not valid for shot");
@@ -273,7 +287,13 @@ class File_Therion_Shot
      */
     public function getAllFlags()
     {
-        return $this->_flags;
+        // build return array containing result of individual getFlag() result.
+        // (proper handling of splay flag due to name)
+        $r = array();
+        foreach (array_keys($this->_flags) as $f) {
+            $r[$f] = $this->getFlag($f);
+        }
+        return $r;
     }
     
     
@@ -532,10 +552,6 @@ class File_Therion_Shot
             throw new InvalidArgumentException("Invalid station argument type");
         }
         $this->_data['from'] = $station;
-        
-        if ($station->getName() == "." || $station->getName() == "-") {
-            $this->setFlag('splay', true);
-        }
     }
     
     /**
@@ -556,10 +572,6 @@ class File_Therion_Shot
             throw new InvalidArgumentException("Invalid station argument type");
         }
         $this->_data['to'] = $station;
-        
-        if ($station->getName() == "." || $station->getName() == "-") {
-            $this->setFlag('splay', true);
-        }
     }
     
     /**
@@ -958,6 +970,24 @@ class File_Therion_Shot
         }
         
         return $value * $factors[$from][$to];
+    }
+    
+    /**
+     * Tell if this shot is a splay shot due to naming conventions.
+     * 
+     * If the from-station or to-station are named ".", then splay is assumed.
+     * 
+     * @return boolean
+     */
+    public function hasSplayStation()
+    {
+        foreach (array($this->getFrom(), $this->getTo()) as $s) {
+            if (!is_null($s) && $s->getName() == '.') {
+                return true;
+            }
+        }
+        
+        return false;
     }
 
 }
