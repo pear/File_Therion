@@ -248,7 +248,7 @@ class File_Therion_Shot
      * Get a shot flag.
      * 
      * Note that the shot is flagged implicitely as splay when one of from- 
-     * or to-stations name is a dot ('.').
+     * or to-stations name is a dot or dash ('.', '-').
      * 
      * @param string  $flag  name of the flag.
      * @return boolean
@@ -975,14 +975,16 @@ class File_Therion_Shot
     /**
      * Tell if this shot is a splay shot due to naming conventions.
      * 
-     * If the from-station or to-station are named ".", then splay is assumed.
+     * If the from-station or to-station are named with a dot or dash,
+     * then splay flag is assumed.
      * 
      * @return boolean
      */
     public function hasSplayStation()
     {
         foreach (array($this->getFrom(), $this->getTo()) as $s) {
-            if (!is_null($s) && $s->getName() == '.') {
+            if (!is_null($s)
+                && ($s->getName() == '.' || $s->getName() == '-')) {
                 return true;
             }
         }
