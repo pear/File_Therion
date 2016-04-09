@@ -636,5 +636,39 @@ class File_Therion_LineTest extends File_TherionTestBase
             array('scale'  => array('295.0 203.0 995.0 207.5 0.0 0.0 0 -36 m')),
             $sample->extractOptions());
     }
+    
+    /**
+     * Test filtering options out of args
+     */
+    public function testOptionsInverting()
+    {
+        // no options
+        $sample = $sample = new File_Therion_Line('');
+        $this->assertEquals(array(), $sample->extractOptions(true));
+        
+        $sample = $sample = new File_Therion_Line('survey foo');
+        $this->assertEquals(array('survey', 'foo'), $sample->extractOptions(true));
+        
+        $sample = $sample = new File_Therion_Line('blafaz foo bar baz');
+        $this->assertEquals(
+            array('blafaz', 'foo', 'bar', 'baz'),
+            $sample->extractOptions(true)
+        );
+        
+        // option at end
+        $sample = $sample = new File_Therion_Line(
+            'join foo bar -smooth on -count 2');
+        $this->assertEquals(
+            array('join', 'foo', 'bar'),
+            $sample->extractOptions(true)
+        );
+        
+        // option at start after cmd
+        $sample = $sample = new File_Therion_Line('foo -animal fox bar');
+        $this->assertEquals(
+            array('foo'),
+            $sample->extractOptions(true)
+        );
+    }
 }
 ?>

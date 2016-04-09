@@ -297,6 +297,9 @@ class File_Therion_Line implements Countable
      * When an option is given more than once, value(s) will be appended to
      * the already existing key like described above.
      * 
+     * If inverting is selected, the fields that are non options are returned
+     * as indexed array in order of appearance.
+     * 
      * Example:
      * <code>
      * //Line = 'survey foo -title "bar foo passage"'
@@ -310,15 +313,23 @@ class File_Therion_Line implements Countable
      * //Line = 'scrap bar -author 2016 "Some One" -author "Someone Else"'
      * $options = $line->extractOptions();
      * print $options['author']; // -> array(array("2016", "Some One"), "Someone Else")
+     * 
+     * //Inverting, that is filter out options
+     * //Line = 'survey foo -title "bar foo passage"'
+     * $options = $line->extractOptions(true);
+     * print_r($options); // -> array("survey", "foo")
      * </code>
      * 
+     * @param boolean $inverse when true, returns non-options datafields
      * @return array
      * @throws File_Therion_SyntaxException in case of missing option arguments
      */
-    public function extractOptions()
+    public function extractOptions($inverse = false)
     {
-        $r = array();
+        $r  = array(); // seen options and options-args
+        $ri = array(); // seen non-options
         $data = $this->getDatafields();
+        $y = 0; // counter for inner loop but used outside too
         for ($i=0; $i<count($data); $i++) {
             $m = array();
             if (preg_match('/^-(.+)/', $data[$i], $m)) {
@@ -361,10 +372,22 @@ class File_Therion_Line implements Countable
                     $r[$opt] = array($args);
                 }
 
+            } else {
+                // non-option field: skip/add to inverse result
+                if ($i > $y-1) {
+                    // only add when not reevaluating the last argument of
+                    // an option. This is detected with $y (counts seen-ahead
+                    // arguments of an detected option), because $i is set
+                    // to the last argument of the option for reevaluation AND
+                    // $y remains at the last seen argument index in $data.
+                    // => when $i is beyond that last argument and this is not
+                    //    an option/option argument, it must be an non-option.
+                    $ri[] = $data[$i];
+                }
             }
         }
         
-        return $r;
+        return ($inverse)? $ri : $r;  // return inversed or normal result
     }
     
     
