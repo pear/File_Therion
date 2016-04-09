@@ -123,7 +123,7 @@
     <dependencies>
         <required>
             <php>
-                <min>5.6.0</min>  <!-- TODO: find out what is really required! -->
+                <min>5.1.0</min>  <!-- as per PHP_CompatInfo 2.26.0 -->
             </php>
             <pearinstaller>
                 <min>1.6.1</min>
