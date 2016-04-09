@@ -76,7 +76,7 @@ class File_Therion_ScrapLine
      * The array is defined as following:
      * - TODO: specify; most important: order and command like options for this point
      *
-     * @var array
+     * @var array of {@link File_Therion_ScrapLinePoint} objects (order matters)
      */
     protected $_points = array();
     
@@ -164,4 +164,163 @@ class File_Therion_ScrapLine
     
 }
 
+
+
+
+/**
+ * Class describing a ScrapLine Point (a bezier courve point).
+ * 
+ * Scrap line objects consist of at least one point objects.
+ * These point objects can have various further information attached.
+ * They form a point of a bezier-courve and have handles.
+ * 
+ * @category   file
+ * @package    File_Therion
+ * @author     Benedikt Hallinger <beni@php.net>
+ * @copyright  2016 Benedikt Hallinger
+ * @license    http://www.gnu.org/licenses/lgpl-3.0.txt LGPLv3
+ * @link       http://pear.php.net/package/File_Therion/
+ * @todo implement me, especially getters to get data out
+ */
+class File_Therion_ScrapLinePoint
+{
+    
+    /**
+     * Data of this point.
+     */
+    protected $_data = array(
+        'coords'   => array(0, 0),
+        'bezierLC' => null,  // left bezier control point (array(x,y) when set)
+        'bezierRC' => null,  // right bezier control point (array(x,y) when set)
+        'mark'     => "",
+        'smooth'   => "auto",  // on/off/auto
+    );
+    
+    /**
+     * Create a new therion ScrapLinePoint object.
+     *
+     * @param float  $x X-position in scrap pane
+     * @param float  $y Y-position in scrap pane
+     * @param string $mark alternative id of this point
+     * @todo implement me
+     */
+    public function __construct(float $x, float $y, $mark = "")
+    {
+        $this->setX($x);
+        $this->setY($y);
+        $this->setMark($mark);
+    }
+    
+    /**
+     * Set Points X coordinate on the scrap.
+     * 
+     * @param float
+     */
+    public function setX(float $x)
+    {
+        $this->_data['coords'][0] = $x;
+    }
+    
+    /**
+     * Set Points Y coordinate on the scrap.
+     * 
+     * @param float
+     */
+    public function setY(float $y)
+    {
+        $this->_data['coords'][1] = $y;
+    }
+    
+    /**
+     * Set mark (alternative ID) of this point
+     * 
+     * @param string
+     */
+    public function setMark(string $arg)
+    {
+        $this->_data['mark'] = $arg;
+    }
+    
+    /**
+     * Remove mark (alternative ID) of this point
+     */
+    public function clearMark()
+    {
+        $this->_data['mark'] = $arg;
+    }
+    
+    /**
+     * Set smoothness of this point
+     * 
+     * @param string "on", "off" or "auto" (default)
+     */
+    public function setSmoothness(string $arg)
+    {
+        $this->_data['smooth'] = $arg;
+    }
+    
+    /**
+     * Set left bezier-courve handle position.
+     *
+     * @param float $x X-position in scrap pane
+     * @param float $y Y-position in scrap pane
+     */
+    public function setLeftBezierHandle(float $x, float $y)
+    {
+        $this->_data['bezierLC'] = array($x, $y);
+    }
+    
+    /**
+     * Set right bezier-courve handle position.
+     *
+     * @param float $x X-position in scrap pane
+     * @param float $y Y-position in scrap pane
+     */
+    public function setRightBezierHandle(float $x, float $y)
+    {
+        $this->_data['bezierRC'] = array($x, $y);
+    }
+    
+    /**
+     * Remove left bezier-courve handle.
+     */
+    public function clearLeftBezierHandle()
+    {
+        $this->_data['bezierLC'] = null;
+    }
+    
+    /**
+     * Remove left bezier-courve handle.
+     */
+    public function clearRightBezierHandle()
+    {
+        $this->_data['bezierRC'] = null;
+    }
+    
+    /**
+     * Generate therion compatible string representation of this point.
+     * 
+     * @return string
+     */
+    public function toString()
+    {
+        // get bezier handles; when not set, they correspond to the point coords
+        // If both points are unset, we only need to report the point coords.
+        $pcoords = $this->_data['coords'];
+        $bezL = $this->_data['bezierLC'];
+        $bezR = $this->_data['bezierLC'];
+        if (!is_null($bezL) || !is_null($bezR)) {
+            // fill in point coords if neccessary (bezier handle is null)
+            $bezL = (is_null($bezL))? $pcoords : $bezL;
+            $bezR = (is_null($bezR))? $pcoords : $bezR;
+            
+            return implode(" ", array_merge($bezL, $bezR, $pcoords));
+            
+        } else {
+            // just return point coords as there are no bezier handles
+            return implode(" ", $pcoords);
+        }
+        
+    }
+}
 ?>
