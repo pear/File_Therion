@@ -413,10 +413,10 @@ class File_Therion_Survey
      * </code>
      * 
      * @param string|array station equates.
-     * @todo support station objects
      * @throws InvalidArgumentException
      * @throws File_Therion_SyntaxException
      * @todo add syntax checks
+     * @todo support station objects, maybe through reference-datatype to support station references of other surveys; this would be handy if stations would be renamed after euqating them when using objects
      */
     public function addEquate($src=null, ...$tgts)
     {
