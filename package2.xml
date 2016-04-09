@@ -55,6 +55,7 @@
                     <file name="Station.php" role="php" />
                     <file name="Surface.php" role="php" />
                     <file name="Survey.php" role="php" />
+                    <file name="Join.php" role="php" />
                     
                     <dir name="DataTypes">
                         <file name="DataTypeInterface.php" role="php" />

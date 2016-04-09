@@ -163,6 +163,34 @@ class File_Therion_ScrapLine
         
     }
     
+    
+    /**
+     * Add a new Point to this line.
+     * 
+     * The point created at the position will be returned as reference,
+     * so you can adjust coordinates etc afterwards.
+     * 
+     * The optional index parameter allows to adjust the insertion
+     * position; the point will be inserted at the index, pushing already
+     * present points one to the end (-1=end, 0=start, ...).
+     * 
+     * @param $index Where to add this point (default is end)
+     * @return File_Therion_ScrapLinePoint created point as reference.
+     * @todo implement like addLine() at file level
+     */
+    public function addPoint($index = -1)
+    {
+        $point = new File_Therion_ScrapLinePoint($this);
+        
+        $this->_points[] = $point;
+        
+        // todo: adjust marks of all previous points
+        
+        // todo: update mark of this point
+        
+        return $point;
+    }
+    
     /**
      * Count points of this line (SPL Countable).
      *
@@ -172,6 +200,25 @@ class File_Therion_ScrapLine
     {
         return count($this->_points);
     }
+    
+    
+    /**
+     * Get points of this line.
+     * 
+     * You may optionally query by named mark (eg 'end' or custom one).
+     * When given mark is not found, index will be tried instead.
+     * In querymode a found point will be returned or exception thrown.
+     * 
+     * @param string $mark optional query selection
+     * @throws OutOfBoundsException when requested mark is not available
+     * @return array|File_Therion_ScrapLinePoint
+     */
+    public function getLinePoints($mark = null) {
+        throw new File_TherionException(
+            __CLASS__."::".__METHOD__." not implemented yet");
+    }
+    
+    
 }
 
 
@@ -194,9 +241,17 @@ class File_Therion_ScrapLine
  */
 class File_Therion_ScrapLinePoint
 {
+    /**
+     * Line this point belongs to.
+     * 
+     * @var File_Therion_ScrapLine
+     */
+    protected $_line = null;
     
     /**
      * Data of this point.
+     * 
+     * @var array
      */
     protected $_data = array(
         'coords'   => array(0, 0),
@@ -209,16 +264,20 @@ class File_Therion_ScrapLinePoint
     /**
      * Create a new therion ScrapLinePoint object.
      *
-     * @param float  $x X-position in scrap pane
-     * @param float  $y Y-position in scrap pane
-     * @param string $mark alternative id of this point
-     * @todo implement me
+     * You usually should not create point objects directly but add them at
+     * the line object.
+     * See {@link File_Therion_ScrapLine::addPoint()}.
+     * 
+     * @param File_Therion_ScrapLine $line ScrapLine this point belongs to
+     * @throws InvalidArgumentException in case line is invalid/null
      */
-    public function __construct(float $x, float $y, $mark = "")
+    public function __construct(File_Therion_ScrapLine $line)
     {
-        $this->setX($x);
-        $this->setY($y);
-        $this->setMark($mark);
+        if (is_null($line)) {
+            throw new InvalidArgumentException(
+                'LinePoint must be associated with valid ScrapLine');
+        }
+        $this->_line = $line;
     }
     
     /**
@@ -242,21 +301,38 @@ class File_Therion_ScrapLinePoint
     }
     
     /**
-     * Set mark (alternative ID) of this point
+     * Return point coordinates.
+     * 
+     * @return array [0]=X, [1]=Y coordinates of point
+     */
+    public function getCoordinates()
+    {
+        return $this->_data['smooth'];
+    }
+    
+    /**
+     * Set mark (alternative ID) of this point.
      * 
      * @param string
      */
     public function setMark(string $arg)
     {
+        if (!is_string($arg)) {
+            throw new InvalidArgumentException(
+                "ScrapLinePoint name expects string value, "
+                .gettype($arg)." given");
+        }
         $this->_data['mark'] = $arg;
     }
     
     /**
-     * Remove mark (alternative ID) of this point
+     * Return point mark.
+     * 
+     * @return string
      */
-    public function clearMark()
+    public function getMark()
     {
-        $this->_data['mark'] = $arg;
+        return $this->_data['mark'];
     }
     
     /**
@@ -270,6 +346,26 @@ class File_Therion_ScrapLinePoint
     }
     
     /**
+     * Return smothness setting.
+     * 
+     * @return string on/off/auto
+     */
+    public function getSmoothness()
+    {
+        return $this->_data['smooth'];
+    }
+    
+    /**
+     * Return reference to line this point is part of.
+     * 
+     * @return File_Therion_ScrapLine
+     */
+    public function getLine()
+    {
+        return $this->_line;
+    }
+    
+    /**
      * Set left bezier-courve handle position.
      *
      * @param float $x X-position in scrap pane
@@ -278,6 +374,34 @@ class File_Therion_ScrapLinePoint
     public function setLeftBezierHandle(float $x, float $y)
     {
         $this->_data['bezierLC'] = array($x, $y);
+    }
+    
+    /**
+     * Return coordinates of bezier courve handles.
+     * 
+     * The returned array is associative:
+     * - key 'left'  => array(x,y) or null if not set
+     * - key 'right' => array(x,y) or null if not set
+     * 
+     * @return array 
+     */
+    public function getBezierHandleCoordinates()
+    {
+        $r = array(
+            'left'  => $this->_data['bezierLC'],
+            'right' => $this->_data['bezierRC'],
+        );
+        return $r;
+    }
+    
+     /**
+     * Return coordinates of left bezier courve handle.
+     * 
+     * @return null|array [0]=X, [1]=Y coordinates of point (null if not set)
+     */
+    public function getLeftBezierHandleCoordinates()
+    {
+        return $this->_data['bezierLC'];
     }
     
     /**

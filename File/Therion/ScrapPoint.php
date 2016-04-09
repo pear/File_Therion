@@ -34,7 +34,7 @@ class File_Therion_ScrapPoint
      * @var array assoc array
      */
     protected $_options = array(
-        //'title' => "",
+        'id' => "",
     );
     
     
