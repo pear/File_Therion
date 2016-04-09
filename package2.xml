@@ -1,11 +1,5 @@
-<?xml version="1.0"?>
-<package version="2.0" xmlns="http://pear.php.net/dtd/package-2.0"
-    xmlns:tasks="http://pear.php.net/dtd/tasks-1.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0
-    	http://pear.php.net/dtd/tasks-1.0.xsd
-	    http://pear.php.net/dtd/package-2.0
-    	http://pear.php.net/dtd/package-2.0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<package packagerversion="1.9.0" version="2.0" xmlns="http://pear.php.net/dtd/package-2.0" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0 http://pear.php.net/dtd/tasks-1.0.xsd http://pear.php.net/dtd/package-2.0 http://pear.php.net/dtd/package-2.0.xsd">
     
     <name>File_Therion</name>
     <channel>pear.php.net</channel>
@@ -23,9 +17,9 @@
         <active>yes</active>
     </lead>
 
-    <date>2016-02-19</date>
-    <!--<time>20:30:13</time> -->
 
+    <!-- Information for this release -->
+    <date>2016-04-09</date>
     <version>
         <release>0.1.0</release>
         <api>0.1.0</api>
@@ -37,44 +31,110 @@
     <license uri="http://www.gnu.org/licenses/lgpl-3.0.en.html">LGPLv3</license>
     <notes>
         Initial release of first API. Still in development!
+        Therion data model core features should be mostly supported already.
     </notes>
 
     <contents>
-        <dir name="/" />
+        <!-- pear root -->
+        <dir name="/"> 
+        
+            <!-- packages lib distribution -->
+            <dir name="File" >
+                <file name="Therion.php" role="php" />
+                <dir name="Therion">
+                    <file name="BasicObject.abstract.php" role="php" />
+                    <file name="Centreline.php" role="php" />
+                    <file name="Exception.php" role="php" />
+                    <file name="Line.php" role="php" />
+                    <file name="Map.php" role="php" />
+                    <file name="ScrapArea.php" role="php" />
+                    <file name="ScrapLine.php" role="php" />
+                    <file name="Scrap.php" role="php" />
+                    <file name="ScrapPoint.php" role="php" />
+                    <file name="Shot.php" role="php" />
+                    <file name="Station.php" role="php" />
+                    <file name="Surface.php" role="php" />
+                    <file name="Survey.php" role="php" />
+                    
+                    <dir name="DataTypes">
+                        <file name="DataTypeInterface.php" role="php" />
+                        <file name="Date.php" role="php" />
+                        <file name="Person.php" role="php" />
+                    </dir>
+                    <dir name="Readers">
+                        <file name="ReaderInterface.php" role="php" />
+                        <file name="FileReader.php" role="php" />
+                    </dir>
+                    <dir name="Writers">
+                        <file name="WriterInterface.php" role="php" />
+                        <file name="ConsoleWriter.php" role="php" />
+                        <file name="DirectWriter.php" role="php" />
+                    </dir>
+                </dir>
+            </dir>
+            
+            <!-- packages documentation -->
+            <dir name="doc">
+                <file name="README.txt" role="doc" />
+            </dir>
+            
+            <!-- packages unit test data -->
+            <dir name="tests" >
+                <file name="phpunit.xml" role="test" />
+                <file name="File_Therion_CentrelineTest.php" role="test" />
+                <file name="File_Therion_DataTypesTest.php" role="test" />
+                <file name="File_Therion_LineTest.php" role="test" />
+                <file name="File_Therion_ShotTest.php" role="test" />
+                <file name="File_Therion_SurveyTest.php" role="test" />
+                <file name="File_TherionTestBase.php" role="test" />
+                <file name="File_TherionTest.php" role="test" />
+                <file name="UseCasesTest.php" role="test" />
+                
+                <dir name="testoutput" >
+                </dir>
+                
+                <dir name="data">
+                    <file name="therion-samples.readme.txt" role="test" />
+                    <dir name="samples_own" >
+                        <dir name="recursetest" >
+                            <file name="cave.th" role="test" />
+                            <file name="lvl2.th" role="test" />
+                            <file name="lvl3.th" role="test" />
+                            <file name="lvl4.th" role="test" />
+                        </dir>
+                    </dir>
+                    <dir name="samples_therion" >
+                        <dir name="basics" >
+                            <file name="rabbit.th" role="test" />
+                            <file name="rabbit.th2" role="test" />
+                            <file name="surface.jpg" role="test" />
+                            <file name="thconfig" role="test" />
+                        </dir>
+                        <!-- more therion sample files in GIT
+                             but not yet used by tests -->
+                    </dir>
+                </dir>
+                
+            </dir>
+            
         </dir>
     </contents>
 
     <dependencies>
         <required>
             <php>
-                <min>5.6.17</min>  <!-- TODO: find out which is really required! -->
+                <min>5.6.0</min>  <!-- TODO: find out what is really required! -->
             </php>
             <pearinstaller>
-                <min>1.4.0dev13</min>
+                <min>1.6.1</min>
             </pearinstaller>
         </required>
     </dependencies>
+    <phprelease />
 
-    <usesrole>
+    <!-- older versions -->
+    <changelog>
+        <!-- no prior release so far -->
+    </changelog>
 
-<role>foo</role>
-  <package>Foo</package>
-  <channel>pear.example.com</channel>
- </usesrole>
-
-<usestask>
-
-<task>footask</task>
-  <package>Footask</package>
-  <channel>pear.example.com</channel>
- </usestask>
-
-
- <changelog>
-  <release>
-   ... todo ...
-  </release>
- </changelog>
 </package>
-
-
