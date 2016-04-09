@@ -26,6 +26,7 @@
  */
 class File_Therion_ScrapLine
     extends File_Therion_BasicObject
+    implements Countable
 {
     
     /**
@@ -162,6 +163,15 @@ class File_Therion_ScrapLine
         
     }
     
+    /**
+     * Count points of this line (SPL Countable).
+     *
+     * @return int number of points
+     */
+    public function count()
+    {
+        return count($this->_points);
+    }
 }
 
 
