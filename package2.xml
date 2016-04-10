@@ -82,12 +82,13 @@
             <!-- packages unit test data -->
             <dir name="tests" >
                 <file name="phpunit.xml" role="test" />
+                <file name="File_TherionTestBase.php" role="test" />
                 <file name="File_Therion_CentrelineTest.php" role="test" />
                 <file name="File_Therion_DataTypesTest.php" role="test" />
                 <file name="File_Therion_LineTest.php" role="test" />
                 <file name="File_Therion_ShotTest.php" role="test" />
                 <file name="File_Therion_SurveyTest.php" role="test" />
-                <file name="File_TherionTestBase.php" role="test" />
+                <file name="File_Therion_JoinTest.php" role="test" />
                 <file name="File_TherionTest.php" role="test" />
                 <file name="UseCasesTest.php" role="test" />
                 

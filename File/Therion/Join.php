@@ -26,6 +26,7 @@
  */
 class File_Therion_Join
     extends File_Therion_BasicObject
+    implements Countable
 {
     
     /**
@@ -55,11 +56,13 @@ class File_Therion_Join
     
     /**
      * Create a new therion ScrapPoint object.
+     * 
+     * After creation of the join command you must call {@link addArgument()}
+     * to add join arguments.
      *
-     * @param array $obj
      * @param array $options key=>value pairs of options to set
      */
-    public function __construct(array $obj, $options = array())
+    public function __construct($options = array())
     {
         $this->setOption($options);
     }
@@ -84,8 +87,24 @@ class File_Therion_Join
         }
         
         // this is a one-line object.
-        $flData = $firstLine->extractOptions(true); // get non-options (=data)
-        $opts   = $firstLine->extractOptions();
+        $flData = $line->extractOptions(true); // get non-options (=data)
+        $opts   = $line->extractOptions();
+        if (array_key_exists('count', $opts)) {
+            // explicit type conversion from parsed string
+            $opts['count'][0] = intval($opts['count'][0]);
+        }
+        
+        $cmd = array_shift($flData);
+        if ($cmd !== "join") {
+            throw new File_Therion_SyntaxException(
+                "parsing join expects 'join' command as first data element, '"
+                .$cmd."' given");
+        }
+        if (count($flData) < 1) {
+            throw new File_Therion_SyntaxException(
+                "join command expects at least two arguments, "
+                .count($flData)." given");
+        }
         
         // craft new Join object
         $joinObj = new File_Therion_Join($opts);
@@ -96,7 +115,7 @@ class File_Therion_Join
             if (preg_match('/(.+?):(.+)/', $ja, $m)) {
                 // <line>:<mark> syntax
                 $line = new File_Therion_ScrapLine('wall');
-                $line->setName($m[1]);
+                $line->setOption('id', $m[1]);
                 $point = $line->addPoint();
                 $point->setMark($m[2]);
                 $joinObj->addArgument($point);
@@ -115,7 +134,7 @@ class File_Therion_Join
                 // We simply guess Line here because of wider compatibility.
                 // (when writing join args later this is not a problem)
                 $line = new File_Therion_ScrapLine('wall');
-                $line->setName($m[1]);
+                $line->setOption('id', $ja);
                 $joinObj->addArgument($line);
             }
         }
@@ -140,12 +159,12 @@ class File_Therion_Join
     {
         $supported = array('File_Therion_Scrap', 'File_Therion_ScrapPoint',
             'File_Therion_ScrapLine', 'File_Therion_ScrapLinePoint');
-        if (!in_array(gettype($arg), $supported)) {
+        if (!in_array(get_class($arg), $supported)) {
             throw new InvalidArgumentException(
-                'Invalid join argument type');
+                "Invalid join argument type: '".get_class($arg)."'");
         }
         
-        if (count($this) > 0
+        if (count($this->_joins) > 0
             && gettype($this->_joins[0]) == 'File_Therion_Scrap'
             && gettype($arg) != 'File_Therion_Scrap') {
                 throw new InvalidArgumentException(
@@ -154,7 +173,7 @@ class File_Therion_Join
                     .gettype($arg).' given');
         }
         
-        if (count($this) == 2
+        if (count($this->_joins) == 2
             && gettype($this->_joins[0]) == 'File_Therion_Scrap') {
                 throw new InvalidArgumentException(
                 'Join already has two scrap object arguments, max 2 allowed!');
@@ -167,9 +186,16 @@ class File_Therion_Join
      * Return therion compatible string of this join definition.
      * 
      * @return string eg "join lineA lineB -smooth on"
+     * @throws File_Therion_SyntaxException in case join syntax is invalid
      */
     public function toString()
     {
+        if (count($this) < 1) {
+            throw new File_Therion_SyntaxException(
+                "join command expects at least two arguments, "
+                .count($flData)." given");
+        }
+        
         $rv = "join";
         // add join args
         foreach ($this->_joins as $j) {
@@ -193,7 +219,7 @@ class File_Therion_Join
         }
         
         // add options if given
-        if ($this->_options['smooth'] && $this->_options['smooth'] != "auto") {
+        if ($this->_options['smooth'] && $this->_options['smooth'] != "") {
             $rv .= " -smooth ".$this->_options['smooth'];
         }
         if ($this->_options['count'] > 0) {
@@ -201,6 +227,17 @@ class File_Therion_Join
         }
         
         return $rv;
+    }
+    
+    
+    /**
+     * Count arguments of this join (SPL Countable).
+     *
+     * @return int number of argument objects
+     */
+    public function count()
+    {
+        return count($this->_joins);
     }
     
 }
