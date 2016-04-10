@@ -60,11 +60,13 @@ class File_Therion_Join
      * After creation of the join command you must call {@link addArgument()}
      * to add join arguments.
      *
+     * @param array $args Objects to join
      * @param array $options key=>value pairs of options to set
      */
-    public function __construct($options = array())
+    public function __construct($args=array(), $options = array())
     {
         $this->setOption($options);
+        $this->addArgument($args);
     }
     
     
@@ -107,7 +109,7 @@ class File_Therion_Join
         }
         
         // craft new Join object
-        $joinObj = new File_Therion_Join($opts);
+        $joinObj = new File_Therion_Join(array(), $opts);
         
         // retrieve non-option lines and add them as join arguments
         foreach ($flData as $ja) {
@@ -152,11 +154,19 @@ class File_Therion_Join
      * - File_Therion_ScrapLine:         scrap line object
      * - File_Therion_ScrapLinePoint:    Line with marked point (eg 'end')
      * 
-     * @param object Join argument (scrap, Line
+     * @param array|object Join argument (scrap, Line, etc) or array of objects
      * @throws InvalidArgumentException when incompatible object is added.
      */
     public function addArgument($arg)
     {
+        // array mode: recall on each element
+        if (is_array($arg)) {
+            foreach ($arg as $a) {
+                $this->addArgument($a);
+            }
+            return;
+        }
+        
         $supported = array('File_Therion_Scrap', 'File_Therion_ScrapPoint',
             'File_Therion_ScrapLine', 'File_Therion_ScrapLinePoint');
         if (!in_array(get_class($arg), $supported)) {
@@ -229,6 +239,15 @@ class File_Therion_Join
         return $rv;
     }
     
+    /**
+     * Return joined objects.
+     * 
+     * @return array
+     */
+    public function getArguments()
+    {
+        return $this->_joins;
+    }
     
     /**
      * Count arguments of this join (SPL Countable).

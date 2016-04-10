@@ -117,10 +117,100 @@ class File_Therion_JoinTest extends File_TherionTestBase {
     /**
      * Test joining in object mode
      */
-    public function testBasicUsage()
+    public function testBasicUsageScraps()
     {
         // joining two scraps
         $scrapA = new File_Therion_Scrap("scrapA");
+        $scrapB = new File_Therion_Scrap("scrapB");
+        
+        // simple mode
+        $join = new File_Therion_Join(array($scrapA, $scrapB));
+        $this->assertEquals("join scrapA scrapB", $join->toString());
+        
+        // manual mode
+        $join = new File_Therion_Join();
+        $join->addArgument($scrapA);
+        $join->addArgument($scrapB);
+        $this->assertEquals("join scrapA scrapB", $join->toString());
+    }
+    
+    /**
+     * Test joining in object mode
+     */
+    public function testBasicUsageLines()
+    {
+        // joining two scrap lines
+        $lineA = new File_Therion_ScrapLine("wall");
+        $lineA->setOption('id', "lineA");
+        $lineB = new File_Therion_ScrapLine("wall");
+        $lineB->setOption('id', "lineB");
+        
+        // simple mode
+        $join = new File_Therion_Join(array($lineA, $lineB));
+        $this->assertEquals("join lineA lineB", $join->toString());
+        
+        // with mark and threesome
+        $lineC = new File_Therion_ScrapLine("wall");
+        $lineC->setOption('id', "lineC");
+        $lp = $lineC->addPoint();
+        $lp->setMark("myMark");
+        $join->addArgument($lp);
+        $this->assertEquals("join lineA lineB lineC:myMark", $join->toString());
+    }
+    
+    /**
+     * Test OO functionality
+     */
+    public function testOOCapabilitysBasic()
+    {
+        // joining two scraps
+        $scrapA = new File_Therion_Scrap("scrapA");
+        $scrapB = new File_Therion_Scrap("scrapB");
+        
+        $join = new File_Therion_Join(array($scrapA, $scrapB));
+        $this->assertEquals("join scrapA scrapB", $join->toString());
+        
+        // rename one scrap
+        $scrapA->setName("newScrapName");
+        $this->assertEquals("join newScrapName scrapB", $join->toString());
+        
+    }
+    
+    /**
+     * Test OO functionality
+     */
+    public function testOOCapabilitysRenaming()
+    {
+        // init testcase
+        $lineA = new File_Therion_ScrapLine("wall");
+        $lineA->setOption('id', "lineA");
+        $lineB = new File_Therion_ScrapLine("wall");
+        $lineB->setOption('id', "lineB");
+        $join = new File_Therion_Join(array($lineA, $lineB));
+        $lineC = new File_Therion_ScrapLine("wall");
+        $lineC->setOption('id', "lineC");
+        $lp = $lineC->addPoint();
+        $lp->setMark("myMark");
+        $join->addArgument($lp);
+        $this->assertEquals("join lineA lineB lineC:myMark", $join->toString());
+        
+        // OO-test: rename the line from outside
+        $lineC->setOption('id', "lCnew");
+        $this->assertEquals("join lineA lineB lCnew:myMark", $join->toString());
+        
+        // OO-test: rename mark from outside
+        $lp->setMark("nwMark");
+        $this->assertEquals("join lineA lineB lCnew:nwMark", $join->toString());
+        
+        // OO-test: get first argument and rename it
+        $join->getArguments()[0]->setOption('id', "rline");
+        $this->assertEquals("join rline lineB lCnew:nwMark", $join->toString());
+        
+        // Test that getting and altering argumetns doesnt affect internal state
+        $args = $join->getArguments();
+        unset($args[0]);
+        $args[1] = null;
+        $this->assertEquals("join rline lineB lCnew:nwMark", $join->toString());
     }
 }
 ?>
