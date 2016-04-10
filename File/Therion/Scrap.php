@@ -183,13 +183,17 @@ class File_Therion_Scrap
                                 break;
                                 
                                 case 'join':
-                                    // Scrapjoins: add the remaining data fields
-                                    $scrap->addJoin($lineData);
+                                    // Scrapjoins: add join object
+                                    // todo: it may be better to postpone joins and try to add defined subobjects as joins.
+                                    $scrap->addJoin(
+                                        File_Therion_Join::parse($line));
                                 break;
                                 
                                 case 'point':
-                                    // points
+                                    // points: Parse line using subparser
                                     // TODO
+                                    //$ctxObj = File_Therion_ScrapPoint::parse($line);
+                                    //$scrap->addObject($ctxObj);
                                 break;
                                 
                                 default:
@@ -407,38 +411,15 @@ class File_Therion_Scrap
      * 
      * Example:
      * <code>
-     * $survey->addJoin("ew1:0", "ew2:end"); // normal join
-     * $survey->addJoin("ew1:0", "ew2:end", "ew3:2"); // threesome
+     * $join = new File_Therion_Join($someScrapLine, $otherScrapLinePoint);
+     * $scrap->addJoin($join);
      * </code>
      * 
-     * @param string|array $join Single or multiple scrap joins.
-     * @throws File_Therion_SyntaxException
-     * @todo maybe invent join datatype and consider this too...
-     * @todo add syntax checks
+     * @param File_Therion_Join|array $join Single or multiple joins.
      */
-    public function addJoin($src=null, ...$tgts)
+    public function addJoin(File_Therion_Join $join)
     {
-        if (!is_array($src)) {
-            $src = array($src);
-        }
-        
-        
-        $merged = array_merge($src, $tgts);
-        
-        // check parameters
-        if (count($merged) < 2) {
-            throw new File_Therion_SyntaxException(
-                "Missing argument: expected >=2 elements");
-        }
-        foreach ($merged as $j) {
-            if (!is_string($j)) {
-                throw new File_Therion_SyntaxException(
-                    "Invalid argument expected string");
-            }
-        }
-        
-        // homogenize and add
-        $this->_joins[] = $merged;
+        $this->_joins[] = $join;
     }
     
     /**
@@ -452,10 +433,7 @@ class File_Therion_Scrap
     /**
      * Get existing scrap joins.
      * 
-     * Each unique definition forms one array element.
-     * Each level has one array containing all join arguments.
-     * 
-     * @return array nested array
+     * @return array File_Therion_Join objects describing the joins
      */
     public function getJoins()
     {

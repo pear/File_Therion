@@ -59,7 +59,7 @@ class File_Therion_ScrapPoint
     {
         $this->setX($x);
         $this->setY($y);
-        $this->setType($y);
+        $this->setType($type);
         $this->setOption($options);
     }
     
@@ -82,12 +82,23 @@ class File_Therion_ScrapPoint
         }
         
         // this is a one-line object.
-        $flData = $firstLine->getDatafields();
-        // TODO: Params check for exaclty three parameters and then options
-        $x    = $flData[0];
-        $y    = $flData[1];
+        $flData = $line->extractOptions(true); // get non-options (=data)
+        $cmd = array_shift($flData);
+        if ($cmd !== "point") {
+            throw new File_Therion_SyntaxException(
+                "parsing scrap-point expects 'point' command as first data"
+                ." element, '".$cmd."' given");
+        }
+        if (count($flData) != 3) {
+            throw new File_Therion_SyntaxException(
+                "point command expects exactly three arguments, "
+                .count($flData)." given");
+        }
+        
+        $x    = floatval($flData[0]);
+        $y    = floatval($flData[1]);
         $type = $flData[2];
-        $opts = $firstLine->extractOptions();
+        $opts = $line->extractOptions();
         
         return new File_Therion_ScrapPoint($x, $y, $type, $opts);
         

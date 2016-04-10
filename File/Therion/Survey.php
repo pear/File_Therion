@@ -574,16 +574,11 @@ class File_Therion_Survey
      * 
      * Example:
      * <code>
-     * $join = new File_Therion_Join();
-     * $join->addArgument($scrap1);
-     * $join->addArgument($scrap2);
+     * $join = new File_Therion_Join($someScrap, $otherScrap);
      * $survey->addJoin($join);
      * </code>
      * 
-     * @param string|array $join Single or multiple scrap joins.
-     * @throws File_Therion_SyntaxException
-     * @todo maybe invent join datatype and consider this too...
-     * @todo add syntax checks
+     * @param File_Therion_Join|array $join Single or multiple joins.
      */
     public function addJoin(File_Therion_Join $join)
     {

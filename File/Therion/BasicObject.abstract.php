@@ -97,6 +97,7 @@ abstract class File_Therion_BasicObject
                     "$type [$key]: Invalid value type '".gettype($value)."'! "
                     ."passed option='$key'; type='".gettype($value)
                     ."'; expected='".gettype($this->{"$type"}[$key])."'"
+                    ."; value='".$value."'"
                 );
             }
         }

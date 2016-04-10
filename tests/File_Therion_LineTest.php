@@ -509,6 +509,18 @@ class File_Therion_LineTest extends File_TherionTestBase
         $sample = new File_Therion_Line('"""foobar"""');
         $this->assertEquals(array('"foobar"'), $sample->getDatafields());
         
+        $sample = new File_Therion_Line('point 773.5 517.0 station -name 1');
+        $this->assertEquals(
+            array('point', '773.5', '517.0', 'station', '-name', '1'),
+            $sample->getDatafields()
+        );
+        
+        $sample = new File_Therion_Line('point 536.5 563.5 station-name -align br');
+        $this->assertEquals(
+            array('point', '536.5', '563.5', 'station-name', '-align', 'br'),
+            $sample->getDatafields()
+        );
+        
         $sample = new File_Therion_Line('map pdx -title "Rabbit Cave -- extended elevation"');
         $this->assertEquals(
             array('map', 'pdx', '-title', 'Rabbit Cave -- extended elevation'),
@@ -667,6 +679,28 @@ class File_Therion_LineTest extends File_TherionTestBase
         $sample = $sample = new File_Therion_Line('foo -animal fox bar');
         $this->assertEquals(
             array('foo'),
+            $sample->extractOptions(true)
+        );
+        
+        
+        // real world examples
+        $sample = new File_Therion_Line('point 773.5 517.0 station -name 1');
+        $this->assertEquals(
+            array('name' => array('1')),
+            $sample->extractOptions()
+        );
+        $this->assertEquals(
+            array('point', '773.5', '517.0', 'station'),
+            $sample->extractOptions(true)
+        );
+        
+        $sample = new File_Therion_Line('point 536.5 563.5 station-name -align br');
+        $this->assertEquals(
+            array('align' => array('br')),
+            $sample->extractOptions()
+        );
+        $this->assertEquals(
+            array('point', '536.5', '563.5', 'station-name'),
             $sample->extractOptions(true)
         );
     }
