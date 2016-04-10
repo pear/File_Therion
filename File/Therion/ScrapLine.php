@@ -285,7 +285,7 @@ class File_Therion_ScrapLinePoint
      * 
      * @param float
      */
-    public function setX(float $x)
+    public function setX($x)
     {
         $this->_data['coords'][0] = $x;
     }
@@ -295,7 +295,7 @@ class File_Therion_ScrapLinePoint
      * 
      * @param float
      */
-    public function setY(float $y)
+    public function setY($y)
     {
         $this->_data['coords'][1] = $y;
     }
@@ -315,7 +315,7 @@ class File_Therion_ScrapLinePoint
      * 
      * @param string
      */
-    public function setMark(string $arg)
+    public function setMark($arg)
     {
         if (!is_string($arg)) {
             throw new InvalidArgumentException(
@@ -340,7 +340,7 @@ class File_Therion_ScrapLinePoint
      * 
      * @param string "on", "off" or "auto" (default)
      */
-    public function setSmoothness(string $arg)
+    public function setSmoothness($arg)
     {
         $this->_data['smooth'] = $arg;
     }
@@ -370,8 +370,9 @@ class File_Therion_ScrapLinePoint
      *
      * @param float $x X-position in scrap pane
      * @param float $y Y-position in scrap pane
+     * @todo type checking
      */
-    public function setLeftBezierHandle(float $x, float $y)
+    public function setLeftBezierHandle($x, $y)
     {
         $this->_data['bezierLC'] = array($x, $y);
     }
@@ -409,8 +410,9 @@ class File_Therion_ScrapLinePoint
      *
      * @param float $x X-position in scrap pane
      * @param float $y Y-position in scrap pane
+     * @todo type checking
      */
-    public function setRightBezierHandle(float $x, float $y)
+    public function setRightBezierHandle($x, $y)
     {
         $this->_data['bezierRC'] = array($x, $y);
     }
