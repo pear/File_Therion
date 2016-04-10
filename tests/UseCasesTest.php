@@ -170,13 +170,18 @@ class File_TherionUseCaseTest extends File_TherionTestBase {
         
         
         // assert joins of survey
+        $this->assertEquals(3, count($survey->getJoins()));
         $this->assertEquals(
             array(
-                array("ew1:0",   "ew2:end"),
-                array("ew1:end", "ew2:0"),
-                array("ps1",     "ps2")
+                "join ew1:0 ew2:end",
+                "join ew1:end ew2:0",
+                "join ps1 ps2"
             ),
-            $survey->getJoins()
+            array(
+                $survey->getJoins()[0]->toString(),
+                $survey->getJoins()[1]->toString(),
+                $survey->getJoins()[2]->toString(),
+            )
         );
         
         

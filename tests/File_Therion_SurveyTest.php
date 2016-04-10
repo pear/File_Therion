@@ -116,50 +116,19 @@ class File_Therion_SurveyTest extends File_TherionTestBase {
     public function testJoins()
     {
         $sample = new File_Therion_Survey("test");
-        $sample->addJoin("foo", "bar");
-        $sample->addJoin("foo", "bar", "baz");
-        $sample->addJoin(array("foo", "bar", "baz"));
         
-        $this->assertEquals(
-            array(
-                array("foo", "bar"),
-                array("foo", "bar", "baz"),
-                array("foo", "bar", "baz"),
-            ),
-            $sample->getJoins()
+        // in-deep testing will be done in dedicated test class
+        $j1 = File_Therion_Join::parse(
+            File_Therion_Line::parse("join foo bar")
+        );
+        $j2 = File_Therion_Join::parse(
+            File_Therion_Line::parse("join l1 l2:0 l3:end")
         );
         
+        $sample->addJoin($j1);
+        $sample->addJoin($j2);
         
-        // wrong invocations:
-        try {
-            $sample->addJoin();
-        } catch (Exception $e) {
-            $this->assertInstanceOf('Exception', $e);
-        }
-        
-        try {
-            $sample->addJoin("missingPartner");
-        } catch (Exception $e) {
-            $this->assertInstanceOf('Exception', $e);
-        }
-        
-        try {
-            $sample->addJoin("missingPartner", null);
-        } catch (Exception $e) {
-            $this->assertInstanceOf('Exception', $e);
-        }
-        
-        try {
-            $sample->addJoin("missingPartner", array());
-        } catch (Exception $e) {
-            $this->assertInstanceOf('Exception', $e);
-        }
-        
-        try {
-            $sample->addJoin(array("foo"), "bar", array("baz")); // <-nonsense
-        } catch (Exception $e) {
-            $this->assertInstanceOf('Exception', $e);
-        }
+        $this->assertEquals(array($j1, $j2), $sample->getJoins());
     }
     
     /**
@@ -228,10 +197,13 @@ class File_Therion_SurveyTest extends File_TherionTestBase {
         $this->assertInstanceOf('File_Therion_Survey', $sample);
         $this->assertEquals(
             array(
-                array("ew1:0", "ew2:end"),
-                array("ps1", "ps2")
+                "join ew1:0 ew2:end",
+                "join ps1 ps2"
             ),
-            $sample->getJoins()
+            array(
+                $sample->getJoins()[0]->toString(),
+                $sample->getJoins()[1]->toString()
+            )
         );
         
         $sample->clearJoins();
