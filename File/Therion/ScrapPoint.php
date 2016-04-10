@@ -34,7 +34,11 @@ class File_Therion_ScrapPoint
      * @var array assoc array
      */
     protected $_options = array(
-        'id' => "",
+        'id'          => "",
+        'name'        => "", // only certain types!
+        'align'       => "", // only certain types!
+        'orientation' => "", // only certain types!
+        // todo: there are alot more.
     );
     
     
@@ -60,7 +64,9 @@ class File_Therion_ScrapPoint
         $this->setX($x);
         $this->setY($y);
         $this->setType($type);
-        $this->setOption($options);
+        
+        //TODO: parsing options removed for now; optionlist is vastly incomplete
+        //$this->setOption($options);  
     }
     
     

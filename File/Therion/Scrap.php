@@ -191,9 +191,8 @@ class File_Therion_Scrap
                                 
                                 case 'point':
                                     // points: Parse line using subparser
-                                    // TODO
-                                    //$ctxObj = File_Therion_ScrapPoint::parse($line);
-                                    //$scrap->addObject($ctxObj);
+                                    $ctxObj = File_Therion_ScrapPoint::parse($line);
+                                    $scrap->addObject($ctxObj);
                                 break;
                                 
                                 default:
