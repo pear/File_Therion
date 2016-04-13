@@ -200,7 +200,7 @@ class File_Therion_Join
      */
     public function toString()
     {
-        if (count($this) < 1) {
+        if (count($this) < 2) {
             throw new File_Therion_SyntaxException(
                 "join command expects at least two arguments, "
                 .count($flData)." given");
