@@ -684,6 +684,65 @@ class File_Therion_Survey
         return count($this->_surveys);
     }
     
+    /**
+     * Searches for an object in the survey structure and returns path.
+     * 
+     * The returned array contains the survey path to the searched object,
+     * where [0] is the topmost found entry and subsequent indexes hold
+     * the next deeper object. The last index is the queried object as
+     * found in the given survey.
+     * If the return value is empty, this signals no such object could be found.
+     * 
+     * Currently locating objects is limited to Station objects.
+     * Station objects are assumed to be located when its name matches and
+     * the linked survey objects are equal.
+     * Station definitions take precedence over stations in centreline data.
+     * 
+     * @param object  $tgt      Object to locate
+     * @param boolean $asString Build stringreference ("id@survey.subsurvey...")
+     * @return array|string indexed array with path to target or stringreference
+     */
+    public function locate($tgt, $asString=false) {
+        $r = array();
+        // TODO: implement recursive resolving and pathfinding
+        // bail out with return null; when nothing could be found
+        
+        //TODO NEXT HERE
+        
+        // build return string or return raw path-array
+        if ($asString) {
+            $obj = array_pop($r);
+            
+            // get ID of object
+            $objID = "";
+            switch (get_class($r)) {
+                case 'File_Therion_Station':
+                    $objID = $obj->getName();
+                break;
+                
+                // TODO: other types can return ID from options, like scrap
+                
+                default:
+                    throw new File_Therion_Exception(
+                        "locating ".get_class($r)." in surveys is unsupported");
+            }
+            
+            // Build return string
+            $strarray = array();
+            foreach ($r as $sobj) {
+                $strarray[] = $sobj->getName();
+            }
+            if (count($strarray) > 0) {
+                return $objID."@".implode(".", $strarray);
+            } else {
+                return $objID;
+            }
+            
+        } else {
+            // return array structure
+            return $r;
+        }
+    }
     
 }
 

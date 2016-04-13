@@ -54,6 +54,13 @@ class File_Therion_Station
     protected $_fixes = array();
     
     /**
+     * Survey context of this station (for name resolution).
+     * 
+     * @var File_Therion_Survey
+     */
+    protected $_survey = null;
+    
+    /**
      * Flags of this station.
      * 
      * NULL values mean that the flag is neither negated nor positively present.
@@ -458,6 +465,35 @@ class File_Therion_Station
         return $stationStr;
     }
     
+    /**
+     * Set local survey context of this station.
+     * 
+     * This is important for name resolution because there may be more stations
+     * named the same in several subsurveys.
+     * 
+     * @param File_Therion_Survey
+     * @throws InvalidArgumentException
+     */
+    public function setSurveyContext(File_Therion_Survey $survey)
+    {
+        if (!is_string($name)) {
+            throw new InvalidArgumentException(
+                "station name expects string value, ".gettype($name)." given");
+        }
+        $this->_name = $name;
+    }
+    
+    /**
+     * Get survey context of this station.
+     * 
+     * This returns the survey this station is assumed to be a local part of.
+     * 
+     * @return null|File_Therion_Survey
+     */
+    public function getSurveyContext()
+    {
+        return $this->_survey;
+    }
+    
 }
-
 ?>

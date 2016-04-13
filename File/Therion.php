@@ -29,6 +29,7 @@ require_once 'File/Therion/ScrapPoint.php';
 require_once 'File/Therion/ScrapLine.php';
 require_once 'File/Therion/ScrapArea.php';
 require_once 'File/Therion/Join.php';
+require_once 'File/Therion/Equate.php';
 require_once 'File/Therion/DataTypes/DataTypeInterface.php';
 require_once 'File/Therion/DataTypes/Person.php';
 require_once 'File/Therion/DataTypes/Date.php';
