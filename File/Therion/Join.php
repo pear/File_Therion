@@ -55,9 +55,9 @@ class File_Therion_Join
     
     
     /**
-     * Create a new therion ScrapPoint object.
+     * Create a new therion Join object.
      * 
-     * After creation of the join command you must call {@link addArgument()}
+     * After creation of the join command you can call {@link addArgument()}
      * to add join arguments.
      *
      * @param array $args Objects to join
