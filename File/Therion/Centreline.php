@@ -30,7 +30,14 @@ class File_Therion_Centreline
 {
     
     /**
-     * Survey options (id, ...).
+     * Survey context of this centreline.
+     * 
+     * @var File_Therion_Survey
+     */
+    protected $_survey = null;
+    
+    /**
+     * Centreline options (id, ...).
      * 
      * @var array assoc array
      */
@@ -782,6 +789,8 @@ class File_Therion_Centreline
      */
     public function addShot(File_Therion_Shot $shot)
     {
+        $shot->getFrom()->setSurveyContext($this->getSurveyContext());
+        $shot->getTo()->setSurveyContext($this->getSurveyContext());
         $this->_shots[] = $shot;
     }
     
@@ -1155,6 +1164,39 @@ class File_Therion_Centreline
         
         // done, go home
         return $lines;
+    }
+    
+    
+    /**
+     * Set local survey context of this centreline.
+     * 
+     * The survey context will be passed to newly added stations and shots.
+     * All already present shot stations context will be updated.
+     * 
+     * @param File_Therion_Survey
+     * @throws InvalidArgumentException
+     */
+    public function setSurveyContext(File_Therion_Survey $survey)
+    {
+        $this->_survey = $survey;
+        
+        // update all shots
+        foreach ($this->getShots() as $shot) {
+            $shot->getFrom()->setSurveyContext($this->getSurveyContext());
+            $shot->getTo()->setSurveyContext($this->getSurveyContext());
+        }
+    }
+    
+    /**
+     * Get survey context of this equate.
+     * 
+     * This returns the survey context of this equate for name resolution.
+     * 
+     * @return null|File_Therion_Survey
+     */
+    public function getSurveyContext()
+    {
+        return $this->_survey;
     }
     
 }

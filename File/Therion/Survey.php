@@ -540,6 +540,8 @@ class File_Therion_Survey
     /**
      * Add a centreline definition.
      * 
+     * This will implicitely update the centrelines survey context.
+     * 
      * Example:
      * <code>
      * $centreline = new File_Therion_Centreline();
@@ -551,6 +553,7 @@ class File_Therion_Survey
      */
     public function addCentreline(File_Therion_Centreline $centreline)
     {
+        $centreline->setSurveyContext($this);
         $this->_centrelines[] = $centreline;
     }
     
