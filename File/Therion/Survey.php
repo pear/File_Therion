@@ -36,6 +36,13 @@ class File_Therion_Survey
     protected $_surveys = array();
     
     /**
+     * Associated parent survey
+     * 
+     * @var File_Therion_Survey
+     */
+    protected $_parent = null;
+    
+    /**
      * Associated centrelines
      * 
      * @var array
@@ -467,6 +474,9 @@ class File_Therion_Survey
     /**
      * Add a subsurvey.
      * 
+     * Adds a survey as subsurvey to this survey and updates its
+     * parent reference.
+     * 
      * Example:
      * <code>
      * $subsurvey = new File_Therion_Survey("fooSurvey");
@@ -478,6 +488,7 @@ class File_Therion_Survey
      */
     public function addSurvey(File_Therion_Survey $subsurvey)
     {
+        $subsurvey->setParent($this); // update parent
         $this->_surveys[] = $subsurvey;
     }
     
@@ -497,6 +508,33 @@ class File_Therion_Survey
     public function getSurveys()
     {
         return $this->_surveys;
+    }
+    
+    
+    /**
+     * Sets the parent survey of this survey.
+     * 
+     * Mainly called by {@link addSurvey()} but may be used to create fake
+     * survey structures manually (may come in handy for equate and friends
+     * together with only partial survey data available as PHP objects).
+     * 
+     * @param File_Therion_Survey|null $parent Use null to reset parent
+     */
+    public function setParent(File_Therion_Survey $parent=null)
+    {
+        $this->_parent = $parent;
+    }
+    
+    /**
+     * Returns the parent survey of this survey.
+     * 
+     * Returns null when this survey has no parent set.
+     * 
+     * @return null|File_Therion_Survey
+     */
+    public function getParent()
+    {
+        return $this->_parent;
     }
     
     /**
