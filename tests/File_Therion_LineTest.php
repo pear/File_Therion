@@ -527,6 +527,11 @@ class File_Therion_LineTest extends File_TherionTestBase
             $sample->getDatafields()
         );
         
+        $sample = new File_Therion_Line('equate 1 2 3@A 4@B.A 5@A.B.C');
+        $this->assertEquals(
+            array("equate", "1", "2", "3@A", "4@B.A", "5@A.B.C"),
+            $sample->getDatafields());
+        
         
         
         // test encoding data
