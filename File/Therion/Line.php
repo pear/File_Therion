@@ -103,6 +103,11 @@ class File_Therion_Line implements Countable
      */
     public static function parse($line)
     {
+        if (!is_string($line)) {
+            throw new InvalidArgumentException(
+                'invalid $line datatype (string expected)!');
+        }
+            
         $line = trim($line, "\r\n");  // strip cross-platform newline symbols
         
         $matches = array();
