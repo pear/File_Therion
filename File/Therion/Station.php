@@ -491,5 +491,20 @@ class File_Therion_Station
         return $this->_survey;
     }
     
+    
+    /**
+     * Determine if Station object is equal
+     * 
+     * Stations are equal when station name matches  and the
+     * survey context is the same.
+     * 
+     * @return boolean
+     */
+    public function equals(File_Therion_Station $tgt)
+    {
+        $nameEqual = $this->getName() == $tgt->getName();
+        $ctxEqual  = $this->getSurveyContext() == $tgt->getSurveyContext();
+        return ($nameEqual && $ctxEqual);
+    }
 }
 ?>

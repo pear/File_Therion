@@ -731,7 +731,8 @@ class File_Therion_Survey
      * The returned array contains the survey path to the searched object,
      * where [0] is the topmost found entry and subsequent indexes hold
      * the next deeper object. The last index is the queried object as
-     * found in the given survey.
+     * found in the given survey (if it is the only array content, then target
+     * object is local to current survey).
      * If the return value is empty, this signals no such object could be found.
      * 
      * Currently locating objects is limited to Station objects.
@@ -743,29 +744,82 @@ class File_Therion_Survey
      * @param boolean $asString Build stringreference ("id@survey.subsurvey...")
      * @return array|string indexed array with path to target or stringreference
      */
-    public function locate($tgt, $asString=false) {
+    private function locate($tgt, $asString=false) {
+        
+        throw new File_Therion_Exception(
+            "NOT IMPLEMENTED YET: It is also questionable if this mehtod"
+            ."will be truly useful");
+        
+        if (get_class($tgt) != 'File_Therion_Station') {
+            // TODO: Support locating more types, scraps maybe?
+            throw new InvalidArgumentException(
+                "locate does currently only support Station objects as target, "
+                ."passed type='".get_class($tgt)."'"
+            );
+        }
+        
         $r = array();
-        // TODO: implement recursive resolving and pathfinding
-        // bail out with return null; when nothing could be found
         
-        //TODO NEXT HERE
+        /*
+         *  search $tgt in local scope
+         */
+        // search centreline shots
+        foreach ($this->getCentrelines() as $cl) {
+            foreach ($cl->getShots() as $cls) {
+                if ($tgt->equals($cls->getFrom())) {
+                    $r = array($cls->getFrom());
+                    break 2;
+                }
+                if ($tgt->equals($cls->getTo())) {
+                    $r = array($cls->getTo());
+                    break 2;
+                }
+            }
+        }
+        // Todo: search/compare more local objects of this survey
+        // if (count($r) == 0) { // nothing local found so far, search more
+        //    ...
         
-        // build return string or return raw path-array
+        
+        /*
+         * NO local object found: recurse deeper
+         */
+        if (count($r) == 0) { // nothing local found so far
+            foreach ($this->getSurveys() as $subSurvey) {
+                $recurseRes = $subSurvey->locate($tgt, false);
+                if (count($recurseRes) > 0) {
+                    // we found something!
+                    // this is either a recursed result or just the local
+                    // target in the subsurvey
+                    // Add the result to the stack and abort further searches.
+                    $r[] = $subSurvey;
+                    $r = array_merge($r, $recurseRes);
+                    break;
+                    
+                } else {
+                    // no result... try next subsurvey
+                }
+            }
+        }
+        
+        
+        /*
+         * Construct returned result
+         * build return string or return raw path-array
+         */
         if ($asString) {
             $obj = array_pop($r);
             
-            // get ID of object
+            // get identifier of searched object
+            // this is done either through an available getName() method
+            // or by the options ID
+            
+            // TODO Refactor code with intelligent array structure and swapping of sep-char
             $objID = "";
-            switch (get_class($r)) {
-                case 'File_Therion_Station':
-                    $objID = $obj->getName();
-                break;
-                
-                // TODO: other types can return ID from options, like scrap
-                
-                default:
-                    throw new File_Therion_Exception(
-                        "locating ".get_class($r)." in surveys is unsupported");
+            if (method_exists($tgt, 'getName()')) {
+                $objID = $tgt->getName();
+            } else {
+                $objID = $tgt->getOption('id');
             }
             
             // Build return string
