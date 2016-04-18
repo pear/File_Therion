@@ -659,10 +659,14 @@ class File_Therion_Centreline
      * station comments/flags.
      * To define fixes and/or comments/flags, adjust the relevant station.
      * 
+     * This will also update the stations survey context to the context of
+     * this centreline.
+     * 
      * @param File_Therion_Station $station
      */
     public function addStation(File_Therion_Station $station)
     {
+        $station->setSurveyContext($this->getSurveyContext());
         $this->_stations[] = $station;
     }
     
@@ -784,6 +788,12 @@ class File_Therion_Centreline
     
     /**
      * Add a survey shot to this centreline.
+     * 
+     * This will also update the survey context of the shots from- and
+     * to-station with the survey context of the centreline; as a given station
+     * could only be part of one centreline.
+     * You need to use {@link File_Therion_Equate}s when you need to set
+     * stations equal.
      * 
      * @param File_Therion_Shot $shot shot object
      */

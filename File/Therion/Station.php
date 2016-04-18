@@ -471,6 +471,9 @@ class File_Therion_Station
      * This is important for name resolution because there may be more stations
      * named the same in several subsurveys.
      * 
+     * The context of the station will be automatically set when the station is
+     * added to a shot which is part of a centreline.
+     * 
      * @param File_Therion_Survey|null Use null to reset context
      * @throws InvalidArgumentException
      */
