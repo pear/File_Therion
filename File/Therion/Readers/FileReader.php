@@ -71,13 +71,18 @@ class File_Therion_FileReader implements File_Therion_Reader
         $fh = fopen ($filename, 'r');
         while (!feof($fh)) {
             $data = fgets($fh);
-            
-            // parse Therion Line object
-            $lineObj = File_Therion_Line::parse($data);
-            
-            // add it to the file
-            $file->addLine($lineObj);
-            
+            if ($data !== false) {
+                // parse Therion Line object
+                $lineObj = File_Therion_Line::parse($data);
+                
+                // add it to the file
+                $file->addLine($lineObj);
+                
+            } else {
+                 // EOF reached in this read: no more data left but EOF was
+                 // not yet reached before (last line was only newline)
+                  $file->addLine(File_Therion_Line::parse(""));
+            }
         }
         fclose($fh);
         

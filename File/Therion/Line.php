@@ -105,7 +105,8 @@ class File_Therion_Line implements Countable
     {
         if (!is_string($line)) {
             throw new InvalidArgumentException(
-                'invalid $line datatype (string expected)!');
+                'invalid $line datatype (string expected, '
+                .gettype($line).' given)!');
         }
             
         $line = trim($line, "\r\n");  // strip cross-platform newline symbols
