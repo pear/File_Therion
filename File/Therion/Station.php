@@ -471,16 +471,12 @@ class File_Therion_Station
      * This is important for name resolution because there may be more stations
      * named the same in several subsurveys.
      * 
-     * @param File_Therion_Survey
+     * @param File_Therion_Survey|null Use null to reset context
      * @throws InvalidArgumentException
      */
-    public function setSurveyContext(File_Therion_Survey $survey)
+    public function setSurveyContext(File_Therion_Survey $survey=null)
     {
-        if (!is_string($name)) {
-            throw new InvalidArgumentException(
-                "station name expects string value, ".gettype($name)." given");
-        }
-        $this->_name = $name;
+        $this->_survey = $survey;
     }
     
     /**
