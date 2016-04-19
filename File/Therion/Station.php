@@ -34,6 +34,13 @@ class File_Therion_Station
     protected $_name = "";
     
     /**
+     * Prefix/Postfix of this station
+     * 
+     * @var array [0]=prefix, [1]=postfix
+     */
+    protected $_prePostfix = array("", "");
+    
+    /**
      * Comment of this station.
      * 
      * @var string
@@ -110,11 +117,21 @@ class File_Therion_Station
     /**
      * Get name of this station.
      * 
+     * If the station has a set prefix/postfix, this will be applied
+     * unless the $raw parameter is set to true.
+     * 
+     * @param boolean $raw return raw name without pre-/postfix
      * @return string
      */
-    public function getName()
+    public function getName($raw=false)
     {
-        return $this->_name;
+        if ($raw) {
+            return $this->_name;
+            
+        } else {
+            $names = $this->getStationNames();
+            return $names[0].$this->_name.$names[1];
+        }
     }
     
     /**
@@ -494,5 +511,39 @@ class File_Therion_Station
         return $this->_survey;
     }
     
+    /**
+     * Set  prefix/postfix of this station.
+     * 
+     * This is usually set automatically in centreline context.
+     * You can use this to adjust station prefix/postfix after updates from
+     * the centreline or to have such data without context.
+     * 
+     * @param string $prefix
+     * @param string $postfix
+     * @throws InvalidArgumentException
+     */
+    public function setStationNames($prefix, $postfix)
+    {
+        if (!is_string($prefix)) {
+            throw new InvalidArgumentException(
+                "Unsupported prefix type '".gettype($prefix)."'" );
+        }
+        if (!is_string($postfix)) {
+            throw new InvalidArgumentException(
+                "Unsupported postfix type '".gettype($postfix)."'" );
+        }
+        
+        $this->_prePostfix = array($prefix, $postfix);
+    }
+    
+    /**
+     * Get station-names (pre-/postfix).
+     * 
+     * @return array: [0]=prefix, [1]=postfix
+     */
+    public function getStationNames()
+    {
+        return $this->_prePostfix;
+    }
 }
 ?>

@@ -317,12 +317,7 @@ class File_Therion_Survey
         
         // equates
         foreach ($this->getEquates() as $sobj) {
-            foreach ($sobj as $j) {
-                $lines[] = new File_Therion_Line(
-                    "equate ".implode(" ", $j),
-                    "", $baseIndent);
-            }
-            unset($j);
+            $lines[] = new File_Therion_Line($sobj->toString(),"",$baseIndent);
         }
         unset($sobj);
         
@@ -413,41 +408,41 @@ class File_Therion_Survey
     /**
      * Add a station equate.
      * 
+     * The stations to equate must have a valid survey context. This is usually
+     * the case automatically when the stations are part of a centreline that
+     * was added to a survey.
+     * 
+     * The survey context of the equate command will be updatet to the
+     * local survey.
+     * 
      * Example:
      * <code>
-     * $survey->addEquate("1.1", "1.25@subsurvey");
-     * $survey->addEquate("1.1", "2.1", "1.25@subsurvey"); // threesome
-     * $survey->addEquate($station1, $station2);
+     * // get from-station of first shot of first centreline
+     * // get to-station of third shot of second centreline
+     * $station1 = $survey->getCentrelines()[0]->getShots()[0]->getFrom();
+     * $station2 = $survey->getCentrelines()[1]->getShots()[2]->getTo();
+     * 
+     * // make them equal
+     * $equate = new File_Therion_Equate($station1, $station2);
+     * 
+     * // add that equality definition to survey
+     * $survey->addEquate($equate);
      * </code>
      * 
      * @param string|array station equates.
-     * @throws InvalidArgumentException
-     * @throws File_Therion_SyntaxException
-     * @todo add syntax checks
-     * @todo support station objects, maybe through reference-datatype to support station references of other surveys; this would be handy if stations would be renamed after euqating them when using objects
+     * @throws File_Therion_SyntaxException when equate < 2 stations
      */
-    public function addEquate($src=null, ...$tgts)
+    public function addEquate(File_Therion_Equate $equate)
     {
-        if (!is_array($src)) {
-            $src = array($src);
-        }
-        
-        $merged = array_merge($src, $tgts);
-        
         // check parameters
-        if (count($merged) < 2) {
+        if (count($equate) < 2) {
             throw new File_Therion_SyntaxException(
-                "Missing argument: expected >=2 elements");
-        }
-        foreach ($merged as $j) {
-            if (!is_string($j)) {
-                throw new File_Therion_SyntaxException(
-                    "addEquate(): Invalid argument, expected string");
-            }
+                "Missing argument: equate command expects >=2 stations");
         }
         
-        // homogenize and add
-        $this->_equates[] = $merged;
+        $equate->setSurveyContext($this); // update context
+        
+        $this->_equates[] = $equate;
     }
     
     /**
@@ -462,9 +457,8 @@ class File_Therion_Survey
      * Get existing equates.
      * 
      * Each unique definition forms one array element.
-     * Each level has one array containing all join arguments.
      * 
-     * @return array nested array
+     * @return array of File_Therion_Equate objects
      */
     public function getEquates()
     {
@@ -514,7 +508,9 @@ class File_Therion_Survey
     /**
      * Sets the parent survey of this survey.
      * 
-     * Mainly called by {@link addSurvey()} but may be used to create fake
+     * Note that in contrast to {@link addSurvey()}, no references in the parent
+     * will be updated: The parent does not know of its child.
+     * It's mainly called by {@link addSurvey()} but may be used to create fake
      * survey structures manually (may come in handy for equate and friends
      * together with only partial survey data available as PHP objects).
      * 

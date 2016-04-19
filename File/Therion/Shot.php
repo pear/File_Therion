@@ -112,7 +112,7 @@ class File_Therion_Shot
     /**
      * Create a new therion shot object.
      * 
-     * After creating, set style and order.
+     * After creating, set style, order and add data.
      */
     public function __construct()
     {

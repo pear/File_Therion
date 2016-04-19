@@ -119,20 +119,53 @@ class File_Therion_SurveyTest extends File_TherionTestBase {
      * Test equates
      */
     public function testEquates()
-    {
+    {        
+        // make a survey
         $sample = new File_Therion_Survey("test");
-        $sample->addEquate("1.1", "1.25@subsurvey");
-        $sample->addEquate("1.1", "2.1", "1.25@subsurvey");
-        $sample->addEquate(array("foo", "bar", "baz"));
+        $cl1    = new File_Therion_Centreline();
+        $sample->addCentreline($cl1);
+        $cl1->setStationNames("1.", "");
+                
+        $shot1  = new File_Therion_Shot();
+        $shot1->setFrom(new File_Therion_Station("1"));
+        $shot1->setTo(new File_Therion_Station("2"));
+        $cl1->addShot($shot1);
         
+        $shot2  = new File_Therion_Shot();
+        $shot2->setFrom($shot1->getTo());
+        $shot2->setTo(new File_Therion_Station("3"));
+        $cl1->addShot($shot2);
+        
+        // make another survey as subsurvey to sample
+        $sample2 = new File_Therion_Survey("subTest");
+        $sample->addSurvey($sample2);
+        $cl2     = new File_Therion_Centreline();
+        $sample2->addCentreline($cl2);
+                
+        $shot11  = new File_Therion_Shot();
+        $shot11->setFrom(new File_Therion_Station("2.1"));
+        $shot11->setTo(new File_Therion_Station("2.2"));
+        $cl2->addShot($shot11);
+        
+        $shot21  = new File_Therion_Shot();
+        $shot21->setFrom($shot11->getTo());
+        $shot21->setTo(new File_Therion_Station("2.3"));
+        $cl2->addShot($shot21);
+        
+        // set equal: first station from first CL == last station from last CL
+        // lookup from the survey context
+        $first = $sample->getCentrelines()[0]->getShots()[0]->getFrom();
+        $last  = $sample2->getCentrelines()[0]->getShots()[1]->getTo();
+        $sample->addEquate(new File_Therion_Equate(array($first, $last)));
+        
+        // expected is clean referenced equate command
+        // TODO: Im not sure how the station prefix is correctly dealth with.
+        //       Maybe with present station-names the name must be fully given
         $this->assertEquals(
-            array(
-                array("1.1", "1.25@subsurvey"),
-                array("1.1", "2.1", "1.25@subsurvey"),
-                array("foo", "bar", "baz"),
-            ),
-            $sample->getEquates()
+            'equate 1 2.3@subTest',
+            $sample->getEquates()[0]->toString()
         );
+        
         
         
         // wrong invocations:
