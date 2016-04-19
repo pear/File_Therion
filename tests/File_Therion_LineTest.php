@@ -30,21 +30,6 @@ class File_Therion_LineTest extends File_TherionTestBase
 /* ---------- TESTS ---------- */
 /* test functions are public and start with "test*".
 
-    /**
-     * dummy test
-     */
-    public function _testDummy()
-    {
-        //$this->markTestSkipped('Skipped Test.');
-        //$this->markTestIncomplete("This test has not been implemented yet.");
-        //$this->assertInstanceOf('File_Therion', $testSubject);
-        //$this->assertTrue($false);
-        //$this->assertEquals($expected, $actual, 'Failed!');
-        //$this->assertNotEquals($expected, $actual, 'Failed!');
-        //$this->assertThat(1, $this->greaterThanOrEqual(2));
-
-    }
-    
     
     /**
      * Test basic instantiation

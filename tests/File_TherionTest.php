@@ -27,8 +27,8 @@ class File_TherionTest extends File_TherionTestBase {
     /**
      * dummy test
      */
-    public function testDummy()
-    {
+    //public function testDummy()
+    //{
         //$this->markTestSkipped('Skipped Test.');
         //$this->markTestIncomplete("This test has not been implemented yet.");
     
@@ -38,7 +38,7 @@ class File_TherionTest extends File_TherionTestBase {
         //$this->assertNotEquals($expected, $actual, 'Failed!');
         //$this->assertThat(1, $this->greaterThanOrEqual(2));
 
-    }
+    //}
     
     
      /**

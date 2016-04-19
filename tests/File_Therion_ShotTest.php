@@ -25,23 +25,6 @@ class File_Therion_ShotTest extends File_TherionTestBase {
 /* test functions are public and start with "test*".
 
     /**
-     * dummy test
-     */
-    public function testDummy()
-    {
-        //$this->markTestSkipped('Skipped Test.');
-        //$this->markTestIncomplete("This test has not been implemented yet.");
-    
-        //$this->assertInstanceOf('File_Therion', $testSubject);
-        //$this->assertTrue($false);
-        //$this->assertEquals($expected, $actual, 'Failed!');
-        //$this->assertNotEquals($expected, $actual, 'Failed!');
-        //$this->assertThat(1, $this->greaterThanOrEqual(2));
-
-    }
-    
-
-    /**
      * Test instantiation
      */
     public function testBasicInstantiation()
