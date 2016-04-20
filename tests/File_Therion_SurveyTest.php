@@ -124,7 +124,13 @@ class File_Therion_SurveyTest extends File_TherionTestBase {
         $sample = new File_Therion_Survey("test");
         $cl1    = new File_Therion_Centreline();
         $sample->addCentreline($cl1);
-        $cl1->setStationNames("1.", "");
+        
+        $shot0  = new File_Therion_Shot(); // without station-names in effect!
+        $shot0->setFrom(new File_Therion_Station("0"));
+        $shot0->setTo(new File_Therion_Station("1"));
+        $cl1->addShot($shot0);
+        
+        $cl1->setStationNames("1.", ""); // now set station names
                 
         $shot1  = new File_Therion_Shot();
         $shot1->setFrom(new File_Therion_Station("1"));
@@ -154,15 +160,14 @@ class File_Therion_SurveyTest extends File_TherionTestBase {
         
         // set equal: first station from first CL == last station from last CL
         // lookup from the survey context
-        $first = $sample->getCentrelines()[0]->getShots()[0]->getFrom();
+        $start = $sample->getCentrelines()[0]->getShots()[0]->getFrom();
+        $first = $sample->getCentrelines()[0]->getShots()[1]->getFrom();
         $last  = $sample2->getCentrelines()[0]->getShots()[1]->getTo();
-        $sample->addEquate(new File_Therion_Equate(array($first, $last)));
+        $sample->addEquate(new File_Therion_Equate(array($start, $first, $last)));
         
         // expected is clean referenced equate command
-        // TODO: Im not sure how the station prefix is correctly dealth with.
-        //       Maybe with present station-names the name must be fully given
         $this->assertEquals(
-            'equate 1 2.3@subTest',
+            'equate 0 1.1 2.3@subTest',
             $sample->getEquates()[0]->toString()
         );
         

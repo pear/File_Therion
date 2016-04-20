@@ -118,14 +118,14 @@ class File_Therion_Station
      * Get name of this station.
      * 
      * If the station has a set prefix/postfix, this will be applied
-     * unless the $raw parameter is set to true.
+     * when the $applyNames parameter is set to true.
      * 
-     * @param boolean $raw return raw name without pre-/postfix
-     * @return string
+     * @param boolean $applyNames return name with applied pre-/postfix
+     * @return string Original or prefixed+postfixed name
      */
-    public function getName($raw=false)
+    public function getName($applyNames=false)
     {
-        if ($raw) {
+        if (!$applyNames) {
             return $this->_name;
             
         } else {

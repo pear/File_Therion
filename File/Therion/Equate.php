@@ -207,11 +207,11 @@ class File_Therion_Equate
                 }
 
                 // build path:
-                $rv .= " ".$station->getName()."@".implode(".", $srvyNames);
+                $rv .= " ".$station->getName(true)."@".implode(".", $srvyNames);
                 
             } else {
                 // local resolving result: return plain name of station
-                $rv .= " ".$station->getName();
+                $rv .= " ".$station->getName(true);
             }
             
         }

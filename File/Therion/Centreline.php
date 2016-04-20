@@ -624,6 +624,10 @@ class File_Therion_Centreline
     /**
      * Set shot station names pre-/postfix.
      * 
+     * Newly added shots stations will receive the new setting.
+     * Already present shots will NOT be modified (use 
+     * {@link updateShotStationNames() to update all shots).
+     * 
      * @param string $prefix
      * @param string $postfix
      */
@@ -659,6 +663,8 @@ class File_Therion_Centreline
      * station comments/flags.
      * To define fixes and/or comments/flags, adjust the relevant station.
      * 
+     * The stations prefix/postfix setting will be updatet with the current
+     * local centreline setting.
      * This will also update the stations survey context to the context of
      * this centreline.
      * 
@@ -667,6 +673,8 @@ class File_Therion_Centreline
     public function addStation(File_Therion_Station $station)
     {
         $station->setSurveyContext($this->getSurveyContext());
+        $names = $this->getStationNames();
+        $station->setStationNames($names[0], $names[1]);
         $this->_stations[] = $station;
     }
     
@@ -789,9 +797,13 @@ class File_Therion_Centreline
     /**
      * Add a survey shot to this centreline.
      * 
+     * The stations pre- and postfix (see {@link setStationNames()}) will be
+     * updated at the shots stations with the current centreline setting.
+     * 
      * This will also update the survey context of the shots from- and
      * to-station with the survey context of the centreline; as a given station
      * could only be part of one centreline.
+     * 
      * You need to use {@link File_Therion_Equate}s when you need to set
      * stations equal.
      * 
@@ -799,8 +811,16 @@ class File_Therion_Centreline
      */
     public function addShot(File_Therion_Shot $shot)
     {
+        // update station survey context
         $shot->getFrom()->setSurveyContext($this->getSurveyContext());
         $shot->getTo()->setSurveyContext($this->getSurveyContext());
+        
+        // update station names
+        $names = $this->getStationNames();
+        $shot->getFrom()->setStationNames($names[0], $names[1]);
+        $shot->getTo()->setStationNames($names[0], $names[1]);
+        
+        // add shot to centreline
         $this->_shots[] = $shot;
     }
     
@@ -864,12 +884,17 @@ class File_Therion_Centreline
     }
     
     /**
-     * Apply station-names to all shots of this centreline.
+     * Apply station-names to all station names of shots of this centreline.
+     * 
+     * Changes the station names in hard mode (overwriting names).
+     * If you just want to update a given prefix/postfix softly, use
+     * {@link updateShotStationNames()}.
      * 
      * This will apply the current prefix/postfix given with
-     * {@link setStationNames()} to the shots contained in this centreline.
-     * The station-names will be reset afterwards.
-     * Shot objects will report the fully qualified name afterwards.
+     * {@link File_Therion_Station::setName()} to the shots contained in this
+     * centreline. The station-names will be reset afterwards.
+     * Shot objects will report the fully qualified name afterwards and will
+     * have NO prefix/postfix associated.
      */
     public function applyStationNames()
     {
@@ -877,14 +902,34 @@ class File_Therion_Centreline
         $prefix  = $this->getStationNames()[0];
         $postfix = $this->getStationNames()[1];
         
-        // apply them to each shot
+        // apply them hard to each shot (update name)
         foreach ($this->_shots as $s) {
-            $s->getFrom()->setStationNames($prefix, $postfix);
-            $s->getTo()->setStationNames($prefix, $postfix);
+            foreach (array($s->getFrom(), $s->getTo()) as $st) {
+                $st->setName($prefix.$st->getName().$postfix); // force name
+                $st->setStationNames("", ""); // clean setting from station
+            }
+            
         }
         
-        // reset station names
+        // clean setting from centreline
         $this->setStationNames("", "");
+    }
+    
+    /**
+     * Update station-names setting in all shots of this centreline.
+     * 
+     * This will update the current prefix/postfix setting of all shot stations
+     * in this centreline using {@link File_Therion_Station::setStationNames()}
+     * on each station.
+     * The original name remains intact.
+     */
+    public function updateShotStationNames()
+    {
+        $names = $this->getStationNames();
+        foreach ($this->getShots() as $shot) {
+            $shot->getFrom()->setStationNames($names[0], $names[1]);
+            $shot->getTo()->setStationNames($names[0], $names[1]);
+        }
     }
     
     /**
@@ -970,6 +1015,7 @@ class File_Therion_Centreline
      * 
      * @return array File_Therion_Line objects
      * @todo finish implementation, implement proper escaping
+     * @todo adjust station-names handling: i think, we need to update all stations if station-names is in effect somewhere (homogenioze all stations to one setting) because currently the API only supports ONE station-names command per centreline. Currently output may not be valid in this situation!
      */
     public function toLines()
     {
