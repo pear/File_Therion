@@ -41,6 +41,36 @@ class File_TherionTest extends File_TherionTestBase {
     //}
     
     
+    /**
+     * Test reported verison reports package.xml version
+     * 
+     * This test needs the package2.xml in the package root dir.
+     * (its the case with an GIT repository clone, test will be skipped
+     * with bare package installation)
+     */
+    public function testVersion()
+    {
+        // retrieve package.xml version number
+        $xml = dirname(__FILE__).'/../package2.xml';
+        $pckge_fh = fopen($xml, 'r');
+        if (!$pckge_fh) {
+            $this->markTestSkipped("Skipped version test: could not open $xml");
+            return;
+        }
+        $ver = "ERROR: UNABLE TO GET VERSION FROM $xml !";
+        while ($l = fgets($pckge_fh)) {
+            $m = array();
+            if (preg_match('/<release>(.+?)<\/release>/', $l, $m)) {
+                $ver = $m[1];
+                break;
+            }
+        }
+        
+        // compare
+        $this->assertEquals($ver, File_Therion::getVersion());
+        
+    }
+    
      /**
      * Test addLine variants
      */

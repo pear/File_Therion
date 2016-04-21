@@ -11,6 +11,11 @@
  * @license    http://www.gnu.org/licenses/lgpl-3.0.txt LGPLv3
  * @link       http://pear.php.net/package/File_Therion/
  */
+ 
+/**
+ * File_Therion Version
+ */
+define('FILE_THERION_VERSION', '0.1.0');
 
 /**
  * Package includes.
@@ -177,6 +182,17 @@ class File_Therion implements Countable
      */
     protected $_wrapAt = 0;
     
+    /**
+    * Returns the current release version, may be called statically
+    *
+    * @static
+    * @return string version
+    */
+    public static function getVersion()
+    {
+        return FILE_THERION_VERSION;
+    }
+
     
     /**
      * Create a new therion file object representing content at $filename.
