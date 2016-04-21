@@ -545,5 +545,40 @@ class File_Therion_Station
     {
         return $this->_prePostfix;
     }
+    
+    /**
+     * Apply prefix/postfix setting permanently.
+     * 
+     * This will apply the current station-names setting to the name
+     * and reset the setting afterwards. The Stations name is then the
+     * prefixed/postfixed one with emtpy prefix/postfix setting.
+     * 
+     * Usually calling {@link getName(true)} is the better alternative because
+     * it leaves the prefix/postfix and original name intact.
+     */
+    public function applyStationNames()
+    {
+        $prePost = $this->getStationNames();
+        $this->setName($prePost[0].$this->getName().$prePost[1]);
+        
+        $this->setStationNames("", ""); // reset station prefix/postfix setting
+    }
+    
+    /**
+     * Strip prefix/postfix setting from name.
+     * 
+     * This will remove the currently set station-names from the name
+     * The Stations name is then the non-prefixed/postfixed one with untouched
+     * prefix/postfix setting.
+     */
+    public function stripStationNames()
+    {
+        $prePost = $this->getStationNames();
+        $name    = $this->getName();
+        $name    = preg_replace('/^'.$prePost[0].'/', '', $name);
+        $name    = preg_replace('/'.$prePost[1].'$/', '', $name);
+        $this->setName($name);
+    }
+    
 }
 ?>

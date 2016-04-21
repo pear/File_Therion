@@ -237,12 +237,14 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
      */
     public function testStationNames()
     {
+        // please note that this data is not valid in therion.
+        // the station pre1post could not be connected to the centreline.
         $sampleLines = array(
             File_Therion_Line::parse('centreline'),
             File_Therion_Line::parse('  units compass clino grads'),
             File_Therion_Line::parse('  data normal from to compass clino tape'),
-            File_Therion_Line::parse('  station-names "pre" "post"'),
             File_Therion_Line::parse('  0     1   200       -5      6.4 '),
+            File_Therion_Line::parse('  station-names "pre" "post"'),
             File_Therion_Line::parse('  1     2    73        8      5.2 '),
             File_Therion_Line::parse('  2     3    42        0      2.09'),
             File_Therion_Line::parse('endcentreline'),            
@@ -256,24 +258,100 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
         
         // test getting stations
         $this->assertEquals('0',  $shots[0]->getFrom()->getName());
+        $this->assertEquals('0',  $shots[0]->getFrom()->getName(true));
         $this->assertEquals('1',  $shots[0]->getTo()->getName());
+        $this->assertEquals('1',  $shots[0]->getTo()->getName(true));
         $this->assertEquals('1',  $shots[1]->getFrom()->getName());
+        $this->assertEquals('pre1post',  $shots[1]->getFrom()->getName(true));
         $this->assertEquals('2',  $shots[1]->getTo()->getName());
+        $this->assertEquals('pre2post',  $shots[1]->getTo()->getName(true));
         $this->assertEquals('2',  $shots[2]->getFrom()->getName());
+        $this->assertEquals('pre2post',  $shots[2]->getFrom()->getName(true));
         $this->assertEquals('3',  $shots[2]->getTo()->getName());
+        $this->assertEquals('pre3post',  $shots[2]->getTo()->getName(true));
         
         // test getting explicit adjusted pre/postfixed stations
         // for this, we apply the station names
         $sample->applyStationNames();
-        $this->assertEquals(array("", ""), $sample->getStationNames());
-        $this->assertEquals('pre0post',  $shots[0]->getFrom()->getName());
-        $this->assertEquals('pre1post',  $shots[0]->getTo()->getName());
+        $this->assertEquals(array("pre", "post"), $sample->getStationNames());
+        // no prefix/postfix was set to this stations
+        $this->assertEquals('0',  $shots[0]->getFrom()->getName());
+        $this->assertEquals('0',  $shots[0]->getFrom()->getName(true));
+        $this->assertEquals('1',  $shots[0]->getTo()->getName());
+        $this->assertEquals('1',  $shots[0]->getTo()->getName(true));
+        // these stations had a prefix/postfix
         $this->assertEquals('pre1post',  $shots[1]->getFrom()->getName());
+        $this->assertEquals('pre1post',  $shots[1]->getFrom()->getName(true));
         $this->assertEquals('pre2post',  $shots[1]->getTo()->getName());
+        $this->assertEquals('pre2post',  $shots[1]->getTo()->getName(true));
         $this->assertEquals('pre2post',  $shots[2]->getFrom()->getName());
+        $this->assertEquals('pre2post',  $shots[2]->getFrom()->getName(true));
         $this->assertEquals('pre3post',  $shots[2]->getTo()->getName());
+        $this->assertEquals('pre3post',  $shots[2]->getTo()->getName(true));
+        
+        // test stripping given prefix/postfix from all stations.
+        // for this to work, we need to enforce a prefix/postfix throughout the
+        // centreline. This also applies a station-names to the previuosly
+        // unprefixed stations 0+1 of shot 0 - that means, that after stripping
+        // we have an homogenous centreline naming convention.
+        $sample->updateShotStationNames();
+        $this->assertEquals('0',  $shots[0]->getFrom()->getName());
+        $this->assertEquals('pre0post',  $shots[0]->getFrom()->getName(true));
+        $this->assertEquals('pre1post',  $shots[1]->getFrom()->getName());
+        // this will yield expected wrong results:
+        $this->assertEquals('prepre1postpost',  $shots[1]->getFrom()->getName(true));
+        $sample->stripStationNames(); // strip them off!
+        $this->assertEquals('0',  $shots[0]->getFrom()->getName()); // strip did nothing
+        $this->assertEquals('pre0post',  $shots[0]->getFrom()->getName(true));
+        $this->assertEquals('1',  $shots[1]->getFrom()->getName()); // strip worked
+        $this->assertEquals('pre1post',  $shots[1]->getFrom()->getName(true));
         
     }
+    
+    /**
+     * Test station names switching inside centreline
+     */
+     public function testStationNamesSwitching()
+     {
+        // complex centreline with several shots
+        $sampleLines = array(
+            File_Therion_Line::parse('centreline'),
+            File_Therion_Line::parse('  units compass clino grads'),
+            File_Therion_Line::parse('  data normal from to compass clino tape'),
+            File_Therion_Line::parse('  0     1   200       -5      6.4 '),
+            File_Therion_Line::parse('  station-names "pre" ""'),
+            File_Therion_Line::parse('  1     2    73        8      5.2 '),
+            File_Therion_Line::parse('  station-names "" "post"'),
+            File_Therion_Line::parse('  2     3    42        0      2.09'),
+            File_Therion_Line::parse('endcentreline')
+        );
+            
+        $sample = File_Therion_Centreline::parse($sampleLines);
+        $this->assertInstanceOf('File_Therion_Centreline', $sample);
+        $this->assertEquals(3, count($sample));  // SPL count shots
+        
+        $sampleOut = $sample->toLines();
+        $this->assertEquals(9, count(File_Therion_Line::filterNonEmpty($sampleLines)));
+        
+        // build string array for easier comparison;
+        // also filter empty lines, trim and replace whitespace with fixed blank
+        $in = array();
+        foreach (File_Therion_Line::filterNonEmpty($sampleLines) as $sli) {
+            $in[] = preg_replace('/\s+/', ' ', trim($sli->toString()));
+        }
+        $out = array();
+        foreach (File_Therion_Line::filterNonEmpty($sampleOut) as $slo) {
+            $out[] = preg_replace('/\s+/', ' ', trim($slo->toString()));
+        }
+        
+        // adjust $in for known legal modifications
+        $in[4] = preg_replace('/"(pre|post)"/', '$1', $in[4]);
+        $in[6] = preg_replace('/"(pre|post)"/', '$1', $in[6]);
+        
+        // finally compare results
+        $this->assertEquals($in, $out);
+
+     }
     
     /**
      * test parsing of data part
@@ -489,6 +567,7 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
             File_Therion_Line::parse(' flags splay'),
             File_Therion_Line::parse('  4a    4splay 30       20    1'),
             File_Therion_Line::parse(' flags not splay'),
+            File_Therion_Line::parse('  station-names "" "post"'),
             File_Therion_Line::parse('  #implicit splay shots following'),
             File_Therion_Line::parse('  4a    4b    10       80    13'),
             File_Therion_Line::parse('  4a    .     60        0    0.3'),
@@ -500,34 +579,52 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
             File_Therion_Line::parse('  4    5     25       -13   130'),
             File_Therion_Line::parse('endcentreline'),            
         );
-        $sample = File_Therion_Centreline::parse($sampleLines);
         
-        // Check if data content is the same
-        // we do this quick and dirty: create trimmed string and strip obsolete
-        // spaces in data, then sort (order may be legally modified) and compare
-        $oriStrings = array();
-        foreach ($sampleLines as $l) {
-            if ($l->isCommentOnly()) continue;
-            $oriStrings[] = preg_replace('/\s+/'," ", trim($l->toString()));
-            //print (count($oriStrings)-1)."\t".$oriStrings[count($oriStrings)-1].PHP_EOL;
+        $sample    = File_Therion_Centreline::parse($sampleLines);
+        $sampleOut = $sample->toLines();
+    
+        
+        // build string array for easier comparison;
+        // also filter empty lines, trim and replace whitespace with fixed blank
+        $in = array();
+        foreach (File_Therion_Line::filterNonEmpty($sampleLines) as $sli) {
+            $in[] = preg_replace('/\s+/', ' ', trim($sli->toString()));
+        }
+        $out = array();
+        foreach (File_Therion_Line::filterNonEmpty($sampleOut) as $slo) {
+            $out[] = preg_replace('/\s+/', ' ', trim($slo->toString()));
         }
         
-        // adjust oriStrings for known legal modifications
-        $oriStrings[8] = preg_replace('/"pre"/', 'pre', $oriStrings[8]);
-        $oriStrings[26] = "flags not surface not duplicate";
-            unset($oriStrings[27]);
         
-        $outStrings = array();
-        foreach ($sample->toLines() as $l) {
-            if ($l->isCommentOnly()) continue;
-            $outStrings[] = preg_replace('/\s+/'," ", trim($l->toString()));
-            //print (count($outStrings)-1)."\t".$outStrings[count($outStrings)-1].PHP_EOL;
-        }
+        /*
+         * adjust $in for known legal modifications
+         */
+        // unescaped output
+        $in[8] = preg_replace('/"(pre|post)"/', '$1', $in[8]);
+        $in[21] = preg_replace('/"(pre|post)"/', '$1', $in[21]);
         
-        // sort and compare
-        sort($oriStrings);
-        sort($outStrings);
-        $this->assertEquals($oriStrings, $outStrings);
+        // swapped order: station-names first, then flags
+        $a=20; $b=21;   $tmp = $in[$a]; $in[$a] = $in[$b]; $in[$b] = $tmp;
+        
+        // changed order in header
+        $a=1; $b=4;   $tmp = $in[$a]; $in[$a] = $in[$b]; $in[$b] = $tmp;
+        $a=2; $b=5;   $tmp = $in[$a]; $in[$a] = $in[$b]; $in[$b] = $tmp;
+        $a=3; $b=4;   $tmp = $in[$a]; $in[$a] = $in[$b]; $in[$b] = $tmp;
+        $a=4; $b=5;   $tmp = $in[$a]; $in[$a] = $in[$b]; $in[$b] = $tmp;
+        $a=6; $b=8;   $tmp = $in[$a]; $in[$a] = $in[$b]; $in[$b] = $tmp;
+        $a=7; $b=8;   $tmp = $in[$a]; $in[$a] = $in[$b]; $in[$b] = $tmp;
+        
+        // combined flags instead of separate ones
+        $in[27] = "flags not surface not duplicate";
+        unset($in[28]);
+        
+        
+        
+        /*
+         * finally compare results
+         */
+        $in = array_reverse(array_reverse($in)); // reassign line number keys
+        $this->assertEquals($in, $out);
         
     }
 

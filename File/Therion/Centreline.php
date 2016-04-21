@@ -63,7 +63,7 @@ class File_Therion_Centreline
         'grid-angle'  => array(), // (<value> <units>)
         'sd'          => array(), // assoc: [<quantity>]=(<value> <units>)
         'cs'          => "",      // <coordinate system>
-        'station-names' => array("",""), // <prefix> <postfix>
+        'station-names' => null, // <prefix> <postfix>; null=leave alone
     );
     
     /**
@@ -622,33 +622,55 @@ class File_Therion_Centreline
     }
     
     /**
-     * Set shot station names pre-/postfix.
+     * Set station names pre-/postfix for newly added shots/stations.
      * 
      * Newly added shots stations will receive the new setting.
      * Already present shots will NOT be modified (use 
-     * {@link updateShotStationNames() to update all shots).
+     * {@link updateShotStationNames() to update all shots in this centreline).
+     * 
+     * Use null as lone parameter to disable prefix/postfix.
+     * Without active setting, newly added stations will be left alone
+     * (set prefix/postfix manually on each station then).
+     * 
+     * Note that this setting has no direct influence on the line representation
+     * of station-names commands: they are derived from the individual station
+     * prefix/postfix settings.
+     * 
+     * When switching prefix/postfix in the middle of the centreline, be aware
+     * that the stations links may break at this position. This is because
+     * the to-station at the previous shot has no prefix/postfix applied,
+     * rather they are viewed as separate distinct stations by therion.
+     * You should handle this situation manually to produce correct data (for
+     * example applying the new setting to the to-station of the previous shot).
      * 
      * @param string $prefix
      * @param string $postfix
      */
-    public function setStationNames($prefix, $postfix)
+    public function setStationNames($prefix, $postfix = null)
     {
-        if (!is_string($prefix)) {
-            throw new InvalidArgumentException(
-                "Unsupported prefix type '".gettype($prefix)."'" );
+        if (is_null($prefix)) {
+            $this->setData('station-names', null);
+            
+        } else {
+            if (!is_string($prefix)) {
+                throw new InvalidArgumentException(
+                    "Unsupported prefix type '".gettype($prefix)."'" );
+            }
+            if (!is_string($postfix)) {
+                throw new InvalidArgumentException(
+                    "Unsupported postfix type '".gettype($postfix)."'" );
+            }
+            
+            $this->setData('station-names', array($prefix, $postfix));
         }
-        if (!is_string($postfix)) {
-            throw new InvalidArgumentException(
-                "Unsupported postfix type '".gettype($postfix)."'" );
-        }
-        
-        $this->setData('station-names', array($prefix, $postfix));
     }
     
     /**
      * Get station-names (pre-/postfix).
      * 
-     * @return array: [0]=prefix, [1]=postfix
+     * When no station-names setting is in effect, null is returned.
+     * 
+     * @return null|array: [0]=prefix, [1]=postfix
      */
     public function getStationNames()
     {
@@ -672,9 +694,16 @@ class File_Therion_Centreline
      */
     public function addStation(File_Therion_Station $station)
     {
+        // update survey context
         $station->setSurveyContext($this->getSurveyContext());
+        
+        // update station names
         $names = $this->getStationNames();
-        $station->setStationNames($names[0], $names[1]);
+        if (is_array($names)) {
+            $station->setStationNames($names[0], $names[1]);
+        }
+        
+        // add station
         $this->_stations[] = $station;
     }
     
@@ -797,8 +826,9 @@ class File_Therion_Centreline
     /**
      * Add a survey shot to this centreline.
      * 
-     * The stations pre- and postfix (see {@link setStationNames()}) will be
-     * updated at the shots stations with the current centreline setting.
+     * If the centreline has an active station-names setting, 
+     * the stations pre- and postfix (see {@link setStationNames()}) will be
+     * updated at the added shot stations with the current centreline setting.
      * 
      * This will also update the survey context of the shots from- and
      * to-station with the survey context of the centreline; as a given station
@@ -808,6 +838,7 @@ class File_Therion_Centreline
      * stations equal.
      * 
      * @param File_Therion_Shot $shot shot object
+     * @todo test for null pointer exception if a shot has no stations
      */
     public function addShot(File_Therion_Shot $shot)
     {
@@ -817,8 +848,10 @@ class File_Therion_Centreline
         
         // update station names
         $names = $this->getStationNames();
-        $shot->getFrom()->setStationNames($names[0], $names[1]);
-        $shot->getTo()->setStationNames($names[0], $names[1]);
+        if (is_array($names)) {
+            $shot->getFrom()->setStationNames($names[0], $names[1]);
+            $shot->getTo()->setStationNames($names[0], $names[1]);
+        }
         
         // add shot to centreline
         $this->_shots[] = $shot;
@@ -884,44 +917,72 @@ class File_Therion_Centreline
     }
     
     /**
-     * Apply station-names to all station names of shots of this centreline.
+     * Apply station-names to all stations of shots from this centreline.
      * 
-     * Changes the station names in hard mode (overwriting names).
-     * If you just want to update a given prefix/postfix softly, use
-     * {@link updateShotStationNames()}.
+     * This applies the individual station prefix/postfix setting of all
+     * stations from all shots of this centreline.
+     * This may be handy when you want to avoid station-name commands in
+     * generated output or want fully qualified station names everywhere.
      * 
-     * This will apply the current prefix/postfix given with
-     * {@link File_Therion_Station::setName()} to the shots contained in this
-     * centreline. The station-names will be reset afterwards.
-     * Shot objects will report the fully qualified name afterwards and will
-     * have NO prefix/postfix associated.
+     * Be aware that this will overwrite the station names and resets the
+     * prefix/postfix setting.
+     * If you just want to enforce a given prefix/postfix softly, use
+     * {@link updateShotStationNames()} instead.
+     * 
+     * You also could call {@link updateShotStationNames()} prior calling
+     * {@link applyStationNames()} to enforce homogenous fully qualified
+     * station names.
+     * 
+     * The centrelines prefix/postfix setting will be untouched after this
+     * operation. Reset it manually if you don't want that further added
+     * stations receive the current prefix/postfix setting
+     * (see {@link setStationNames()}).
+     * 
+     * @todo test for nullPointerException in case shot station is invalid
      */
     public function applyStationNames()
     {
-        // get current station names
-        $prefix  = $this->getStationNames()[0];
-        $postfix = $this->getStationNames()[1];
-        
-        // apply them hard to each shot (update name)
         foreach ($this->_shots as $s) {
             foreach (array($s->getFrom(), $s->getTo()) as $st) {
-                $st->setName($prefix.$st->getName().$postfix); // force name
-                $st->setStationNames("", ""); // clean setting from station
+                $st->applyStationNames();
             }
-            
         }
-        
-        // clean setting from centreline
-        $this->setStationNames("", "");
+    }
+    
+    /**
+     * Strip station-names from all stations of shots from this centreline.
+     * 
+     * This strips the individual station prefix/postfix setting of all
+     * stations from all shots of this centreline.
+     * 
+     * You also could call {@link updateShotStationNames()} prior calling
+     * {@link applyStationNames()} to enforce homogenous station-names
+     * settings throughout all shots.
+     * 
+     * @todo test for nullPointerException in case shot station is invalid
+     */
+    public function stripStationNames()
+    {
+        foreach ($this->_shots as $s) {
+            foreach (array($s->getFrom(), $s->getTo()) as $st) {
+                $st->stripStationNames();
+            }
+        }
     }
     
     /**
      * Update station-names setting in all shots of this centreline.
      * 
-     * This will update the current prefix/postfix setting of all shot stations
-     * in this centreline using {@link File_Therion_Station::setStationNames()}
-     * on each station.
-     * The original name remains intact.
+     * This will overwrite the current prefix/postfix setting of all shot
+     * stations in this centreline using
+     * {@link File_Therion_Station::setStationNames()} on each station.
+     * The original name of the stations remain intact.
+     * 
+     * This can be useful to correct the station prefix/postfix to a common
+     * centreline wide setting.
+     * Use {@link applyStationNames()} to permanently apply the setting. 
+     * 
+     * @todo test for nullPointerException in case shot station is invalid
      */
     public function updateShotStationNames()
     {
@@ -1107,22 +1168,12 @@ class File_Therion_Centreline
         $lines[] = new File_Therion_Line(""); // add line spacer
         
 
-        // station prefix/postfix
-        $stationNames = $this->getStationNames();
-        if ($stationNames != array("", "")) {
-            $lines[] = new File_Therion_Line(
-                    "station-names "
-                    .File_Therion_Line::escape($stationNames[0])
-                    ." "
-                    .File_Therion_Line::escape($stationNames[1]), 
-                "", $baseIndent);
-        }
-
         // shots, units and data definitions.
         // this comes from the shot objects.
         if (count($this->getShots()) > 0) {
             $unitsdef = array(); // array of Line objects with units
             $datadef  = null;    // line object with last seen order def
+            $st_names = array("", ""); // assume empty start
             $flags    = array(
                'surface'     => false,
                'splay'       => false,
@@ -1133,6 +1184,24 @@ class File_Therion_Centreline
 
             // Generate Lines for all shots:
             foreach ($this->getShots() as $sobj) {
+                // see if station-names changed;
+                // currently we determine this from the from station.
+                // this may yield weird results if one of the two stations
+                // has a diverging prefix or postfix.
+                // This however may be forced behavior: therion will complain,
+                // so we wont handle this error for now.
+                $st_namesNew = $sobj->getFrom()->getStationNames();
+                if ($st_names != $st_namesNew) {
+                    // craft new station-names command
+                    $lines[] = new File_Therion_Line(
+                        "station-names "
+                        .File_Therion_Line::escape($st_namesNew[0])
+                        ." "
+                        .File_Therion_Line::escape($st_namesNew[1]), 
+                        "", $baseIndent);
+                    $st_names = $st_namesNew;
+                }
+                
                 // see if units changed (the case at least at start of loop!)
                 $unitsdefNew = $sobj->toLinesUnitsDef();
                 if ($unitsdef != $unitsdefNew) {
