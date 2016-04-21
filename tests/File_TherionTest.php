@@ -513,14 +513,45 @@ class File_TherionTest extends File_TherionTestBase {
         $this->assertEquals(null, $centreline->getExploDate());
         $this->assertEquals(3, count($centreline->getTeam()));
         $this->assertEquals('"Martin Budaj"',
-            $centreline->getTeam()[0]->toString());
-            $this->assertEquals('"Miroslav Hofer"',
-            $centreline->getTeam()[2]->toString());
+        $centreline->getTeam()[0]->toString());
+        $this->assertEquals('"Miroslav Hofer"',
+        $centreline->getTeam()[2]->toString());
         $this->assertEquals(0, count($centreline->getExploTeam()));
         $this->assertEquals(array(), $centreline->getExploTeam());
         
+        // test units of centreline
+        $this->assertEquals(15, count($centreline));
+        $shots = $centreline->getShots();        
+        $this->assertEquals('meters', $shots[0]->getUnit('length'));
+        $this->assertEquals('grads', $shots[0]->getUnit('compass'));
+        $this->assertEquals('grads', $shots[0]->getUnit('clino'));
+        $this->assertEquals('grads', $shots[0]->getUnit('bearing'));
+        $this->assertEquals('grads', $shots[0]->getUnit('gradient'));
+        
+        // test some shots (13)
+        $this->assertEquals('13', $shots[13]->getFrom()->getName());
+        $this->assertEquals('14', $shots[13]->getTo()->getName());
+        $this->assertEquals(295.0, $shots[13]->getBearing());
+        $this->assertEquals(3, $shots[13]->getGradient());
+        $this->assertEquals(11.9, $shots[13]->getLength());
+        $this->assertEquals(true, $shots[13]->getFlag('surface'));
+        
+        // test some shots (14)
+        $this->assertEquals('14', $shots[14]->getFrom()->getName());
+        $this->assertEquals('15', $shots[14]->getTo()->getName());
+        $this->assertEquals(170.0, $shots[14]->getBearing());
+        $this->assertEquals(2, $shots[14]->getGradient());
+        $this->assertEquals(23.28, $shots[14]->getLength());
+        $this->assertEquals(true, $shots[14]->getFlag('surface'));
+// TODO: implement fix checking once we revised parsing code to use already established objects
+        //$this->assertEquals(true, $shots[14]->getTo()->isFixed());
+        //$this->assertEquals(array(TODO), $shots[14]->getTo()->getFix());
+        
         
         // TODO: More to test for!
+        // joins
+        // maps
+        // surface
     }
     
     /**
