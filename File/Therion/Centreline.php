@@ -153,8 +153,6 @@ class File_Therion_Centreline
      * @return File_Therion_Centreline Centreline object
      * @throws InvalidArgumentException
      * @throws File_Therion_SyntaxException
-     * @todo implement me fully (with tests)
-     * @todo better handling for parsing stations/fix: With duplicate stations it would be nice if we reused the same station object.
      */
     public static function parse($lines)
     {
@@ -1076,7 +1074,6 @@ class File_Therion_Centreline
      * 
      * @return array File_Therion_Line objects
      * @todo finish implementation, implement proper escaping
-     * @todo adjust station-names handling: i think, we need to update all stations if station-names is in effect somewhere (homogenioze all stations to one setting) because currently the API only supports ONE station-names command per centreline. Currently output may not be valid in this situation!
      */
     public function toLines()
     {
