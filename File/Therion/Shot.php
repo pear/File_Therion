@@ -112,10 +112,30 @@ class File_Therion_Shot
     /**
      * Create a new therion shot object.
      * 
-     * After creating, set style, order and add data.
+     * The shot will be initialized with default style, data ordering and
+     * units (see {@link $_style}, {@link $_order} and {@link $_units}).
+     * 
+     * You may optionally supply basic shot data using the constructors params.
+     * Please refer to the named methods for further information on expected
+     * types and formats.
+     * 
+     * After creating, style, ordering and data can be changed/added.
+     * 
+     * @param string|File_Therion_Station $from
+     * @param string|File_Therion_Station $to
+     * @param float $length
+     * @param float $bearing
+     * @param float $gradient
      */
-    public function __construct()
+    public function __construct(
+        $from=null, $to=null,
+        $length=null, $bearing=null, $gradient=null)
     {
+        if (!is_null($from))     $this->setFrom($from);
+        if (!is_null($to))       $this->setTo($to);
+        if (!is_null($length))   $this->setLength($length);
+        if (!is_null($bearing))  $this->setBearing($bearing);
+        if (!is_null($gradient)) $this->setGradient($gradient);
     }
     
     /**

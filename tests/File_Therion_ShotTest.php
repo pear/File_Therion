@@ -29,6 +29,32 @@ class File_Therion_ShotTest extends File_TherionTestBase {
      */
     public function testBasicInstantiation()
     {
+        $sample = new File_Therion_Shot();
+        $this->assertEquals(null, $sample->getFrom());
+        $this->assertEquals(null, $sample->getTo());
+        $this->assertEquals(0, $sample->getLength());
+        $this->assertEquals(0, $sample->getBearing());
+        $this->assertEquals(0, $sample->getGradient());
+        
+        $sample = new File_Therion_Shot("0", "-");
+        $this->assertInstanceOf('File_Therion_Station', $sample->getFrom());
+        $this->assertEquals("0", $sample->getFrom()->getName());
+        $this->assertTrue($sample->getFlag('splay'));
+        $this->assertInstanceOf('File_Therion_Station', $sample->getTo());
+        $this->assertEquals("-", $sample->getTo()->getName());
+        $this->assertEquals(0, $sample->getLength());
+        $this->assertEquals(0, $sample->getBearing());
+        $this->assertEquals(0, $sample->getGradient());
+        
+        $sample = new File_Therion_Shot("0", "1.1", 1, 2.2, 3.33);
+        $this->assertInstanceOf('File_Therion_Station', $sample->getFrom());
+        $this->assertEquals("0", $sample->getFrom()->getName());
+        $this->assertFalse($sample->getFlag('splay'));
+        $this->assertInstanceOf('File_Therion_Station', $sample->getTo());
+        $this->assertEquals("1.1", $sample->getTo()->getName());
+        $this->assertEquals(1, $sample->getLength());
+        $this->assertEquals(2.2, $sample->getBearing());
+        $this->assertEquals(3.33, $sample->getGradient());
     }
     
     /**

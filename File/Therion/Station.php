@@ -330,7 +330,7 @@ class File_Therion_Station
             return $this->_flags[$flag];
         } else {
             throw new InvalidArgumentException(
-                "Invalid flag $flag; flag not valid for shot");
+                "Invalid flag $flag; flag not valid for station");
         }
     }
     
