@@ -51,7 +51,7 @@ class File_TherionTest extends File_TherionTestBase {
     public function testVersion()
     {
         // retrieve package.xml version number
-        $xml = dirname(__FILE__).'/../package2.xml';
+        $xml = dirname(__FILE__).'/../package.xml';
         $pckge_fh = fopen($xml, 'r');
         if (!$pckge_fh) {
             $this->markTestSkipped("Skipped version test: could not open $xml");
