@@ -733,8 +733,12 @@ class File_Therion_Centreline
             
         } else {
             // search for station
+            if (is_a($station, 'File_Therion_Station')) {
+                $station = $station->getName(true);
+            }
+            
             foreach ($this->getStations() as $s) {
-                if ($s->getName() === $station) return $s;
+                if ($s->getName(true) === $station) return $s;
             }
         
             // in case no such station defined:

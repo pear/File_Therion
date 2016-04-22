@@ -627,6 +627,36 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
         $this->assertEquals($in, $out);
         
     }
+    
+    /**
+     * Test querying stations
+     */
+    public function testGetStations()
+    {
+        $sampleLines = array(
+            File_Therion_Line::parse('centreline'),
+            File_Therion_Line::parse('  fix 0 20 40 646.23'),
+            File_Therion_Line::parse('  station 1 "some comment" entrance'),
+            File_Therion_Line::parse('endcentreline'),            
+        );
+        $centreline = File_Therion_Centreline::parse($sampleLines);
+        $this->assertInstanceOf('File_Therion_Centreline', $centreline);
+        
+        $cl_st = $centreline->getStations();
+        $this->assertEquals(2, count($cl_st));
+        for ($i=0; $i< count($cl_st); $i++) {
+            $this->assertInstanceOf('File_Therion_Station', $cl_st[$i]);
+            $this->assertEquals($cl_st[$i], $centreline->getStations(strval($i)));
+            $this->assertEquals($cl_st[$i], $centreline->getStations($cl_st[$i]));
+        }
+        $this->assertTrue($cl_st[0]->isFixed());
+        $this->assertEquals("", $cl_st[0]->getComment());
+        $this->assertFalse($cl_st[0]->getFlag('entrance'));
+        $this->assertFalse($cl_st[1]->isFixed());
+        $this->assertEquals("some comment", $cl_st[1]->getComment());
+        $this->assertTrue($cl_st[1]->getFlag('entrance'));
+
+    }
 
 }
 ?>
