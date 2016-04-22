@@ -235,6 +235,8 @@ class File_Therion_Map
      * @throws InvalidArgumentException
      * @throws File_Therion_SyntaxException
      * @throws OutOfBoundsException when requested index is not available
+     * 
+     * @todo: Im not sure if the reference handling is a good idea like this. Maybe better handle it like in equate/join class?
      */
     public function addElement($element, $index=-1, $replace=false)
     {

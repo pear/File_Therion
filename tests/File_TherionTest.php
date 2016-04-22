@@ -547,11 +547,55 @@ class File_TherionTest extends File_TherionTestBase {
         //$this->assertEquals(true, $shots[14]->getTo()->isFixed());
         //$this->assertEquals(array(TODO), $shots[14]->getTo()->getFix());
         
+        // Test fixed stations
+        $cl_st = $centreline->getStations();
+        $this->assertEquals(1, count($cl_st));
+        $this->assertInstanceOf('File_Therion_Station', $cl_st[0]);
+        $this->assertEquals($cl_st[0], $centreline->getStations("15"));
+        $this->assertTrue($cl_st[0]->isFixed());
+        $fix = $cl_st[0]->getFix();
+        $this->assertEquals(array(20, 40, 646.23), $fix['coords']);
         
-        // TODO: More to test for!
-        // joins
-        // maps
-        // surface
+        
+        // Test extends
+        $cl_st = $centreline->getExtends();
+        $this->assertEquals(2, count($cl_st));
+        $this->assertEquals("5", $cl_st[0]['obj']->getName());
+        $this->assertEquals("ignore", $cl_st[0]['spec']);
+        $this->assertEquals("12", $cl_st[1]['obj']->getName());
+        $this->assertEquals("ignore", $cl_st[1]['spec']);
+        
+        
+        // Test joins
+        $joins = $survey->getJoins();
+        $this->assertEquals(3, count($joins));
+        $this->assertInstanceOf('File_Therion_Join', $joins[0]);
+        $this->assertEquals(2, count($joins[0]->getArguments()));
+        $this->assertEquals("join ew1:0 ew2:end", $joins[0]->toString());
+        $this->assertInstanceOf('File_Therion_Join', $joins[1]);
+        $this->assertEquals(2, count($joins[1]->getArguments()));
+        $this->assertEquals("join ew1:end ew2:0", $joins[1]->toString());
+        $this->assertInstanceOf('File_Therion_Join', $joins[2]);
+        $this->assertEquals(2, count($joins[1]->getArguments()));
+        $this->assertEquals("join ps1 ps2", $joins[2]->toString());
+        
+        
+        // Test maps
+        $maps = $survey->getMaps();
+        $this->assertEquals(2, count($maps));
+        $this->assertInstanceOf('File_Therion_Map', $maps[0]);
+        $this->assertEquals(2, count($maps[0]));
+        $this->assertEquals("pdx", $maps[0]->getName());
+        $this->assertInstanceOf('File_Therion_Map', $maps[1]);
+        $this->assertEquals(2, count($maps[1]));
+        $this->assertEquals("pdp", $maps[1]->getName());
+        // todo: test map content once implemented fully
+
+
+        // Test surface
+        $surfaces = $survey->getSurfaces();
+        $this->assertEquals(1, count($surfaces));
+        // todo: test surface content once implemented fully
     }
     
     /**

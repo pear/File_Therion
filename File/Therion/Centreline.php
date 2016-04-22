@@ -1280,6 +1280,9 @@ class File_Therion_Centreline
         unset($sobj);
         
         
+        // Extends
+        // TODO
+        
         /*
          *  create footer
          */
