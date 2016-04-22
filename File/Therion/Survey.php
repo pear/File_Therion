@@ -483,7 +483,7 @@ class File_Therion_Survey
      * $survey->addSurvey($subsurvey);
      * </code>
      * 
-     * @param File_Therion_Survey $subsurvey Survey object to add
+     * @param {@link File_Therion_Survey} $subsurvey Survey object to add
      */
     public function addSurvey(File_Therion_Survey $subsurvey)
     {
