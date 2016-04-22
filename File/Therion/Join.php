@@ -240,6 +240,16 @@ class File_Therion_Join
     }
     
     /**
+     * Return Line representation of this command.
+     * 
+     * @return {@link File_Therion_Line} object
+     */
+    public function toLines()
+    {
+        return new File_Therion_Line($this->toString());
+    }
+    
+    /**
      * Return joined objects.
      * 
      * @return array

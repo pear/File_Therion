@@ -317,7 +317,11 @@ class File_Therion_Survey
         
         // equates
         foreach ($this->getEquates() as $sobj) {
-            $lines[] = new File_Therion_Line($sobj->toString(),"",$baseIndent);
+            foreach ($sobj as $e) {
+                $l = $e->toLines();
+                $l->setIndent($baseIndent.$l->getIndent());
+                $lines[] = $l;
+            }
         }
         unset($sobj);
         
@@ -334,8 +338,9 @@ class File_Therion_Survey
         // joins
         foreach ($this->getJoins() as $sobj) {
             foreach ($sobj as $j) {
-                $lines[] = new File_Therion_Line(
-                    $j->toString(), "", $baseIndent);
+                $l = $j->toLines();
+                $l->setIndent($baseIndent.$l->getIndent());
+                $lines[] = $l;
             }
             unset($j);
         }
@@ -458,7 +463,7 @@ class File_Therion_Survey
      * 
      * Each unique definition forms one array element.
      * 
-     * @return array of File_Therion_Equate objects
+     * @return array of {@link File_Therion_Equate} objects
      */
     public function getEquates()
     {
@@ -633,7 +638,7 @@ class File_Therion_Survey
     /**
      * Get existing scrap joins.
      * 
-     * @return array File_Therion_Join objects describing the joins
+     * @return array {@link File_Therion_Join} objects describing the joins
      */
     public function getJoins()
     {
