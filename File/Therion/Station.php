@@ -316,18 +316,27 @@ class File_Therion_Station
     /**
      * Get a station flag.
      * 
-     * When the flag is not set explicitely, NULL is returned.
      * Custom attribute flags (flag 'attr') are returned as associative array
      * holding the attrs name and value.
      * 
+     * When the flag is not set explicitely, false is returned;
+     * this can be switched to NULL return with $null param set to true.
+     * In this case the return is false only if flag is explicitely negated
+     * and null if it is not explicitely set; true otherwise.
+     * 
      * @param string  $flag name of the flag.
+     * @param boolean $null When true, unset flag is returned as null
      * @return bool|string|array
      * @throws InvalidArgumentException
      */
-    public function getFlag($flag)
+    public function getFlag($flag, $null=false)
     {
         if (array_key_exists($flag, $this->_flags)) {
-            return $this->_flags[$flag];
+            if (!$null) {
+                return (true == $this->_flags[$flag]);
+            } else {
+                return $this->_flags[$flag];
+            }
         } else {
             throw new InvalidArgumentException(
                 "Invalid flag $flag; flag not valid for station");
