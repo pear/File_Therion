@@ -17,6 +17,19 @@
  *
  * Equates are used to equate stations inside the survey or in subsurveys
  * to form an extended centreline network with loop closures.
+ *
+ * @obsolete
+ * THIS CLASS MAY BE OBSOLETE!
+ * As a specific station could only b part of a specific centreline and a
+ * centreline only part of a specific survey, the stations context in surveys
+ * is already known. Thus, this could be handled at the station-class level,
+ * possibly much more convinient for the end user.
+ * The only problem could be lone equate commands in included files and also
+ * referenced stations that are not known because of only partial data.
+ * However, when parsing, this could be circumvented with faked data strutures
+ * as it is donw currently.
+ * some more thinking should go into this (also tests with therion itself),
+ * however i currently think that the current impementation is not elegant.
  * 
  * @category   file
  * @package    File_Therion

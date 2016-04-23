@@ -433,6 +433,8 @@ class File_Therion_Survey
      * // add that equality definition to survey
      * $survey->addEquate($equate);
      * </code>
+     *
+     * @obsolete this may be obsoleted, see File_Therion_Equate class comment
      * 
      * @param string|array station equates.
      * @throws File_Therion_SyntaxException when equate < 2 stations
