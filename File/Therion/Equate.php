@@ -30,6 +30,14 @@
  * as it is donw currently.
  * some more thinking should go into this (also tests with therion itself),
  * however i currently think that the current impementation is not elegant.
+ * On the other hand: equate is valid in centreline, survey AND none context,
+ * that means a separate entity is needed to resolve this. The dedicated
+ * Equate-class solves this as it is able to form an own "context" to hold such
+ * definitions. It is also in conformance with the rest of the API (scrap-objs,
+ * lines etc). We will keep this class and the current implementation for a
+ * a while until it really proves wrong. Probably for more convinience,
+ * a equates() method at the station class could be introduced, returning
+ * a proper initialized Equate-object with stations given.
  * 
  * @category   file
  * @package    File_Therion
