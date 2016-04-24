@@ -31,13 +31,25 @@
  * some more thinking should go into this (also tests with therion itself),
  * however i currently think that the current impementation is not elegant.
  * On the other hand: equate is valid in centreline, survey AND none context,
- * that means a separate entity is needed to resolve this. The dedicated
+ * that means a separate entity is probably needed to resolve this. The dedicated
  * Equate-class solves this as it is able to form an own "context" to hold such
  * definitions. It is also in conformance with the rest of the API (scrap-objs,
  * lines etc). We will keep this class and the current implementation for a
  * a while until it really proves wrong. Probably for more convinience,
  * a equates() method at the station class could be introduced, returning
  * a proper initialized Equate-object with stations given.
+ * Another aspect: Therions data model (thbook, p.61) says nothing like a
+ * dedicated entity. As other Stations relations are part of the station class,
+ * it would be naturally to hold equal informations directly there. If a user
+ * wants to have a context-less equate relation, he could craft two stations
+ * and link them together. The station class could provide a toEquateString()
+ * method to have an easy resolution mehtod based on current station context
+ * (which naturally should equal local centreline survey context). Survey-class
+ * could use this to easily generate equate-commands in parse() and toLines()
+ * viewed from the local context automaticly. Care should be taken with
+ * backlinking: the local-station should equate to local-or-deeper stations,
+ * linking to upper stations from a station context should be disallowed as
+ * this would generate wrong data (and is mentioned in the thbook as wrong). 
  * 
  * @category   file
  * @package    File_Therion
