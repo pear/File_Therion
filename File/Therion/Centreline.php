@@ -23,6 +23,8 @@
  * @copyright  2016 Benedikt Hallinger
  * @license    http://www.gnu.org/licenses/lgpl-3.0.txt LGPLv3
  * @link       http://pear.php.net/package/File_Therion/
+ * 
+ * @todo support fix-stations without shot data (like onlymarked cave entrances)
  */
 class File_Therion_Centreline
     extends File_Therion_BasicObject
