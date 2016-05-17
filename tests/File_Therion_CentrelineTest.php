@@ -157,9 +157,6 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
             File_Therion_Line::parse('  team "Baz Fooz" tape'),
             File_Therion_Line::parse('  '),
             File_Therion_Line::parse('  date 1997.08.10'),
-            File_Therion_Line::parse('  cs UTM33 # Austria: UTM33-T'),
-            File_Therion_Line::parse('  fix 1 20 40 646.23'),
-            File_Therion_Line::parse('  extend ignore 2'),
             File_Therion_Line::parse('endcentreline'),            
         );
         $sample = File_Therion_Centreline::parse($sampleLines);
@@ -175,6 +172,23 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
         $this->assertEquals("Baz", $team[1]->getGivenname());
         $this->assertEquals("Fooz", $team[1]->getSurname());
         $this->assertEquals(array('tape'), $sample->getTeamRoles($team[1]));
+        
+    }
+    
+    /**
+     * test fixing stations representing caves (e.g no centreline)
+     */
+    public function testParsingCaveFixture()
+    {
+        $sampleLines = array(
+            File_Therion_Line::parse('centreline'),
+            File_Therion_Line::parse('  date 1997.08.10'),
+            File_Therion_Line::parse('  cs UTM33 # Austria: UTM33-T'),
+            File_Therion_Line::parse('  fix 1 20 40 646.23'),
+            File_Therion_Line::parse('endcentreline'),            
+        );
+        $sample = File_Therion_Centreline::parse($sampleLines);
+        $this->assertInstanceOf('File_Therion_Centreline', $sample);
         $this->assertEquals('UTM33', $sample->getCoordinateSystem());
         $this->assertEquals(
             array(
@@ -183,6 +197,28 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
             ),
             $sample->getStations("1")->getFix()
         );
+        
+    }
+    
+    /**
+     * test basic parsing of simple data fields
+     */
+    public function testParsingExtends()
+    {
+        $sampleLines = array(
+            File_Therion_Line::parse('centreline'),
+            File_Therion_Line::parse('  units compass clino grads'),
+            File_Therion_Line::parse('  data normal from to compass clino tape'),
+            File_Therion_Line::parse('  0     1   200       -5      6.4 '),
+            File_Therion_Line::parse('# note: extend command prior station,'),
+            File_Therion_Line::parse('# so we can test postponed parsing'),
+            File_Therion_Line::parse('  extend ignore 2'),
+            File_Therion_Line::parse('  1     2    73        8      5.2 '),
+            File_Therion_Line::parse('  2     3    42        0      2.09'),
+            File_Therion_Line::parse('endcentreline'),            
+        );
+        $sample = File_Therion_Centreline::parse($sampleLines);
+        $this->assertInstanceOf('File_Therion_Centreline', $sample);
         $this->assertEquals(
             array('ignore', '2'),
             array(
@@ -635,26 +671,38 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
     {
         $sampleLines = array(
             File_Therion_Line::parse('centreline'),
-            File_Therion_Line::parse('  fix 0 20 40 646.23'),
-            File_Therion_Line::parse('  station 1 "some comment" entrance'),
+            File_Therion_Line::parse('  data normal from to compass clino tape'),
+            File_Therion_Line::parse('  station-names "pre" ""'),
+            File_Therion_Line::parse('  0     1   200       -5      6.4 '),
+            File_Therion_Line::parse('  1     2    73        8      5.2 '),
+            File_Therion_Line::parse('  fix     pre0 20 40 646.23'),
+            File_Therion_Line::parse('  station pre1 "some comment" entrance'),
             File_Therion_Line::parse('endcentreline'),            
         );
         $centreline = File_Therion_Centreline::parse($sampleLines);
         $this->assertInstanceOf('File_Therion_Centreline', $centreline);
         
         $cl_st = $centreline->getStations();
-        $this->assertEquals(2, count($cl_st));
+        $this->assertEquals(3, count($cl_st));
         for ($i=0; $i< count($cl_st); $i++) {
             $this->assertInstanceOf('File_Therion_Station', $cl_st[$i]);
-            $this->assertEquals($cl_st[$i], $centreline->getStations(strval($i)));
-            $this->assertEquals($cl_st[$i], $centreline->getStations($cl_st[$i]));
+            $this->assertEquals(
+                $cl_st[$i],
+                $centreline->getStations("pre".strval($i))
+            );
         }
+        
         $this->assertTrue($cl_st[0]->isFixed());
         $this->assertEquals("", $cl_st[0]->getComment());
         $this->assertFalse($cl_st[0]->getFlag('entrance'));
+        
         $this->assertFalse($cl_st[1]->isFixed());
         $this->assertEquals("some comment", $cl_st[1]->getComment());
         $this->assertTrue($cl_st[1]->getFlag('entrance'));
+        
+        $this->assertFalse($cl_st[2]->isFixed());
+        $this->assertEquals("", $cl_st[2]->getComment());
+        $this->assertFalse($cl_st[2]->getFlag('entrance'));
 
     }
 

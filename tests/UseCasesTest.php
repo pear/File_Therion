@@ -129,7 +129,7 @@ class File_TherionUseCaseTest extends File_TherionTestBase {
         );
         
         $stations = $centreline->getStations();
-        $this->assertEquals(1, count($stations));
+        $this->assertEquals(16, count($stations));
         $station_15 = $centreline->getStations("15");
         $this->assertEquals(true, $station_15->isFixed());
         $this->assertEquals(

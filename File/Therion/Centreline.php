@@ -153,6 +153,8 @@ class File_Therion_Centreline
      * @return File_Therion_Centreline Centreline object
      * @throws InvalidArgumentException
      * @throws File_Therion_SyntaxException
+     * @throws OutOfBoundsException when unknown station is referenced
+     * @todo Implement parsing of centreline extending
      */
     public static function parse($lines)
     {
@@ -224,9 +226,10 @@ class File_Therion_Centreline
             'surface'     => false,
             'approximate' => false,
         );
-        $lastSeenDatadef = false;
-        $lastSeenStyle   = false;
-        $lastSeenUnits   = false;
+        $lastSeenDatadef     = false;
+        $lastSeenStyle       = false;
+        $lastSeenUnits       = false;
+        $postponeLineParsing = array();
         foreach ($orderedData as $type => $data) {
             switch ($type) {
                 case 'LOCAL':
@@ -272,13 +275,11 @@ class File_Therion_Centreline
                                     $centreline->addExploTeam($p_obj);                                    
                                 break;
                                 
-                                
                                 case 'station':
                                 case 'fix':
-                                    // add station definition
-                                    $centreline->addStation(
-                                        File_Therion_Station::parse($line)
-                                    );  
+                                case 'extend':
+                                    // Postpone parsing after centreline is rdy
+                                    $postponeLineParsing[] = $line;
                                 break;
                                 
                                 case 'station-names':
@@ -303,36 +304,6 @@ class File_Therion_Centreline
                                         // (all but "not" reset the state->true)
                                         $state = ($flag==="not")? false: true;
                                     }
-                                break;
-                                
-                                case 'extend':
-                                    // try to get established station or shot
-                                    // out of centreline
-                                    $spec = array_shift($lineData);
-                                    switch (count($lineData)) {
-                                        case 1:
-                                            // station spec: get station
-                                            try {
-                                                $obj = $centreline->getStations($lineData[0]);
-                                            } catch (OutOfBoundsException $e) {
-                                                // no such station: instanciate fresh one
-                                                $obj = new File_Therion_Station($lineData[0]);
-                                            }
-                                        break;
-                                        case 2:
-                                            // shot spec: get shot
-                                            // note that we cannot create a fresh shot here.
-                                            $obj = $centreline->getShots(
-                                                $lineData[0], $lineData[1]);
-                                        break;
-                                        default:
-                                            throw new File_Therion_SyntaxException(
-                                                "Wrong extend arg count "
-                                                .count($lineData));
-                                    }
-                                    
-                                    $centreline->setExtend($spec, $obj);
-                                    
                                 break;
                                 
                                 
@@ -387,8 +358,29 @@ class File_Therion_Centreline
                                             $lastSeenUnits
                                         );
                                         
+                                        // add the shot to centreline
+                                        // (init context etc)
+                                        $centreline->addShot($shot);
+                                        
                                         // set reading style of shot
                                         $shot->setStyle($lastSeenStyle);
+                                        
+                                        // swap parsed shot stations with
+                                        // existing centreline ones, if possible
+                                        try {
+                                            $rsf = $centreline->getStations(
+                                                $shot->getFrom()->getName(true));
+                                            $shot->setFrom($rsf);
+                                        } catch (OutOfBoundsException $e) {
+                                            // just ignore.
+                                        }
+                                        try {
+                                            $rst = $centreline->getStations(
+                                                $shot->getTo()->getName(true));
+                                            $shot->setTo($rst);
+                                        } catch (OutOfBoundsException $e) {
+                                            // just ignore.
+                                        }
                                         
                                         // adjust shot flags according to
                                         // current defined flag states
@@ -396,8 +388,6 @@ class File_Therion_Centreline
                                             $shot->setFlag($fn, $fv);
                                         }
                                    
-                                        // add the shot to centreline
-                                        $centreline->addShot($shot);
                                 
                                     } else {
                                         // not in data mode: rise exception
@@ -414,7 +404,73 @@ class File_Therion_Centreline
                         "unsupported multiline centreline command '$type'"
                     );
             }
-        } 
+        }
+        
+        
+        // Parse postponed lines
+        // this is neccessary because some commands reference stations, however
+        // therion is not dependent on ordering of lines.
+        foreach ($postponeLineParsing as $line) {
+            $lineData = $line->getDatafields();
+            $command  = strtolower(array_shift($lineData));
+            
+            switch ($command) {
+                case 'station':
+                    // change comment and flags of existing station
+                    // OutOfBoundsException (no such station) will bubble up!
+                    $tmpStn = File_Therion_Station::parse($line);
+                    $refStn = $centreline->getStations($tmpStn->getName(true));
+                    $refStn->setComment($tmpStn->getComment());
+                    foreach($tmpStn->getAllFlags() as $f => $v) {
+                        $refStn->setFlag($f, $v);
+                    }
+                break;
+                
+                case 'fix':
+                    // fixate existing station
+                    // OutOfBoundsException (no such station) will bubble up!
+                    $tmpStn = File_Therion_Station::parse($line);
+                    $refStn = $centreline->getStations($tmpStn->getName(true));
+                    $fix    = $tmpStn->getFix();
+                    $refStn->setFix(
+                        $fix['coords'][0],
+                        $fix['coords'][1],
+                        $fix['coords'][2],
+                        $fix['std'][0],
+                        $fix['std'][1],
+                        $fix['std'][2] );
+                break;
+                    
+                case 'extend':
+                    // @TODO: IMPLEMENT ME - probably its a good idea to hold the specification at the shot and stastion object and not in the centreline. This is maybe more OO like and easier to understand.
+                    // set centreline extending
+                    // OutOfBoundsException (no such station) will bubble up!
+                    $spec = array_shift($lineData);
+                    switch (count($lineData)) {
+                        case 1:
+                            // station spec: get station
+                            $obj = $centreline->getStations($lineData[0]);
+                            //$centreline->setExtend($spec, $obj);
+                        break;
+                        case 2:
+                            // shot spec: get shot for referenced stations
+                            // (note that we cannot create a fresh shot here!)
+                            $obj = $centreline->getShots(
+                                $lineData[0], $lineData[1]);
+                            //$centreline->setExtend($spec, $obj);
+                        break;
+                        default:
+                            throw new File_Therion_SyntaxException(
+                                "Wrong extend arg count "
+                                .count($lineData));
+                    }
+                    
+                    $centreline->setExtend($spec, $obj);
+                    
+                break;
+            }
+        }
+        
         
         return $centreline;
         
@@ -690,7 +746,14 @@ class File_Therion_Centreline
      * 
      * @param File_Therion_Station $station
      */
-    public function addStation(File_Therion_Station $station)
+/*
+ * @obsolete
+ * DISABLED because stations can only life in centreline shot data.
+ * Other station stuff is to be set explicitely there
+ * 
+ * REMOVE THIS CODE ONCE READY
+ * 
+ *     public function addStation(File_Therion_Station $station)
     {
         // update survey context
         $station->setSurveyContext($this->getSurveyContext());
@@ -704,6 +767,7 @@ class File_Therion_Centreline
         // add station
         $this->_stations[] = $station;
     }
+*/
     
     /**
      * Clear all stations.
@@ -719,17 +783,27 @@ class File_Therion_Centreline
      * Get all station objects.
      * 
      * You may query for a station name in which case either the station is
-     * returned or throws an OutOfBoundsException when not found. 
+     * returned or throws an OutOfBoundsException when not found.
+     * Use the full stations name when station-names is in effect.
      *
-     * @param string $station Query for named station
+     * @param string $station Query for named station (use full name)
      * @return array of File_Therion_Station objects
      * @throws OutOfBoundsException if no named station is found.
      */
     public function getStations($station = null)
-    {
+    {        
         if (is_null($station)) {
-            // return all stations
-            return $this->_stations;
+            // return all stations from all shots
+            $allSt = array();
+            foreach ($this->getShots() as $sht) {
+                foreach (array($sht->getFrom(), $sht->getTo()) as $stn) {
+                    if (!is_null($stn) && !in_array($stn, $allSt)) {
+                        array_push($allSt, $stn);
+                    }
+                }
+            }
+
+            return $allSt;
             
         } else {
             // search for station
@@ -765,6 +839,7 @@ class File_Therion_Centreline
      * 
      * @param null|string $spec 
      * @param File_Therion_Station|File_Therion_Shot $stationOrShot
+     * @TODO 'extends': probably its a good idea to hold the specification at the shot and stastion object and not in the centreline. This is maybe more OO like and easier to understand.
      */
     public function setExtend($spec, $stationOrShot)
     {

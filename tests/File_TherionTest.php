@@ -543,17 +543,22 @@ class File_TherionTest extends File_TherionTestBase {
         $this->assertEquals(2, $shots[14]->getGradient());
         $this->assertEquals(23.28, $shots[14]->getLength());
         $this->assertEquals(true, $shots[14]->getFlag('surface'));
-// TODO: implement fix checking once we revised parsing code to use already established objects
-        //$this->assertEquals(true, $shots[14]->getTo()->isFixed());
-        //$this->assertEquals(array(TODO), $shots[14]->getTo()->getFix());
+        $this->assertEquals(true, $shots[14]->getTo()->isFixed());
+        $this->assertEquals(
+            array(
+                'coords' => array(20, 40, 646.23),
+                'std'    => array(0, 0, 0)
+            ),
+            $shots[14]->getTo()->getFix());
+
         
         // Test fixed stations
         $cl_st = $centreline->getStations();
-        $this->assertEquals(1, count($cl_st));
-        $this->assertInstanceOf('File_Therion_Station', $cl_st[0]);
-        $this->assertEquals($cl_st[0], $centreline->getStations("15"));
-        $this->assertTrue($cl_st[0]->isFixed());
-        $fix = $cl_st[0]->getFix();
+        $this->assertEquals(16, count($cl_st));
+        $this->assertInstanceOf('File_Therion_Station', $cl_st[15]);
+        $this->assertEquals($cl_st[15], $centreline->getStations("15"));
+        $this->assertTrue($cl_st[15]->isFixed());
+        $fix = $cl_st[15]->getFix();
         $this->assertEquals(array(20, 40, 646.23), $fix['coords']);
         
         
