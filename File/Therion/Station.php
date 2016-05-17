@@ -352,9 +352,9 @@ class File_Therion_Station
      */
     public function getAllFlags()
     {
-        $r = array();
+        $rv = array();
         foreach ($this->_flags as $f => $fv) {
-            if ($flag == 'attr') {
+            if ($f == 'attr') {
                 if (count($fv) > 0) {
                     $rv[$f] = $fv;
                 }
@@ -366,7 +366,8 @@ class File_Therion_Station
                 }
             }
         }
-        return $r;
+
+        return $rv;
     }
     
     /**
