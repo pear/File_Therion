@@ -110,14 +110,6 @@ class File_Therion_Centreline
      */
     protected $_shots = array();
     
-    /**
-     * Centreline stations.
-     * 
-     * Stations may alter some of the shots or introduce supplementary data.
-     *
-     * @var array with File_Therion_Station objects.
-     */
-    protected $_stations = array();
     
     /**
      * Extend definitions.
@@ -729,54 +721,6 @@ class File_Therion_Centreline
     public function getStationNames()
     {
         return $this->getData('station-names');
-    }
-    
-    
-    /**
-     * Add station to centreline.
-     * 
-     * This is useful to tell the centreline to fix stations or to add
-     * station comments/flags.
-     * To define fixes and/or comments/flags, adjust the relevant station.
-     * 
-     * The stations prefix/postfix setting will be updatet with the current
-     * local centreline setting.
-     * This will also update the stations survey context to the context of
-     * this centreline.
-     * 
-     * @param File_Therion_Station $station
-     */
-/*
- * @obsolete
- * DISABLED because stations can only life in centreline shot data.
- * Other station stuff is to be set explicitely there
- * 
- * REMOVE THIS CODE ONCE READY
- * 
- *     public function addStation(File_Therion_Station $station)
-    {
-        // update survey context
-        $station->setSurveyContext($this->getSurveyContext());
-        
-        // update station names
-        $names = $this->getStationNames();
-        if (is_array($names)) {
-            $station->setStationNames($names[0], $names[1]);
-        }
-        
-        // add station
-        $this->_stations[] = $station;
-    }
-*/
-    
-    /**
-     * Clear all stations.
-     * 
-     * This will essentially remove all station fixes and station flags.
-     */
-    public function clearStations()
-    {
-        $this->_stations = array();
     }
     
     /**
