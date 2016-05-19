@@ -62,4 +62,17 @@ class File_Therion_IOException extends File_Therion_Exception { }
  */
 class File_Therion_SyntaxException extends File_Therion_Exception { }
 
+
+/**
+ * Therion Exception designating a referencing error
+ *
+ * @category   file
+ * @package    File_Therion
+ * @author     Benedikt Hallinger <beni@php.net>
+ * @copyright  2016 Benedikt Hallinger
+ * @license    http://www.gnu.org/licenses/lgpl-3.0.txt LGPLv3
+ * @link       http://pear.php.net/package/File_Therion/
+ */
+class File_Therion_InvalidReferenceException extends File_Therion_Exception { }
+
 ?>

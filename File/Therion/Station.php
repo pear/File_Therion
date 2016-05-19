@@ -24,7 +24,7 @@
  * @license    http://www.gnu.org/licenses/lgpl-3.0.txt LGPLv3
  * @link       http://pear.php.net/package/File_Therion/
  */
-class File_Therion_Station
+class File_Therion_Station implements File_Therion_IReferenceable
 {
     /**
      * Name/ID of this station.

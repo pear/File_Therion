@@ -73,6 +73,7 @@
                         <file name="DataTypeInterface.php" role="php" />
                         <file name="Date.php" role="php" />
                         <file name="Person.php" role="php" />
+                        <file name="Reference.php" role="php" />
                     </dir>
                     <dir name="Readers">
                         <file name="ReaderInterface.php" role="php" />
@@ -102,6 +103,8 @@
                 <file name="File_Therion_SurveyTest.php" role="test" />
                 <file name="File_Therion_JoinTest.php" role="test" />
                 <file name="File_Therion_EquateTest.php" role="test" />
+                <file name="File_Therion_StationTest.php" role="test" />
+                <file name="File_Therion_ReferenceTest.php" role="test" />
                 <file name="File_TherionTest.php" role="test" />
                 <file name="UseCasesTest.php" role="test" />
                 
