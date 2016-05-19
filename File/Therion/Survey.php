@@ -504,11 +504,34 @@ class File_Therion_Survey
     /**
      * Get existing subsurveys.
      * 
+     * You may query for a survey in which case either the survey is
+     * returned or throws an OutOfBoundsException when not found.
+     *
+     * @param string|File_Therion_Survey $survey Query for named survey
      * @return array of File_Therion_Survey objects
+     * @throws OutOfBoundsException if no named survey is found.
      */
-    public function getSurveys()
+    public function getSurveys($survey = null)
     {
-        return $this->_surveys;
+        if (is_null($survey)) {
+            // return all surveys
+            return $this->_surveys;
+            
+        } else {
+            // search for named survey
+            if (is_a($survey, 'File_Therion_Survey')) {
+                $survey = $survey->getName();
+            }
+            
+            foreach ($this->getSurveys() as $s) {
+                if ($s->getName() === $survey) return $s;
+            }
+        
+            // in case no such station defined:
+            throw new OutOfBoundsException(
+                "No such survey '".$survey."' in survey '".
+                $this->getName()."'!");
+        }
     }
     
     

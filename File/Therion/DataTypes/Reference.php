@@ -28,6 +28,18 @@
  * parsing/resolving references easy. Under normal circumstances you should
  * not need to use references yourself. The package will create them
  * automatically when neccessary.
+ * 
+ * Two basic use cases exist:
+ * <code>
+ * // Dereference string reference to object (lookup object)
+ * // (assuming structure: SurveyTop -> Subsurvey[Station_1])
+ * $ref       = new File_Therion_Reference("1@Subsurvey", $topSurveyObj);
+ * $station1  = $ref->getObject();
+ * 
+ * // Create string reference from Object
+ * $ref       = new File_Therion_Reference($station1, $topSurveyObj);
+ * $stringRef = $ref->toString();  // = "1@Subsurvey"
+ * </code>
  *
  * @category   file
  * @package    File_Therion_DataTypes
@@ -66,23 +78,27 @@ class File_Therion_Reference
      * Create a new therion reference object.
      * 
      * This generates a new reference object. The following invocations exist:
-     * - (obj,    survey): Create resolvable reference.
-     * - (obj,    null):   Create fake reference (resolves obj's entire path).
-     * - (string, survey): Create resolvable reference.
+     * - (obj,    survey): Create obj reference (to generate string-reference).
+     * - (string, survey): Create resolvable string-reference.
+     * 
+     * More special invocations are:
      * - (string, null):   Create a contextless ref (returns string as is)
-
+     * - (obj,    null):   Create fake obj reference (generates entire pathref).
      * 
      * @param string|object $refObj The object to reference
      * @param File_Therion_Survey $ctx Viewing context
      * @throws InvalidArgumentException
-     * @todo syntax check on stringref
+     * @todo better syntax check when string reference was given
      */
     public function __construct($refObj, $ctx)
     {
         if (is_a($refObj, 'File_Therion_IReferenceable')) {
             $this->_obj = $refObj;
         } elseif (is_string($refObj)) {
-            // todo: check for syntax
+            if (!preg_match('/.+/i', $refObj)) {  // todo: better syntax check
+                throw new InvalidArgumentException(
+                "invalid string reference content '".$refObj."'!");
+            }
             $this->_stringRef = $refObj;
             
         } else {
@@ -140,8 +156,7 @@ class File_Therion_Reference
      * This will generate a string reference that will be returned by
      * {@link toString()}. The reference addresses the current referenced object
      * viewed from the reference view-context.
-     * 
-     * @return void
+     * You usually don't need to call this yourself ({@see toString()}).
      */
     public function updateStringReference()
     {        
@@ -236,6 +251,95 @@ class File_Therion_Reference
                 ." from survey ctx ".$viewCtx->getName());
         }
         
+    }
+    
+    /**
+     * Return referenced object by string reference.
+     * 
+     * In case the string reference was not resolved yet, it will be
+     * looked up. You usually dont need to call this yourself
+     * ({@see getObject()}).
+     * 
+     * This will throw an UnexpectedValueException when the view context is
+     * invalid. A File_Therion_InvalidReferenceException will be thrown, when
+     * the referenced object cannot be found in the data model.
+     * 
+     * @throws UnexpectedValueException when view-context is not available
+     * @throws File_Therion_InvalidReferenceException for resolving errors
+     * @return File_Therion_IReferenceable object (station, etc)
+     */
+    public function getObject()
+    {
+        if (is_null($this->_obj)) {
+            // resolve object from reference if not done yet.
+            // (on errors this will bubble up an appropiate exception)
+            $this->updateObjectReference();
+        }
+        
+        return $this->_obj;
+    }
+    
+    
+    /**
+     * Parse string reference and resolve referenced object.
+     * 
+     * This will take the current string reference and uses the view-context
+     * to lookup the referenced object.
+     * 
+     * @throws UnexpectedValueException when view-context is not available
+     * @throws File_Therion_InvalidReferenceException for resolving errors
+     * @todo support more objects like scraps, maps etc
+     */
+    public function updateObjectReference()
+    {
+        $viewCtx = $this->_ctx;
+        if (is_null($viewCtx)) {
+            throw new UnexpectedValueException(
+                "Cannot getObject(): View-Context"
+                ." of reference is invalid!");
+        }
+        
+        // dissolve stringref
+        $parts   = explode("@", $this->_stringRef, 2);
+        $id      = array_shift($parts);
+        $address = explode(".", array_shift($parts));
+        
+        // try to find the addressed survey in substructure,
+        // do this by walking down the right path
+        $curCTX = $viewCtx; // assume local survey ctx as start
+        while ($childAddr = array_shift($address)) {
+            // select matching child survey amongst all children
+            // as new context. Do this as long as there are addresses left.
+            // this will essentially recurse the right path down.
+            try {
+                $curCTX = $curCTX->getSurveys($childAddr);
+            } catch (OutOfBoundsException $e) {
+                throw new File_Therion_InvalidReferenceException(
+                "Could not dereference survey: ".$e->getMessage());
+            }
+        }
+        
+        // we should have reached the addressed end. As we have not met an
+        // exceptional state so far, we can safely assume that we have found
+        // the right addressed context.
+        
+        // investigate all stations of $curCTX for matching IDs
+        foreach ($curCTX->getCentrelines() as $cl) {
+            foreach ($cl->getStations() as $stn) {
+                if ($id == $stn->getName(true)) {
+                    $this->_obj = $stn;
+                    return; // found the referenced object, go home
+                }
+            }
+        }
+        
+        // TODO: Implement more referenceable objects (scraps, maps, etc)
+        
+        
+        // Still here?: the referenced object does not exist!
+        throw new File_Therion_InvalidReferenceException(
+            "Could not dereference '".$this->_stringRef."': ".
+            "object not found!");
     }
     
     

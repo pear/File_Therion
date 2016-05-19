@@ -60,9 +60,9 @@ class File_Therion_ReferenceTest extends File_TherionTestBase {
     }
     
     /**
-     * Test invalid resolving
+     * Test invalid resolving to string
      */
-    public function testInvalidResolving()
+    public function testInvalidStringGeneration()
     {
         $surveyA  = new File_Therion_Survey("surveyA");
         $station1 = new File_Therion_Station("1");
@@ -82,9 +82,9 @@ class File_Therion_ReferenceTest extends File_TherionTestBase {
     
     
     /**
-     * Test fake structure resolving
+     * Test fake structure resolving to string
      */
-    public function testFakeResolving()
+    public function testFakeStringGeneration()
     {
         // craft basic sample objects
         // survey containing other survey.
@@ -105,7 +105,7 @@ class File_Therion_ReferenceTest extends File_TherionTestBase {
     /**
      * Test generating of path
      */
-    public function testPathResolving()
+    public function testPathRetrival()
     {
         // craft basic sample objects
         // survey containing other survey.
@@ -177,11 +177,95 @@ class File_Therion_ReferenceTest extends File_TherionTestBase {
     
     
     /**
-     * Test resolving of path from string
+     * Test resolving of station objects from string reference
      */
-    public function testObjectResolving()
+    public function testStationResolving()
     {
-        todo...
+        // craft basic sample objects
+        // survey containing other survey.
+        $surveyA    = new File_Therion_Survey("surveyA");
+        $surveyA->addCentreline(new File_Therion_Centreline());
+        
+        $surveyBatA = new File_Therion_Survey("surveyBatA");
+        $surveyBatA->addCentreline(new File_Therion_Centreline());
+        $surveyA->addSurvey($surveyBatA);
+        
+        $surveyCatB = new File_Therion_Survey("surveyCatB");
+        $surveyCatB->addCentreline(new File_Therion_Centreline());
+        $surveyBatA->addSurvey($surveyCatB);
+        
+        // both surveys have associated stations
+        $station1 = new File_Therion_Station("1"); // 1@surveyA
+        $surveyA->getCentrelines()[0]->addShot(
+            new File_Therion_Shot($station1, "-") );
+        
+        $station2 = new File_Therion_Station("2"); // 2@surveyA.surveyBatA
+        $surveyBatA->getCentrelines()[0]->addShot(
+            new File_Therion_Shot($station2, "-") );
+         
+        $station3 = new File_Therion_Station("3"); // 3@A.B.C
+        $surveyCatB->getCentrelines()[0]->addShot(
+            new File_Therion_Shot($station3, "-") );
+        
+        
+        //
+        // craft string reference and try to dereference stations with it.
+        //
+        
+        // local station 1 viewed from top survey
+        $ref = new File_Therion_Reference("1", $surveyA);
+        $obj = $ref->getObject();
+        $this->assertEquals($station1, $obj);
+        
+        // nested station 2 viewed from top survey
+        $ref = new File_Therion_Reference("2@surveyBatA", $surveyA);
+        $obj = $ref->getObject();
+        $this->assertEquals($station2, $obj);
+        
+        // nested station 3 viewed from top survey
+        $ref = new File_Therion_Reference("3@surveyBatA.surveyCatB", $surveyA);
+        $obj = $ref->getObject();
+        $this->assertEquals($station3, $obj);
+        
+        // local station 2 viewed from surveyBatA
+        $ref = new File_Therion_Reference("2", $surveyBatA);
+        $obj = $ref->getObject();
+        $this->assertEquals($station2, $obj);
+        
+        // nested station 3 viewed from surveyBatA
+        $ref = new File_Therion_Reference("3@surveyCatB", $surveyBatA);
+        $obj = $ref->getObject();
+        $this->assertEquals($station3, $obj);
+        
+        // local station 3 viewed from surveyCatB
+        $ref = new File_Therion_Reference("3", $surveyCatB);
+        $obj = $ref->getObject();
+        $this->assertEquals($station3, $obj);
+        
+        // undefined station: expect esception
+        $ref = new File_Therion_Reference("undefined", $surveyA);
+        $exception = null;
+        try {
+            $obj = $ref->getObject();
+        } catch (Exception $e) {
+            $exception = $e;
+        }
+        $this->assertInstanceOf(
+            'File_Therion_InvalidReferenceException',
+            $exception);
+            
+        // unreachable station: expect esception
+        $ref = new File_Therion_Reference("1", $surveyBatA);
+        $exception = null;
+        try {
+            $obj = $ref->getObject();
+        } catch (Exception $e) {
+            $exception = $e;
+        }
+        $this->assertInstanceOf(
+            'File_Therion_InvalidReferenceException',
+            $exception);
+        
     }
     
 }
