@@ -459,7 +459,7 @@ class File_Therion_Station implements File_Therion_IReferenceable
             if (count($fixdata['std']) > 0) {
                 $fixstring .= " ".implode(" ", $fixdata['std']);
             }
-            return "fix ".$fixstring;
+            return "fix ".$this->getName(true)." ".$fixstring;
         }
     }
     
