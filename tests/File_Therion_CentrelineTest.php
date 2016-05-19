@@ -705,6 +705,69 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
         $this->assertFalse($cl_st[2]->getFlag('entrance'));
 
     }
+    
+    /**
+     * Test fixed stations outside of shot data
+     */
+    public function testFixedStation()
+    {
+        $centreline = new File_Therion_Centreline();
+        $station1   = new File_Therion_Station("1");
+        $station1->setComment("Small cave");
+        $station1->setFix(1, 2, 3);
+        $centreline->addFixedStation($station1);
+        
+        $this->assertEquals(
+            array(
+                File_Therion_Line::parse('centreline'),
+                File_Therion_Line::parse("\tstation 1 \"Small cave\""),
+                File_Therion_Line::parse("\tfix 1 1 2 3 0 0 0"),
+                File_Therion_Line::parse('endcentreline'),
+            ),
+            File_Therion_Line::filterNonEmpty($centreline->toLines())
+        );
+        
+        
+        $station2 = new File_Therion_Station("2");
+        $station2->setFix(4, 5, 6, 0.5, 0.6, 0.7);
+        $centreline->addFixedStation($station2);
+        
+        $this->assertEquals(
+            array(
+                File_Therion_Line::parse('centreline'),
+                File_Therion_Line::parse("\tstation 1 \"Small cave\""),
+                File_Therion_Line::parse("\tfix 1 1 2 3 0 0 0"),
+                File_Therion_Line::parse("\tfix 2 4 5 6 0.5 0.6 0.7"),
+                File_Therion_Line::parse('endcentreline'),
+            ),
+            File_Therion_Line::filterNonEmpty($centreline->toLines())
+        );
+        
+        
+        // clear fix of station
+        $station1->clearFix();
+        
+        $this->assertEquals(
+            array(
+                File_Therion_Line::parse('centreline'),
+                File_Therion_Line::parse("\tfix 2 4 5 6 0.5 0.6 0.7"),
+                File_Therion_Line::parse('endcentreline'),
+            ),
+            File_Therion_Line::filterNonEmpty($centreline->toLines())
+        );
+        
+        
+        // clear all fixes from survey
+        $centreline->clearFixedStations();
+        
+        $this->assertEquals(
+            array(
+                File_Therion_Line::parse('centreline'),
+                File_Therion_Line::parse('endcentreline'),
+            ),
+            File_Therion_Line::filterNonEmpty($centreline->toLines())
+        );
+    }
 
 }
 ?>

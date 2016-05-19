@@ -23,8 +23,6 @@
  * @copyright  2016 Benedikt Hallinger
  * @license    http://www.gnu.org/licenses/lgpl-3.0.txt LGPLv3
  * @link       http://pear.php.net/package/File_Therion/
- * 
- * @todo support fix-stations without shot data (like onlymarked cave entrances)
  */
 class File_Therion_Centreline
     extends File_Therion_BasicObject
@@ -111,6 +109,13 @@ class File_Therion_Centreline
      * @var array with File_Therion_Shot objects.
      */
     protected $_shots = array();
+    
+    /**
+     * Fixed stations outside of shot data
+     * 
+     * @var array
+     */
+    protected $_fixedStations = array();
     
     
     /**
@@ -421,18 +426,9 @@ class File_Therion_Centreline
                 break;
                 
                 case 'fix':
-                    // fixate existing station
-                    // OutOfBoundsException (no such station) will bubble up!
+                    // fixate existing station (or add outside-shot-one)
                     $tmpStn = File_Therion_Station::parse($line);
-                    $refStn = $centreline->getStations($tmpStn->getName(true));
-                    $fix    = $tmpStn->getFix();
-                    $refStn->setFix(
-                        $fix['coords'][0],
-                        $fix['coords'][1],
-                        $fix['coords'][2],
-                        $fix['std'][0],
-                        $fix['std'][1],
-                        $fix['std'][2] );
+                    $centreline->addFixedStation($tmpStn);
                 break;
                     
                 case 'extend':
@@ -748,6 +744,13 @@ class File_Therion_Centreline
                     }
                 }
             }
+            
+            // also fixed stations outside of shot data
+            foreach ($this->getFixedStations() as $stn) {
+                if (!is_null($stn) && !in_array($stn, $allSt)) {
+                    array_push($allSt, $stn);
+                }
+            }
 
             return $allSt;
             
@@ -764,6 +767,83 @@ class File_Therion_Centreline
             // in case no such station defined:
             throw new OutOfBoundsException("No such station: ".$station);
         }
+    }
+    
+    /**
+     * Add a fixed station definition.
+     * 
+     * Note that the usual way to go is, to call
+     * {@link File_Therion_Station::setFix()} on a existing station from one of
+     * the associated centreline shots.
+     * 
+     * If a station object with the name exists, that station will be fixed.
+     * Otherwise the station will be added as uncorrelated to shot data.
+     * 
+     * Example:
+     * <code>
+     * $station = new File_Therion_Station("1");
+     * $station->setComment("Small rabbit hole left of tree");
+     * $station->setFix(1, 2, 3);
+     * $centreline->addFixedStation($station);
+     * </code>
+     * 
+     * @param File_Therion_Station $station Station object to add
+     * @throws InvalidArgumentException if station is not fixed
+     */
+    public function addFixedStation(File_Therion_Station $station)
+    {
+        if (!$station->isFixed()) {
+            throw new InvalidArgumentException(
+                "station '".$station->getName()."' must be fixed!");
+        }
+        
+        // see if there is such a station... if so, use it;
+        // otherwise add as uncorrelated to existing shot data.
+        try {
+            $refStn = $this->getStations($station->getName(true));
+            $fix    = $station->getFix();
+            $refStn->setFix(
+                $fix['coords'][0],
+                $fix['coords'][1],
+                $fix['coords'][2],
+                $fix['std'][0],
+                $fix['std'][1],
+                $fix['std'][2] );
+                
+        } catch (OutOfBoundsException $e) {
+            // no such station found: add as uncorrelated to shots
+            $this->_fixedStations[] = $station;
+        }
+        
+    }
+    
+    /**
+     * Remove associated fixed stations.
+     */
+    public function clearFixedStations()
+    {
+        $this->_fixedStations = array();
+    }
+    
+    /**
+     * Get existing fixed station objects associated outside of shot data.
+     * 
+     * Associated stations (see {@link addFixedStation()}) will be tested so
+     * only currently fixed stations will be returned.
+     * 
+     * @return array of fixed File_Therion_Station objects
+     */
+    public function getFixedStations()
+    {
+        $r = array();
+        foreach ($this->_fixedStations as $fs) {
+            if ($fs->isFixed()) {
+                $r[] = $fs;
+            }
+        }
+        $this->_fixedStations = $r; // update contents with filtered data
+        
+        return $r;
     }
     
     
@@ -1280,11 +1360,10 @@ class File_Therion_Centreline
         
         
         // stations (fixed, normal)
-        foreach ($this->getStations() as $sobj) {
-            foreach ($sobj as $s) {
+        foreach ($this->getStations() as $s) {
                 
                 // comment and/or flags
-                if ($s->getComment() != "" || count($s->getAllFlags() > 0)) {
+                if ($s->getComment() != "" || count($s->getAllFlags()) > 0) {
                     $lines[] = new File_Therion_Line(
                         $s->toStationString(),"", $baseIndent);
                 }
@@ -1294,11 +1373,9 @@ class File_Therion_Centreline
                     $lines[] = new File_Therion_Line(
                         $s->toFixString(),"", $baseIndent);
                 }
-                
-            }
-            unset($s);
+
         }
-        unset($sobj);
+        unset($s);
         
         
         // Extends
