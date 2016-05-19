@@ -118,9 +118,11 @@ class File_Therion_Reference
 
 
     /**
-     * Parse string content into this datatype.
+     * Parse string reference into static reference object.
      * 
      * This will create a basic string reference object without context.
+     * As such, it is just a kind of alias to the constructor for static
+     * string references.
      * 
      * @param $string reference to parse
      * @return File_Therion_Reference
@@ -136,7 +138,8 @@ class File_Therion_Reference
      * Update string representation of this reference.
      * 
      * This will generate a string reference that will be returned by
-     * {@link toString()}.
+     * {@link toString()}. The reference addresses the current referenced object
+     * viewed from the reference view-context.
      * 
      * @return void
      */
