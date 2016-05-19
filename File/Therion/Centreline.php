@@ -732,7 +732,7 @@ class File_Therion_Centreline
      * returned or throws an OutOfBoundsException when not found.
      * Use the full stations name when station-names is in effect.
      *
-     * @param string $station Query for named station (use full name)
+     * @param string|File_Therion_Station $station Query for named station (use full name)
      * @return array of File_Therion_Station objects
      * @throws OutOfBoundsException if no named station is found.
      */
