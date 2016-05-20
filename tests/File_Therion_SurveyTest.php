@@ -230,7 +230,6 @@ class File_Therion_SurveyTest extends File_TherionTestBase {
         $this->assertEquals(array($cl1_sh1_to), $cl1_sh2_from->getEquates() );
         $this->assertEquals(array($cl1_sh1_to), $cl2_sh2_to->getEquates() );
         
-        
         // TODO negative test cases for equate parsing missing...
     }
     

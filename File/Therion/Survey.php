@@ -189,6 +189,7 @@ class File_Therion_Survey
         // We delegate as much as possible, so we just honor commands
         // the local level knows about.
         // Other lines will be collected and given to a suitable parser.
+        $postponeLineParsing = array();
         foreach ($orderedData as $type => $data) {
             switch ($type) {
                 case 'LOCAL':
@@ -212,8 +213,8 @@ class File_Therion_Survey
                                 break;
                                 
                                 case 'equate':
-                                    // Equates: add the remaining data fields
-                                    $survey->addEquate($lineData);
+                                    // Postpone parsing after surveys are rdy
+                                    $postponeLineParsing[] = $line;
                                 break;
                                 
                                 default:
@@ -269,7 +270,55 @@ class File_Therion_Survey
                         "unsupported multiline command '$type'"
                     );
             }
-        } 
+        }
+
+
+        // Parse postponed local lines
+        // this is neccessary because some commands reference stations, however
+        // therion is not dependent on ordering of lines.
+        foreach ($postponeLineParsing as $line) {
+            $lineData = $line->getDatafields();
+            $command  = strtolower(array_shift($lineData));
+            
+            switch ($command) {
+                case 'equate':
+                    // resolve stations and establish equate
+                    if (count($lineData) < 2) {
+                        throw new File_Therion_SyntaxException(
+                            "equate command needs at least two arguments, "
+                            .count($lineData)." given "
+                            ."('".trim($line->toString())."')"
+                        );
+                    }
+                    
+                    // resolve first station
+                    try {
+                        $strRef  = array_shift($lineData);
+                        $ref     = new File_Therion_Reference($strRef, $survey);
+                        $station = $ref->getObject();
+                        
+                        try {
+                            // resolve remaining stations and equate them
+                            while ($sref = array_shift($lineData)) {
+                                $refo    = new File_Therion_Reference(
+                                                $sref, $survey);
+                                $stn = $refo->getObject();
+                                $station->addEquate($stn);
+                            }
+                        } catch (Exception $exc) {
+                            // not possible to dereference station:
+                            // ignore silently for now (->partial data?)
+                        }
+                    } catch (Exception $exc) {
+                        // not possible to dereference first station:
+                        // ignore silently for now (->partial data?)
+                    }
+                    
+                break;
+
+            }
+        }
+        
         
         return $survey;
         
