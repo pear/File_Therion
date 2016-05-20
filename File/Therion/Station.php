@@ -619,6 +619,11 @@ class File_Therion_Station implements File_Therion_IReferenceable
             }
             
         } else {
+            if (!is_a($station, 'File_Therion_Station')) {
+                throw new InvalidArgumentException(
+                    "wrong argument type '"
+                    .gettype($station)."'/'".get_class($station)."'" );
+            }
         
             if (!in_array($station, $this->_equates)) {
                 $this->_equates[] = $station;
