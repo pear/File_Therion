@@ -611,7 +611,10 @@ class File_Therion_Station implements File_Therion_IReferenceable
      */
     public function addEquate(File_Therion_Station $station, $noLink = false)
     {
-        $this->_equates[] = $station;
+        if (!in_array($station, $this->_equates)) {
+            $this->_equates[] = $station;
+        }
+        
         if (!$noLink) {
             // add backlink
             $station->addEquate($this, true);

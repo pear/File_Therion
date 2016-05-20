@@ -82,6 +82,13 @@ class File_Therion_StationTest extends File_TherionTestBase {
         $this->assertEquals(array($station2, $station3), $station1->getEquates());
         $station1->clearEquates();
         $this->assertEquals(array(), $station1->getEquates());
+        
+        // test duplicates
+        $station1->addEquate($station2);
+        $station1->addEquate($station2);
+        $station1->addEquate($station2);
+        $this->assertEquals(array($station2), $station1->getEquates());
+        
     }
     
     /**
