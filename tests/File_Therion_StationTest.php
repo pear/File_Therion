@@ -65,60 +65,6 @@ class File_Therion_StationTest extends File_TherionTestBase {
         
     }
     
-    
-    /**
-     * Test equates basic operation
-     */
-    public function testEquatesBasicOperation()
-    {
-        $station1 = new File_Therion_Station("1");
-        $station2 = new File_Therion_Station("2");
-        $station3 = new File_Therion_Station("3");
-        
-        $this->assertEquals(array(), $station1->getEquates());
-        $station1->addEquate($station2);
-        $this->assertEquals(array($station2), $station1->getEquates());
-        $station1->addEquate($station3);
-        $this->assertEquals(array($station2, $station3), $station1->getEquates());
-        $station1->clearEquates();
-        $this->assertEquals(array(), $station1->getEquates());
-        
-        // test duplicates
-        $station1->addEquate($station2);
-        $station1->addEquate($station2);
-        $station1->addEquate($station2);
-        $this->assertEquals(array($station2), $station1->getEquates());
-        
-        
-        /*
-        *  wrong invocations:
-        */
-        $exc = null;
-        try {
-            $start->addEquate(null);
-        } catch (Exception $e) {
-            $exc = $e;
-        }
-        $this->assertInstanceOf('Exception', $exc);
-        
-        $exc = null;
-        try {
-            $start->addEquate(array("foo", "bar"));
-        } catch (Exception $e) {
-            $exc = $e;
-        }
-        $this->assertInstanceOf('Exception', $exc);
-        
-        $exc = null;
-        try {
-            $start->addEquate(new File_Therion_Centreline());
-        } catch (Exception $e) {
-            $exc = $e;
-        }
-        $this->assertInstanceOf('Exception', $exc);
-        
-    }
-    
     /**
      * Test station name aliasing
      */
@@ -165,6 +111,64 @@ class File_Therion_StationTest extends File_TherionTestBase {
         $this->assertEquals('1', $station->getName(false));
         $this->assertEquals('bar1baz', $station->getName(true));
         $this->assertEquals('bar1baz', $station->getName());
+        
+    }
+    
+    
+    /**
+     * Test equates basic operation
+     */
+    public function testEquatesBasicOperation()
+    {
+        $station1 = new File_Therion_Station("1");
+        $station2 = new File_Therion_Station("2");
+        $station3 = new File_Therion_Station("3");
+        
+        $this->assertEquals(array(), $station1->getEquates());
+        $station1->addEquate($station2);
+        $this->assertEquals(array($station2), $station1->getEquates());
+        $station1->addEquate($station3);
+        $this->assertEquals(array($station2, $station3), $station1->getEquates());
+        $station1->clearEquates();
+        $this->assertEquals(array(), $station1->getEquates());
+        
+        // test duplicates
+        $station1->addEquate($station2);
+        $station1->addEquate($station2);
+        $station1->addEquate($station2);
+        $station2->addEquate($station1);
+        $station2->addEquate($station1);
+        $station2->addEquate($station1);
+        $this->assertEquals(array($station2), $station1->getEquates());
+        $this->assertEquals(array($station1), $station2->getEquates());
+        
+        
+        /*
+        *  wrong invocations:
+        */
+        $exc = null;
+        try {
+            $start->addEquate(null);
+        } catch (Exception $e) {
+            $exc = $e;
+        }
+        $this->assertInstanceOf('Exception', $exc);
+        
+        $exc = null;
+        try {
+            $start->addEquate(array("foo", "bar"));
+        } catch (Exception $e) {
+            $exc = $e;
+        }
+        $this->assertInstanceOf('Exception', $exc);
+        
+        $exc = null;
+        try {
+            $start->addEquate(new File_Therion_Centreline());
+        } catch (Exception $e) {
+            $exc = $e;
+        }
+        $this->assertInstanceOf('Exception', $exc);
         
     }
     
