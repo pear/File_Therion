@@ -19,10 +19,10 @@
 
 
     <!-- Information for this release -->
-    <date>2016-04-22</date>
+    <date>2016-xx-xx</date>
     <version>
-        <release>0.1.0</release>
-        <api>0.1.0</api>
+        <release>0.2.0</release>
+        <api>0.2.0</api>
     </version>
     <stability>
         <release>alpha</release>
@@ -30,19 +30,7 @@
     </stability>
     <license uri="http://www.gnu.org/licenses/lgpl-3.0.en.html">LGPLv3</license>
     <notes>
-        Initial release of first API. Still in development!
-        Therion data model core features should be mostly supported already;
-        that means survey structure and centreline data should be usable mostly.
-        The package is still not stable and API may change in future versions.
-        
-        Please refer to the TODO tags in the API to get an idea what is still missing.
-        You can expect basic survey structure, important metadata and centreline to be working.
-        Scraps, Maps, surface and many data fields are still unsupported however should parse OK silently.
-        
-        
-        This release is dedicated to my friend Dr. Stefan Dahm, who died in the
-        Hirlatz cave (Dachstein, Austria) on 28.02.2016 while conducting an
-        expedition. We miss you Stefan! Your work will be continued...
+        ... see gitlog for now ...
     </notes>
 
     <contents>
@@ -153,7 +141,33 @@
 
     <!-- older versions -->
     <changelog>
-        <!-- no prior release so far -->
+        <release>
+            <date>2016-04-22</date>
+            <version>
+                <release>0.1.0</release>
+                <api>0.1.0</api>
+            </version>
+            <stability>
+                <release>alpha</release>
+                <api>alpha</api>
+            </stability>
+            <license uri="http://www.gnu.org/licenses/lgpl-3.0.en.html">LGPLv3</license>
+            <notes>
+                Initial release of first API. Still in development!
+                Therion data model core features should be mostly supported already;
+                that means survey structure and centreline data should be usable mostly.
+                The package is still not stable and API may change in future versions.
+                
+                Please refer to the TODO tags in the API to get an idea what is still missing.
+                You can expect basic survey structure, important metadata and centreline to be working.
+                Scraps, Maps, surface and many data fields are still unsupported however should parse OK silently.
+                
+                
+                This release is dedicated to my friend Dr. Stefan Dahm, who died in the
+                Hirlatz cave (Dachstein, Austria) on 28.02.2016 while conducting an
+                expedition. We miss you Stefan! Your work will be continued...
+            </notes>
+        </release>
     </changelog>
 
 </package>
