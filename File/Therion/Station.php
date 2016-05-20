@@ -601,23 +601,33 @@ class File_Therion_Station implements File_Therion_IReferenceable
      * Add equated station.
      * 
      * This defines that the local station is equal to the passed one.
+     * You may also pass an array of Station objects.
      * 
      * Unless $noLink is true, a backlink will be established. You normally
      * won't need to enable this.
      * 
-     * @param File_Therion_Station $station
+     * @param array|File_Therion_Station $station
      * @param boolean $noLink Don't establish backlink.
      * @param
      */
-    public function addEquate(File_Therion_Station $station, $noLink = false)
+    public function addEquate($station, $noLink = false)
     {
-        if (!in_array($station, $this->_equates)) {
-            $this->_equates[] = $station;
-        }
+        if (is_array($station)) {
+            // add elements
+            foreach ($station as $stn) {
+                $this->addEquate($stn, $noLink);
+            }
+            
+        } else {
         
-        if (!$noLink) {
-            // add backlink
-            $station->addEquate($this, true);
+            if (!in_array($station, $this->_equates)) {
+                $this->_equates[] = $station;
+            }
+            
+            if (!$noLink) {
+                // add backlink
+                $station->addEquate($this, true);
+            }
         }
     }
     
