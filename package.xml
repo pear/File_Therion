@@ -67,7 +67,6 @@
                     <file name="Surface.php" role="php" />
                     <file name="Survey.php" role="php" />
                     <file name="Join.php" role="php" />
-                    <file name="Equate.php" role="php" />
                     
                     <dir name="DataTypes">
                         <file name="DataTypeInterface.php" role="php" />
@@ -102,7 +101,6 @@
                 <file name="File_Therion_ShotTest.php" role="test" />
                 <file name="File_Therion_SurveyTest.php" role="test" />
                 <file name="File_Therion_JoinTest.php" role="test" />
-                <file name="File_Therion_EquateTest.php" role="test" />
                 <file name="File_Therion_StationTest.php" role="test" />
                 <file name="File_Therion_ReferenceTest.php" role="test" />
                 <file name="File_TherionTest.php" role="test" />
