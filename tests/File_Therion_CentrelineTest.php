@@ -297,13 +297,17 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
         $this->assertEquals('0',  $shots[0]->getFrom()->getName(true));
         $this->assertEquals('1',  $shots[0]->getTo()->getName());
         $this->assertEquals('1',  $shots[0]->getTo()->getName(true));
-        $this->assertEquals('1',  $shots[1]->getFrom()->getName());
+        $this->assertEquals('1',  $shots[1]->getFrom()->getName(false));
+        $this->assertEquals('pre1post',  $shots[1]->getFrom()->getName());
         $this->assertEquals('pre1post',  $shots[1]->getFrom()->getName(true));
-        $this->assertEquals('2',  $shots[1]->getTo()->getName());
+        $this->assertEquals('2',  $shots[1]->getTo()->getName(false));
+        $this->assertEquals('pre2post',  $shots[1]->getTo()->getName());
         $this->assertEquals('pre2post',  $shots[1]->getTo()->getName(true));
-        $this->assertEquals('2',  $shots[2]->getFrom()->getName());
+        $this->assertEquals('2',  $shots[2]->getFrom()->getName(false));
+        $this->assertEquals('pre2post',  $shots[2]->getFrom()->getName());
         $this->assertEquals('pre2post',  $shots[2]->getFrom()->getName(true));
-        $this->assertEquals('3',  $shots[2]->getTo()->getName());
+        $this->assertEquals('3',  $shots[2]->getTo()->getName(false));
+        $this->assertEquals('pre3post',  $shots[2]->getTo()->getName());
         $this->assertEquals('pre3post',  $shots[2]->getTo()->getName(true));
         
         // test getting explicit adjusted pre/postfixed stations
@@ -331,16 +335,15 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
         // unprefixed stations 0+1 of shot 0 - that means, that after stripping
         // we have an homogenous centreline naming convention.
         $sample->updateShotStationNames();
-        $this->assertEquals('0',  $shots[0]->getFrom()->getName());
-        $this->assertEquals('pre0post',  $shots[0]->getFrom()->getName(true));
-        $this->assertEquals('pre1post',  $shots[1]->getFrom()->getName());
+        $this->assertEquals('0',  $shots[0]->getFrom()->getName(false));
+        $this->assertEquals('pre0post',  $shots[0]->getFrom()->getName());
         // this will yield expected wrong results:
-        $this->assertEquals('prepre1postpost',  $shots[1]->getFrom()->getName(true));
+        $this->assertEquals('prepre1postpost',  $shots[1]->getFrom()->getName());
         $sample->stripStationNames(); // strip them off!
-        $this->assertEquals('0',  $shots[0]->getFrom()->getName()); // strip did nothing
-        $this->assertEquals('pre0post',  $shots[0]->getFrom()->getName(true));
-        $this->assertEquals('1',  $shots[1]->getFrom()->getName()); // strip worked
-        $this->assertEquals('pre1post',  $shots[1]->getFrom()->getName(true));
+        $this->assertEquals('0',  $shots[0]->getFrom()->getName(false)); // strip did nothing
+        $this->assertEquals('pre0post',  $shots[0]->getFrom()->getName());
+        $this->assertEquals('1',  $shots[1]->getFrom()->getName(false)); // strip worked
+        $this->assertEquals('pre1post',  $shots[1]->getFrom()->getName());
         
     }
     

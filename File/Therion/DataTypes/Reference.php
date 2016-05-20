@@ -326,7 +326,7 @@ class File_Therion_Reference
         // investigate all stations of $curCTX for matching IDs
         foreach ($curCTX->getCentrelines() as $cl) {
             foreach ($cl->getStations() as $stn) {
-                if ($id == $stn->getName(true)) {
+                if ($id == $stn->getName()) {
                     $this->_obj = $stn;
                     return; // found the referenced object, go home
                 }

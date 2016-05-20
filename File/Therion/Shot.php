@@ -768,15 +768,22 @@ class File_Therion_Shot
     /**
      * Return formatted datafields as Therion Line in current order.
      * 
+     * If $fsn is set to true, the full station name will be reported.
+     * By default, only the unprefixed name is reported.
+     * The reason is, that toLines() is expected to be called in context of
+     * a centreline that will take care of reporting valid station-names
+     * commands prior exporting a shot.
+     * 
+     * @param boolean $fsn switch reporting of sation names
      * @return File_Therion_Line containing data items
      */
-    public function toLines()
+    public function toLines($fsn=false)
     {
         $strItems = array();
         foreach ($this->getOrderedData() as $od) {
             if (is_a($od, 'File_Therion_Station')) {
                 // resolve station objects to string names
-                $strItems[] = File_Therion_Line::escape($od->getName());
+                $strItems[] = File_Therion_Line::escape($od->getName($fsn));
             } else {
                 $strItems[] = File_Therion_Line::escape($od);
             }

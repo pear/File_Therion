@@ -120,6 +120,55 @@ class File_Therion_StationTest extends File_TherionTestBase {
     }
     
     /**
+     * Test station name aliasing
+     */
+    public function testStationName()
+    {
+        $station = new File_Therion_Station("1");
+        $this->assertEquals('1', $station->getName(false));
+        $this->assertEquals('1', $station->getName(true));
+        $this->assertEquals('1', $station->getName());
+        
+        $station->setStationNames("pre", null);
+        $this->assertEquals('1', $station->getName(false));
+        $this->assertEquals('pre1', $station->getName(true));
+        $this->assertEquals('pre1', $station->getName());
+        
+        $station->setStationNames(null, "post");
+        $this->assertEquals('1', $station->getName(false));
+        $this->assertEquals('pre1post', $station->getName(true));
+        $this->assertEquals('pre1post', $station->getName());
+        
+        $station->setStationNames("foo", null);
+        $this->assertEquals('1', $station->getName(false));
+        $this->assertEquals('foo1post', $station->getName(true));
+        $this->assertEquals('foo1post', $station->getName());
+        
+        $station->setStationNames("bar", "baz");
+        $this->assertEquals('1', $station->getName(false));
+        $this->assertEquals('bar1baz', $station->getName(true));
+        $this->assertEquals('bar1baz', $station->getName());
+        
+        $station->setStationNames("", "");
+        $this->assertEquals('1', $station->getName(false));
+        $this->assertEquals('1', $station->getName(true));
+        $this->assertEquals('1', $station->getName());
+        
+        $station->setStationNames("bar", "baz");
+        $station->applyStationNames();
+        $this->assertEquals('bar1baz', $station->getName(false));
+        $this->assertEquals('bar1baz', $station->getName(true));
+        $this->assertEquals('bar1baz', $station->getName());
+        
+        $station->setStationNames("bar", "baz");
+        $station->stripStationNames();
+        $this->assertEquals('1', $station->getName(false));
+        $this->assertEquals('bar1baz', $station->getName(true));
+        $this->assertEquals('bar1baz', $station->getName());
+        
+    }
+    
+    /**
      * Test equates basic operation (backlinking)
      */
     public function testEquatesBasicOperationBacklink()

@@ -124,13 +124,13 @@ class File_Therion_Station implements File_Therion_IReferenceable
     /**
      * Get name of this station.
      * 
-     * If the station has a set prefix/postfix, this will be applied
-     * when the $applyNames parameter is set to true.
+     * If the station has a set prefix/postfix, this will be applied,
+     * unless the $applyNames parameter is set to false.
      * 
-     * @param boolean $applyNames return name with applied pre-/postfix
+     * @param boolean $applyNames true return name without applied pre-/postfix
      * @return string Original or prefixed+postfixed name
      */
-    public function getName($applyNames=false)
+    public function getName($applyNames=true)
     {
         if (!$applyNames) {
             return $this->_name;
@@ -535,20 +535,26 @@ class File_Therion_Station implements File_Therion_IReferenceable
      * You can use this to adjust station prefix/postfix after updates from
      * the centreline or to have such data without context.
      * 
+     * When null is supplied, the setting will be left untouched.
+     * 
      * @param string $prefix
      * @param string $postfix
      * @throws InvalidArgumentException
      */
     public function setStationNames($prefix, $postfix)
     {
-        if (!is_string($prefix)) {
+        if (!is_string($prefix) && !is_null($prefix)) {
             throw new InvalidArgumentException(
                 "Unsupported prefix type '".gettype($prefix)."'" );
         }
-        if (!is_string($postfix)) {
+        if (!is_string($postfix) && !is_null($postfix)) {
             throw new InvalidArgumentException(
                 "Unsupported postfix type '".gettype($postfix)."'" );
         }
+        
+        // keep values if requested
+        if (is_null($prefix))  $prefix  = $this->_prePostfix[0];
+        if (is_null($postfix)) $postfix = $this->_prePostfix[1];
         
         $this->_prePostfix = array($prefix, $postfix);
     }
@@ -576,7 +582,7 @@ class File_Therion_Station implements File_Therion_IReferenceable
     public function applyStationNames()
     {
         $prePost = $this->getStationNames();
-        $this->setName($prePost[0].$this->getName().$prePost[1]);
+        $this->setName($prePost[0].$this->getName(false).$prePost[1]);
         
         $this->setStationNames("", ""); // reset station prefix/postfix setting
     }
@@ -591,7 +597,7 @@ class File_Therion_Station implements File_Therion_IReferenceable
     public function stripStationNames()
     {
         $prePost = $this->getStationNames();
-        $name    = $this->getName();
+        $name    = $this->getName(false);
         $name    = preg_replace('/^'.$prePost[0].'/', '', $name);
         $name    = preg_replace('/'.$prePost[1].'$/', '', $name);
         $this->setName($name);
