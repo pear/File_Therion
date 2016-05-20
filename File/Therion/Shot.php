@@ -23,6 +23,7 @@
  * @copyright  2016 Benedikt Hallinger
  * @license    http://www.gnu.org/licenses/lgpl-3.0.txt LGPLv3
  * @link       http://pear.php.net/package/File_Therion/
+ * @todo Shot dimensions may also be given in [n n] syntax (from to station) - this is currently unsupported
  */
 class File_Therion_Shot
 {
