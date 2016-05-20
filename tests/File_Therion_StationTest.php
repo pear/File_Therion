@@ -89,6 +89,34 @@ class File_Therion_StationTest extends File_TherionTestBase {
         $station1->addEquate($station2);
         $this->assertEquals(array($station2), $station1->getEquates());
         
+        
+        /*
+        *  wrong invocations:
+        */
+        $exc = null;
+        try {
+            $start->addEquate(null);
+        } catch (Exception $e) {
+            $exc = $e;
+        }
+        $this->assertInstanceOf('Exception', $exc);
+        
+        $exc = null;
+        try {
+            $start->addEquate(array("foo", "bar"));
+        } catch (Exception $e) {
+            $exc = $e;
+        }
+        $this->assertInstanceOf('Exception', $exc);
+        
+        $exc = null;
+        try {
+            $start->addEquate(new File_Therion_Centreline());
+        } catch (Exception $e) {
+            $exc = $e;
+        }
+        $this->assertInstanceOf('Exception', $exc);
+        
     }
     
     /**
