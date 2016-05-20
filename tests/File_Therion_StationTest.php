@@ -189,20 +189,6 @@ class File_Therion_StationTest extends File_TherionTestBase {
         $station1->clearEquates($station3);
         $this->assertEquals(array($station2), $station1->getEquates());
         $this->assertEquals(array(), $station3->getEquates());
-        
-        // test with skipping backlink
-        $station1->addEquate($station3, true);
-        $this->assertEquals(array(), $station3->getEquates());
-        $station3->addEquate($station1, true);
-        $this->assertEquals(array($station1), $station3->getEquates());
-        $station1->clearEquates($station3, true);
-        $this->assertEquals(array($station1), $station3->getEquates());
-        $station3->clearEquates();
-        $this->assertEquals(array(), $station3->getEquates());
-        $this->assertEquals(array($station2), $station1->getEquates());
-        $station1->clearEquates();
-        $this->assertEquals(array(), $station1->getEquates());
-        $this->assertEquals(array(), $station2->getEquates());
     }
     
     /**

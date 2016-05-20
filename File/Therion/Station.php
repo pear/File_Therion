@@ -97,6 +97,13 @@ class File_Therion_Station implements File_Therion_IReferenceable
     protected $_equates = array();
     
     /**
+     * Equated stations (backlinks).
+     * 
+     * @var array of File_Therion_Station objects
+     */
+    protected $_equatesBL = array();
+    
+    /**
      * Create a new therion station object.
      * 
      * @param string $station Station name (like "1")
@@ -609,19 +616,18 @@ class File_Therion_Station implements File_Therion_IReferenceable
      * This defines that the local station is equal to the passed one.
      * You may also pass an array of Station objects.
      * 
-     * Unless $noLink is true, a backlink will be established. You normally
-     * won't need to enable this.
+     * A backlink will be established automatically if the equated station
+     * already links to this station (the added station will also equate to
+     * this station at hand).
      * 
      * @param array|File_Therion_Station $station
-     * @param boolean $noLink Don't establish backlink.
-     * @param
      */
-    public function addEquate($station, $noLink = false)
+    public function addEquate($station)
     {
         if (is_array($station)) {
             // add elements
             foreach ($station as $stn) {
-                $this->addEquate($stn, $noLink);
+                $this->addEquate($stn);
             }
             
         } else {
@@ -631,13 +637,28 @@ class File_Therion_Station implements File_Therion_IReferenceable
                     .gettype($station)."'/'".get_class($station)."'" );
             }
         
-            if (!in_array($station, $this->_equates)) {
-                $this->_equates[] = $station;
-            }
-            
-            if (!$noLink) {
-                // add backlink
-                $station->addEquate($this, true);
+            // add station link if not already linked as forward or backlink
+            $curEquates = $this->getEquates(false);
+            if (!in_array($station, $curEquates)) {
+                // station is not linked in this station, it must be added.
+                // We look if it is to be added as forward link or as backlink.
+                if (!in_array($this, $station->getEquates())) {
+                    // local station is not linked at target:
+                    // this is a normal forward link
+                    $this->_equates[] = $station;
+                    
+                    // establish a backlink in linked station
+                    $station->addEquate($this);
+                    
+                } else {
+                    // local station is already linked at target:
+                    // this means, a backlink should be established.
+                    $this->_equatesBL[] = $station;
+                }
+                
+            } else {
+                // station is already linked either as forward or as backlink.
+                // do nothing and ignore the add request.
             }
         }
     }
@@ -649,7 +670,7 @@ class File_Therion_Station implements File_Therion_IReferenceable
      */
     public function getEquates()
     {
-        return $this->_equates;
+        return array_merge($this->_equates, $this->_equatesBL);
     }
     
     /**
@@ -658,40 +679,59 @@ class File_Therion_Station implements File_Therion_IReferenceable
      * You may optionally select a station to clear by providing the station
      * object. Other stations will be still equated.
      * 
-     * The referenced stations backlink will be cleared unless $keepLink is
-     * true. You normally won't need to enable this.
+     * The referenced stations backlink will be cleared automatically.
      * 
      * @param File_Therion_Station $station clear only this link
-     * @param boolean $keepLink true=Don't clean backlink
      */
-    public function clearEquates(
-        File_Therion_Station $station = null, $keepLink = false)
+    public function clearEquates(File_Therion_Station $station = null)
     {
         if (is_null($station)) {
             // clear all stations
-            if (!$keepLink) {
-                // clear backlink
-                foreach ($this->_equates as $eq) {
-                    $eq->clearEquates($this, true);
-                }
+            
+            // clear backlinks
+            foreach ($this->_equates as $eq) {
+                $eq->clearEquates($this);
             }
-            $this->_equates = array();
+                
+            // clear all stations
+            $this->_equates   = array();
+            $this->_equatesBL = array();
             
         } else {
             // clear selected station
             // (implemented quick and dirty, sorry. Brain empty.)
-            $neq = array();
-            foreach ($this->_equates as $eq) {
-                if ($eq != $station) {
-                    $neq[] = $eq;
-                } else {
-                    if (!$keepLink) {
-                        // clear backlink
-                        $eq->clearEquates($this, true);
+            
+            if (in_array($station, $this->getEquates())) {
+                // only do this if the station is still linked
+                $neq = array();
+                $tgt = null;
+                foreach ($this->_equates as $eq) {
+                    if ($eq != $station) {
+                        $neq[] = $eq;
+                    } else {
+                        $tgt = $eq; // save for later clearing
                     }
                 }
+                $this->_equates = $neq;
+                if (!is_null($tgt)) {
+                    $tgt->clearEquates($this); // clear backlink
+                }
+                
+                // do it again for the backlinks store.
+                $neq = array();
+                $tgt = null;
+                foreach ($this->_equatesBL as $eq) {
+                    if ($eq != $station) {
+                        $neq[] = $eq;
+                    } else {
+                        $tgt = $eq; // save for later clearing
+                    }
+                }
+                $this->_equatesBL = $neq;
+                if (!is_null($tgt)) {
+                    $tgt->clearEquates($this); // clear backlink
+                }
             }
-            $this->_equates = $neq;
         }
     }
     
@@ -729,6 +769,14 @@ class File_Therion_Station implements File_Therion_IReferenceable
         $equates = $this->getEquates();
         array_unshift($equates, $this); // add local station to equate refs
         foreach ($equates as $es) {
+            // Skip referencing in case the link is a backlink AND the
+            // referenced station is in the same survey context.
+            // This avoids duplicate equate-commands.
+            if (in_array($es, $this->_equatesBL)
+                && $es->getSurveyContext() == $this->getSurveyContext()) {
+                continue; // ignore the station
+            }
+            
             try {
                 // create string reference
                 $ref = new File_Therion_Reference($es, $viewCTX);

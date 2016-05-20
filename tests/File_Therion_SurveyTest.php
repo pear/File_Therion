@@ -131,15 +131,19 @@ class File_Therion_SurveyTest extends File_TherionTestBase {
         $cl1->addShot($shot0);
         
         $cl1->setStationNames("1.", ""); // now set station names
+        // Note this creates a mistake as this yields in two valid stations;
+        // one is "1" and the other "1.1". but they are not the same.
+        // We will "fix" this using an equate below.
                 
         $shot1  = new File_Therion_Shot();
-        $shot1->setFrom(new File_Therion_Station("1"));
-        $shot1->setTo(new File_Therion_Station("2"));
-        $cl1->addShot($shot1);
+        $shot1->setFrom(new File_Therion_Station("1")); // 1.1, but not linked
+        $shot1->setTo(new File_Therion_Station("2"));   // 1.2
+        $this->assertEquals("1", $shot1->getFrom()->getName(true));
+        $cl1->addShot($shot1); // this updates statin-names for shot stations
         
         $shot2  = new File_Therion_Shot();
-        $shot2->setFrom($shot1->getTo());
-        $shot2->setTo(new File_Therion_Station("3"));
+        $shot2->setFrom($shot1->getTo());  // linked 1.2
+        $shot2->setTo(new File_Therion_Station("3"));  // 1.3
         $cl1->addShot($shot2);
         
         // make another survey as subsurvey to sample
@@ -158,51 +162,76 @@ class File_Therion_SurveyTest extends File_TherionTestBase {
         $shot21->setTo(new File_Therion_Station("2.3"));
         $cl2->addShot($shot21);
         
-        // set equal: first station from first CL == last station from last CL
-        // lookup from the survey context
-        $start = $sample->getCentrelines()[0]->getShots()[0]->getFrom();
-        $first = $sample->getCentrelines()[0]->getShots()[1]->getFrom();
-        $last  = $sample2->getCentrelines()[0]->getShots()[1]->getTo();
-        $sample->addEquate(new File_Therion_Equate(array($start, $first, $last)));
-        
-        // expected is clean referenced equate command
+        // set equal (lookup from the survey context):
+        // - Fix 1 to 1.1 human error (introduced by station-names above)
+        // - second station from first CL == last station from first CL
+        $start = $sample->getCentrelines()[0]->getShots()[0]->getTo();   // 1
+        $first = $sample->getCentrelines()[0]->getShots()[1]->getFrom(); // 1.1
+        $last  = $sample2->getCentrelines()[0]->getShots()[1]->getTo();  // 2.3
+        $start->addEquate(array($first, $last));
+        $this->assertEquals("1",   $start->getName(true));
+        $this->assertEquals("1.1", $first->getName(true));
+        $this->assertEquals("2.3", $last->getName(true));
+
+        // expected is two stations in top survey with valid equals.
+        // ($first has a valid resolvable backlink)
+        // also note, that because me made a mistake above, we have two
+        // "1" stations: 1 and 1.1. This can be fixed by equating them.
+        $this->assertEquals(array($start), $sample->getEquates());
         $this->assertEquals(
-            'equate 0 1.1 2.3@subTest',
-            $sample->getEquates()[0]->toString()
+            'equate 1 1.1 2.3@subTest',
+            $start->toEquateString()
+        );
+        $this->assertEquals(
+            '', // skipped link, because station 1.1 only links back to 1!
+            $first->toEquateString()
         );
         
         
+        // test line representation of those equates
+        $lines = File_Therion_Line::filterNonEmpty($sample->toLines());
+        $this->assertEquals( // investigate output slice of lines
+            array(
+                "\tendcentreline",
+                "\tequate 1 1.1 2.3@subTest",
+                "\tsurvey subTest"
+            ),
+            array(
+                rtrim($lines[7]->toString()),
+                rtrim($lines[8]->toString()),
+                rtrim($lines[9]->toString())
+            )
+        );
         
-        // wrong invocations:
-        try {
-            $sample->addEquate();
-        } catch (Exception $e) {
-            $this->assertInstanceOf('Exception', $e);
-        }
+    }
+    
+    public function testEquateParsing()
+    {
+        // fetch file content
+        $equatesFile = $this->testdata_base_own.'/parseEquatetest/equates.th';
+        $th = File_Therion::parse($equatesFile);
+        $this->assertEquals(1, count($th->getSurveys()));
+        $survey = array_shift($th->getSurveys());
+        $subsurvey = array_shift($survey->getSurveys());
+        $cl1 = $survey->getCentrelines()[0];
+        $cl2 = $subsurvey->getCentrelines()[0];
         
-        try {
-            $sample->addEquate("missingPartner");
-        } catch (Exception $e) {
-            $this->assertInstanceOf('Exception', $e);
-        }
+        // see what we have
+        $cl1_sh1_to   = $cl1->getShots()[0]->getTo();   // 1
+        $cl1_sh2_from = $cl1->getShots()[1]->getFrom(); // 1.1
+        $cl2_sh2_to   = $cl2->getShots()[1]->getTo();   // 2.3
         
-        try {
-            $sample->addEquate("missingPartner", null);
-        } catch (Exception $e) {
-            $this->assertInstanceOf('Exception', $e);
-        }
+        $this->assertEquals(  // equate 1 1.1 2.3@subTest
+            array($cl1_sh2_from, $cl2_sh2_to),
+            $cl1_sh1_to->getEquates()
+        );
         
-        try {
-            $sample->addEquate("missingPartner", array());
-        } catch (Exception $e) {
-            $this->assertInstanceOf('Exception', $e);
-        }
+        // backlinks established?
+        $this->assertEquals(array($cl1_sh1_to), $cl1_sh2_from->getEquates() );
+        $this->assertEquals(array($cl1_sh1_to), $cl2_sh2_to->getEquates() );
         
-        try {
-            $sample->addEquate(array("foo"), "bar", array("baz")); // <-nonsense
-        } catch (Exception $e) {
-            $this->assertInstanceOf('Exception', $e);
-        }
+        
+        // TODO negative test cases for equate parsing missing...
     }
     
     

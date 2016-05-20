@@ -65,13 +65,6 @@ class File_Therion_Survey
     protected $_joins = array();
     
     /**
-     * Associated equate definitions
-     * 
-     * @var array of equal-station-arrays ($x[n]=array(1, 2, 3, ...))
-     */
-    protected $_equates = array();
-    
-    /**
      * Associated maps
      * 
      * @var array of map objects
@@ -316,14 +309,15 @@ class File_Therion_Survey
         unset($sobj);
         
         // equates
-        foreach ($this->getEquates() as $sobj) {
-            foreach ($sobj as $e) {
-                $l = $e->toLines();
-                $l->setIndent($baseIndent.$l->getIndent());
-                $lines[] = $l;
-            }
+        foreach ($this->getEquates() as $stn) {
+    //print "DBG: seen equated station: '".."' -> ''\n";
+           // foreach ($eqs as $stn) {
+                $lines[] = new File_Therion_Line(
+                    $stn->toEquateString($this), "", $baseIndent);
+           // }
+            unset($stn);
         }
-        unset($sobj);
+        unset($eqs);
         
         // scraps
         foreach ($this->getScraps() as $sobj) {
@@ -410,66 +404,36 @@ class File_Therion_Survey
         $this->_name = $id;
     }
     
-    /**
-     * Add a station equate.
-     * 
-     * The stations to equate must have a valid survey context. This is usually
-     * the case automatically when the stations are part of a centreline that
-     * was added to a survey.
-     * 
-     * The survey context of the equate command will be updatet to the
-     * local survey.
-     * 
-     * Example:
-     * <code>
-     * // get from-station of first shot of first centreline
-     * // get to-station of third shot of second centreline
-     * $station1 = $survey->getCentrelines()[0]->getShots()[0]->getFrom();
-     * $station2 = $survey->getCentrelines()[1]->getShots()[2]->getTo();
-     * 
-     * // make them equal
-     * $equate = new File_Therion_Equate($station1, $station2);
-     * 
-     * // add that equality definition to survey
-     * $survey->addEquate($equate);
-     * </code>
-     *
-     * @obsolete this may be obsoleted, see File_Therion_Equate class comment
-     * 
-     * @param string|array station equates.
-     * @throws File_Therion_SyntaxException when equate < 2 stations
-     */
-    public function addEquate(File_Therion_Equate $equate)
-    {
-        // check parameters
-        if (count($equate) < 2) {
-            throw new File_Therion_SyntaxException(
-                "Missing argument: equate command expects >=2 stations");
-        }
-        
-        $equate->setSurveyContext($this); // update context
-        
-        $this->_equates[] = $equate;
-    }
     
     /**
-     * Clean existing equates.
-     */
-    public function clearEquates()
-    {
-        $this->_equates = array();
-    }
-    
-    /**
-     * Get existing equates.
+     * Get equated stations of this survey.
      * 
-     * Each unique definition forms one array element.
+     * This evaluates all stations of this survey and returns those, wo have
+     * forward equates that are valid seen from the local survey context.
      * 
-     * @return array of {@link File_Therion_Equate} objects
+     * Backlinked equates will be skipped if the survey context of the forward-
+     * linked station equals the equated stations context (i.e. skip the
+     * backlink when forward-link was already considered).
+     * 
+     * @return array of {@link File_Therion_Station} objects
      */
     public function getEquates()
     {
-        return $this->_equates;
+        // inspect all stations from all centrelines
+        $equated_stations = array();
+        foreach ($this->getCentrelines() as $cl) {
+            foreach ($cl->getStations() as $stn) {
+                if ($stn->toEquateString($this) != "") {
+                    // viewed from this survey, the station has
+                    // some resolvable equates.
+                    // Backlinks in same context are skipped automatically from
+                    // the Station class toEquateString() method.
+                    $equated_stations[] = $stn;
+                }
+            }
+        }
+        
+        return $equated_stations;
     }
     
     /**

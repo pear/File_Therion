@@ -1,0 +1,21 @@
+survey test
+	centreline
+	
+	
+		data	normal	from	to	length	bearing	gradient	left	right	up	down
+				0	1	0	0	0	0	0	0	0
+		station-names 1. ""
+				1	2	0	0	0	0	0	0	0
+				2	3	0	0	0	0	0	0	0
+	endcentreline
+	equate 1 1.1 2.3@subTest
+	survey subTest
+		centreline
+		
+		
+			data	normal	from	to	length	bearing	gradient	left	right	up	down
+					2.1	2.2	0	0	0	0	0	0	0
+					2.2	2.3	0	0	0	0	0	0	0
+		endcentreline
+	endsurvey subTest
+endsurvey test

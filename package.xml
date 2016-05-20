@@ -118,6 +118,9 @@
                             <file name="lvl3.th" role="test" />
                             <file name="lvl4.th" role="test" />
                         </dir>
+                         <dir name="parseEquatetest" >
+                            <file name="equates.th" role="test" />
+                        </dir>
                     </dir>
                     <dir name="samples_therion" >
                         <dir name="basics" >
