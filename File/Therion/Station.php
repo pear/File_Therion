@@ -90,6 +90,13 @@ class File_Therion_Station implements File_Therion_IReferenceable
     );
     
     /**
+     * Equated stations.
+     * 
+     * @var array of File_Therion_Station objects
+     */
+    protected $_equates = array();
+    
+    /**
      * Create a new therion station object.
      * 
      * @param string $station Station name (like "1")
@@ -588,6 +595,131 @@ class File_Therion_Station implements File_Therion_IReferenceable
         $name    = preg_replace('/^'.$prePost[0].'/', '', $name);
         $name    = preg_replace('/'.$prePost[1].'$/', '', $name);
         $this->setName($name);
+    }
+    
+    /**
+     * Add equated station.
+     * 
+     * This defines that the local station is equal to the passed one.
+     * 
+     * Unless $noLink is true, a backlink will be established. You normally
+     * won't need to enable this.
+     * 
+     * @param File_Therion_Station $station
+     * @param boolean $noLink Don't establish backlink.
+     * @param
+     */
+    public function addEquate(File_Therion_Station $station, $noLink = false)
+    {
+        $this->_equates[] = $station;
+        if (!$noLink) {
+            // add backlink
+            $station->addEquate($this, true);
+        }
+    }
+    
+    /**
+     * Returns equated stations.
+     * 
+     * @return array of equated File_Therion_Station objects
+     */
+    public function getEquates()
+    {
+        return $this->_equates;
+    }
+    
+    /**
+     * Removes all equated stations.
+     * 
+     * You may optionally select a station to clear by providing the station
+     * object. Other stations will be still equated.
+     * 
+     * The referenced stations backlink will be cleared unless $keepLink is
+     * true. You normally won't need to enable this.
+     * 
+     * @param File_Therion_Station $station clear only this link
+     * @param boolean $keepLink true=Don't clean backlink
+     */
+    public function clearEquates(
+        File_Therion_Station $station = null, $keepLink = false)
+    {
+        if (is_null($station)) {
+            // clear all stations
+            if (!$keepLink) {
+                // clear backlink
+                foreach ($this->_equates as $eq) {
+                    $eq->clearEquates($this, true);
+                }
+            }
+            $this->_equates = array();
+            
+        } else {
+            // clear selected station
+            // (implemented quick and dirty, sorry. Brain empty.)
+            $neq = array();
+            foreach ($this->_equates as $eq) {
+                if ($eq != $station) {
+                    $neq[] = $eq;
+                } else {
+                    if (!$keepLink) {
+                        // clear backlink
+                        $eq->clearEquates($this, true);
+                    }
+                }
+            }
+            $this->_equates = $neq;
+        }
+    }
+    
+    /**
+     * Return equate command as string.
+     * 
+     * This creates an "equate"-command string with station references as viewed
+     * from the stations local context.
+     * 
+     * When no stations are equated, an empty string is returned.
+     * Otherwise the command "equate" followed by station string references
+     * will be returned.
+     * 
+     * Stations whose reference cannot be resolved will be silently suppressed.
+     * 
+     * If an alternative survey context is provided, this will be used instead
+     * of the stations context. Be aware that this may yield strange results,
+     * and be sure to pass parent surveys of the local context.
+     *
+     * @param File_Therion_Survey $viewCTX alternative context
+     * @return string empty string or equate command
+     * @throws UnexpectedValueException when view-context is not available
+     */
+    public function toEquateString(File_Therion_Survey $viewCTX = null)
+    {
+        if (is_null($viewCTX)) $viewCTX = $this->getSurveyContext();
+        
+        if (is_null($viewCTX)) {
+            throw new UnexpectedValueException(
+                "View-Context of station ".$this->getName(true)." is invalid!");
+        }
+        
+        // walk all stations and try to resolve them
+        $refStrings = array();
+        $equates = $this->getEquates();
+        array_unshift($equates, $this); // add local station to equate refs
+        foreach ($equates as $es) {
+            try {
+                // create string reference
+                $ref = new File_Therion_Reference($es, $viewCTX);
+                $refStrings[] = $ref->toString();
+            } catch (File_Therion_InvalidReferenceException $exc) {
+                // ignore the station
+            }
+        }
+        
+        // return result
+        if (count($refStrings) >= 2) {
+            return "equate ".implode(" ", $refStrings);
+        } else {
+            return "";
+        }
     }
     
 }
