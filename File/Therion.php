@@ -15,7 +15,7 @@
 /**
  * File_Therion Version
  */
-define('FILE_THERION_VERSION', '0.1.0');
+define('FILE_THERION_VERSION', '0.2.0');
 
 /**
  * Package includes.
