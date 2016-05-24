@@ -35,6 +35,19 @@ class File_Therion_SurveyTest extends File_TherionTestBase {
         $this->assertEquals(0, count($sample)); // SPL count subsurveys
         $this->assertEquals(0, $sample->count()); // normal count subsurveys
         $this->assertEquals("test", $sample->getName());
+        
+        // test for loop references
+        $sampleChild1 = new File_Therion_Survey("testChild1");
+        $sample->addSurvey($sampleChild1);
+        $sampleChild2 = new File_Therion_Survey("testChild2");
+        $sampleChild1->addSurvey($sampleChild2);
+        $exc = null;
+        try {
+            $sampleChild2->addSurvey($sample);
+        } catch (Exception $e) {
+            $exc = $e;
+        }
+        $this->assertInstanceOf('File_Therion_Exception', $exc);
     }
     
     /**

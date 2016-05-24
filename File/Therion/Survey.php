@@ -499,9 +499,23 @@ class File_Therion_Survey
      * </code>
      * 
      * @param {@link File_Therion_Survey} $subsurvey Survey object to add
+     * @throws File_Therion_Exception at loop reference
+     * @todo unreference children from old parent when reassigning children
      */
     public function addSurvey(File_Therion_Survey $subsurvey)
     {
+        // walk parents upwards and search for subsurvey
+        $next = $this;
+        while (!is_null($next)) {
+            $next = $next->getParent();
+            if ($next == $subsurvey) {
+                throw new File_Therion_Exception(
+                    "survey '".$subsurvey->getName()
+                    ."' is a parent of '".$next->getName()."'!"
+                );
+            }
+        }
+        
         $subsurvey->setParent($this); // update parent
         $this->_surveys[] = $subsurvey;
     }
