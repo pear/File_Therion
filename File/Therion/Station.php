@@ -777,8 +777,9 @@ class File_Therion_Station implements File_Therion_IReferenceable
             // Skip referencing in case the link is a backlink AND the
             // referenced station is in the same survey context.
             // This avoids duplicate equate-commands.
+            $thisCTX = $this->getSurveyContext();
             if (in_array($es, $this->_equatesBL)
-                && $es->getSurveyContext() == $this->getSurveyContext()) {
+                && $thisCTX->isEqual($es->getSurveyContext())) {
                 continue; // ignore the station
             }
             

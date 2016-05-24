@@ -468,7 +468,7 @@ class File_Therion_Survey
      */
     public function getEquates()
     {
-        // inspect all stations from all centrelines
+        // inspect all local stations from all local centrelines
         $equated_stations = array();
         foreach ($this->getCentrelines() as $cl) {
             foreach ($cl->getStations() as $stn) {
@@ -776,6 +776,31 @@ class File_Therion_Survey
     public function count()
     {
         return count($this->_surveys);
+    }
+    
+    /**
+     * Tell if this survey is equal to another survey object.
+     * 
+     * This is assumed to be the case when the name matches and the tree
+     * structure is the same.
+     * 
+     * @return boolean
+     * @todo children test currently based on equal count only, but testing them explicitely would be good
+     */
+    public function isEqual($survey) {
+        if (is_null($survey) || !is_a($survey, 'File_Therion_Survey')) {
+            return false;
+        }
+        
+        $tName   = ($this->getName() == $survey->getName());
+        $tChild  = (count($this->getSurveys() == count($survey->getSurveys())));
+        if (!is_null($this->getParent())) {
+            $tParent = ($this->getParent()->isEqual($survey->getParent()));
+        } else {
+            $tParent = is_null($survey->getParent());
+        }
+        
+        return ($tName && $tChild && $tParent);
     }
     
 }
