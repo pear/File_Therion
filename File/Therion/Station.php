@@ -636,6 +636,11 @@ class File_Therion_Station implements File_Therion_IReferenceable
                     "wrong argument type '"
                     .gettype($station)."'/'".get_class($station)."'" );
             }
+            
+            // ignore self-references
+            if (in_array($station, $this->getEquates())) {
+                return;
+            }
         
             // add station link if not already linked as forward or backlink
             $curEquates = $this->getEquates(false);
