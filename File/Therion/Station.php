@@ -779,7 +779,7 @@ class File_Therion_Station implements File_Therion_IReferenceable
             // This avoids duplicate equate-commands.
             $thisCTX = $this->getSurveyContext();
             if (in_array($es, $this->_equatesBL)
-                && $thisCTX->isEqual($es->getSurveyContext())) {
+                && $thisCTX === $es->getSurveyContext()) {
                 continue; // ignore the station
             }
             
