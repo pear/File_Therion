@@ -82,8 +82,8 @@ class File_Therion_Reference
      * - (string, survey): Create resolvable string-reference.
      * 
      * More special invocations are:
-     * - (string, null):   Create a contextless ref (returns string as is)
-     * - (obj,    null):   Create fake obj reference (generates entire pathref).
+     * - (string, null): Create a contextless static ref (returns string as is)
+     * - (obj,    null): Create fake obj reference (generates entire pathref).
      * 
      * @param string|object $refObj The object to reference
      * @param File_Therion_Survey $ctx Viewing context
