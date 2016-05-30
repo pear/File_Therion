@@ -48,11 +48,13 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
         
         
         // wrong invocation
+        $exc = null;
         try {
             $sample = new File_Therion_Centreline("foo");
         } catch (Exception $e) {
-            $this->assertInstanceOf('Exception', $e);
+            $exc = $e;
         }
+        $this->assertInstanceOf('Exception', $exc);
     }
     
     /**
