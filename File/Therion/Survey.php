@@ -359,11 +359,16 @@ class File_Therion_Survey
         
         // equates
         foreach ($this->getEquates() as $stn) {
-    //print "DBG: seen equated station: '".."' -> ''\n";
-           // foreach ($eqs as $stn) {
+                //print "DBG: seen equated station: '".."' -> ''\n";
                 $lines[] = new File_Therion_Line(
                     $stn->toEquateString($this), "", $baseIndent);
-           // }
+            unset($stn);
+        }
+        unset($eqs);
+        foreach ($this->getDeepEquates() as $stn) {
+            //print "DBG: seen deepequated station: '".."' -> ''\n";
+            $lines[] = new File_Therion_Line(
+                $stn->toEquateString($this), "", $baseIndent);
             unset($stn);
         }
         unset($eqs);
@@ -470,14 +475,91 @@ class File_Therion_Survey
     {
         // inspect all local stations from all local centrelines
         $equated_stations = array();
-        foreach ($this->getCentrelines() as $cl) {
-            foreach ($cl->getStations() as $stn) {
-                if ($stn->toEquateString($this) != "") {
-                    // viewed from this survey, the station has
-                    // some resolvable equates.
-                    // Backlinks in same context are skipped automatically from
-                    // the Station class toEquateString() method.
-                    $equated_stations[] = $stn;
+        foreach ($this->getAllStations(0) as $stn) {
+            if ($stn->toEquateString($this) != "") {
+                // viewed from this survey, the station has
+                // some resolvable equates.
+                // Backlinks in same context are skipped automatically from
+                // the Station class toEquateString() method.
+                $equated_stations[] = $stn;
+            }
+        }
+        
+        return $equated_stations;
+    }
+    
+    /**
+     * Get equated stations of lower level surveys.
+     * 
+     * This evaluates all stations of lower level surveys and returns those,
+     * wo have equates that are valid seen from the local survey context but
+     * cannot be fully referenced in the next deeper survey context of
+     * the survey structure path they belong to.
+     * 
+     * Viewed from the stations local survey perspective:
+     * This happens when stations of a local survey are equated with stations
+     * from another survey which is not part of this surveys tree (station is
+     * not local and not in a child survey) but share a common parent survey.
+     * 
+     * Essentially, this reports all station eqautes of all subsurveys that are
+     * only fully referenceable from the local perspective of this survey.
+     * 
+     * @return array of {@link File_Therion_Station} objects
+     */
+    public function getDeepEquates()
+    {        
+        // get all stations with equates from all subsurveys
+        $allStns = $this->getAllStations(-1);
+        
+        // now see, if the equating string result differs dependig on context:
+        // - when they are equal, this means, that the station equates could be
+        //   resolved fully in the child survey, which means we can skip here.
+        // - when not, this means that the equate must be placed at the local
+        //   survey context because there are stations that are only visible
+        //   from here.
+        $equated_stations = array();
+        $processedEquates = array();
+        foreach ($allStns as $stn) {
+            // skip station if it has no equates defined
+            if (count($stn->getEquates()) == 0 ) continue;
+            
+            $localEqres  = $stn->toEquateString($this);
+            $localEqresC = count(explode(" ", $localEqres));
+            
+            foreach($this->getSurveys() as $srvy) {
+                // check if the stations parent survey structure belongs
+                // to this subsurvey. It makes only sense to compare if
+                // we can expect valid results.
+                try {
+                    $ref = new File_Therion_Reference($stn, $srvy);
+                    $parentPath = $ref->getSurveyPath();
+                     
+                } catch (File_Therion_InvalidReferenceException $exc) {
+                    // station is not referenceable from child survey,
+                    // that is: it does not belong to this branch of the tree
+                    continue; //skip this child survey
+                }
+                
+                $childEqres  = $stn->toEquateString($srvy);
+                $childEqresC = count(explode(" ", $childEqres));
+                if ($childEqresC < $localEqresC) {
+                    // filter duplicates (backlinks!) without altering order
+                    $localEqresSRT = explode(" ", $localEqres);
+                    sort($localEqresSRT);
+                    if (!in_array($localEqresSRT, $processedEquates)) {
+                        // stations equates could not be referenced to the
+                        // extend as we have seen it in local context!
+                        $equated_stations[] = $stn;
+                        $processedEquates[] = $localEqresSRT; // cache result
+                        
+                    } else {
+                        // just ignore the equate: we already processed those
+                        // exact equate command (but maybe in different order)
+                    }
+                    
+                } else {
+                    // ignore this station because child surveys equate is the
+                    // same as the local equate result string
                 }
             }
         }
@@ -490,6 +572,9 @@ class File_Therion_Survey
      * 
      * Adds a survey as subsurvey to this survey and updates its
      * parent reference.
+     * 
+     * A {@link File_Therion_Exception} is thrown, when the child survey is
+     * already present as one of the parents.
      * 
      * Example:
      * <code>
@@ -626,6 +711,39 @@ class File_Therion_Survey
     public function getCentrelines()
     {
         return $this->_centrelines;
+    }
+    
+    /**
+     * Get all stations defined in all centrelines.
+     * 
+     * By default, only returns stations local to this survey.
+     * With $maxDepth you can swith on recursion:
+     * - -1 = recurse endlessly
+     * - 0  = only local stations (default)
+     * - >1 = recurse down to this level (1=first child level, etc)
+     * 
+     * @param boolean $maxDepth
+     * @return array containing {@link File_Therion_Station} objects
+     */
+    public function getAllStations($maxDepth = 0)
+    {
+        $stns = array();
+        
+        // return local stations
+        foreach ($this->getCentrelines() as $cl) {
+            $stns = array_merge($stns, $cl->getStations());
+            // todo we probably need to filter out duplicate stations
+        }
+        
+        // recurse if requested
+        if ($maxDepth <= -1 || $maxDepth > 1) {
+            $maxDepth--;
+            foreach ($this->getSurveys() as $srvy) {
+                $stns = array_merge($stns, $srvy->getAllStations($maxDepth));
+            }
+        }
+        
+        return $stns;
     }
     
     /**

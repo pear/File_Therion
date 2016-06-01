@@ -249,6 +249,123 @@ class File_Therion_SurveyTest extends File_TherionTestBase {
         // TODO negative test cases for equate parsing missing...
     }
     
+    /**
+     * Test deep equating
+     * 
+     * That is points that are equal but do not belong to the local survey
+     * but must be equated there because the points cannot see each other.
+     * 
+     * Survey A containts both survey AB and AC.
+     * Survey AB1 and AB2 is a child of AC.
+     * Points of AB1 and AB2 are equated but cant reach them in local context.
+     * The equate command must be given in Survey AB but not in A (but it would
+     * be also valid there, given that the referencing is done correctly).
+     */
+    public function testEquatingOfDeepStationsSameParent()
+    {
+        // make survey structure
+        $srvy_A   = new File_Therion_Survey("A");
+        $srvy_AB  = new File_Therion_Survey("AB");
+        $srvy_AC  = new File_Therion_Survey("AC");
+        $srvy_AB1 = new File_Therion_Survey("AB1");
+        $srvy_AB2 = new File_Therion_Survey("AB2");
+        $srvy_A->addSurvey($srvy_AB);
+        $srvy_A->addSurvey($srvy_AC);
+        $srvy_AB->addSurvey($srvy_AB1);
+        $srvy_AB->addSurvey($srvy_AB2);
+        
+        // prepare centreline data
+        $stn_1_1 = new File_Therion_Station("1.1");
+        $stn_1_2 = new File_Therion_Station("1.2");
+        $stn_2_1 = new File_Therion_Station("2.1");
+        $stn_2_2 = new File_Therion_Station("2.2");
+        $srvy_AB1->addCentreline(new File_Therion_Centreline());
+        $srvy_AB2->addCentreline(new File_Therion_Centreline());
+        $srvy_AB1->getCentrelines()[0]->addShot(
+            new File_Therion_Shot($stn_1_1, $stn_1_2)
+        );
+        $srvy_AB2->getCentrelines()[0]->addShot(
+            new File_Therion_Shot($stn_2_1, $stn_2_2)
+        );
+        $stn_1_2->addEquate($stn_2_2);
+        
+        // FOR DEBUGGING: Print survey lines
+        //foreach($srvy_A->toLines() as $l) {
+        //    print "DBG: ".$l->toString();
+        //}
+        
+        // test it
+        $this->assertEquals("", $stn_1_2->toEquateString()); // not referencable
+        $this->assertEquals("", $stn_2_2->toEquateString()); // not referencable
+        $this->assertEquals(0, count($srvy_A->getDeepEquates())); // can be referenced deeper down (AB)
+        $this->assertEquals(0, count($srvy_AC->getDeepEquates())); // not referenceable
+        $this->assertEquals(1, count($srvy_AB->getDeepEquates())); // equate in child srvy
+        $this->assertEquals(0, count($srvy_AB1->getDeepEquates())); // not referenceable here, only @parent
+        $this->assertEquals(0, count($srvy_AB2->getDeepEquates())); // not referenceable here, only @parent
+
+    }
+    
+    /**
+     * Test deep equating
+     * 
+     * That is points that are equal but do not belong to the local survey
+     * but must be equated there because the points cannot see each other.
+     * 
+     * Survey A containts both survey AB and AC.
+     * Survey AB1 and AB2 is a child of AC.
+     * Survey AB2a is a child of AB2 and contains a station.
+     * Points of AB1 and AB2a are equated but cant reach them in local context.
+     * The equate command must be given in Survey AB but not in A (but it would
+     * be also valid there, given that the referencing is done correctly).
+     */
+    public function testEquatingOfDeepStationsRecursedParent()
+    {
+        // make survey structure
+        $srvy_A   = new File_Therion_Survey("A");
+        $srvy_AB  = new File_Therion_Survey("AB");
+        $srvy_AC  = new File_Therion_Survey("AC");
+        $srvy_AB1 = new File_Therion_Survey("AB1");
+        $srvy_AB2 = new File_Therion_Survey("AB2");
+        $srvy_AB2a = new File_Therion_Survey("AB2a");
+        $srvy_A->addSurvey($srvy_AB);
+        $srvy_A->addSurvey($srvy_AC);
+        $srvy_AB->addSurvey($srvy_AB1);
+        $srvy_AB2->addSurvey($srvy_AB2a);
+        $srvy_AB->addSurvey($srvy_AB2);
+        
+        // prepare centreline data
+        $stn_1_1 = new File_Therion_Station("1.1");
+        $stn_1_2 = new File_Therion_Station("1.2");
+        $stn_2_1 = new File_Therion_Station("2.1");
+        $stn_2_2 = new File_Therion_Station("2.2");
+        $srvy_AB1->addCentreline(new File_Therion_Centreline());
+        $srvy_AB2a->addCentreline(new File_Therion_Centreline());
+        $srvy_AB1->getCentrelines()[0]->addShot(
+            new File_Therion_Shot($stn_1_1, $stn_1_2)
+        );
+        $srvy_AB2a->getCentrelines()[0]->addShot(
+            new File_Therion_Shot($stn_2_1, $stn_2_2)
+        );
+        $stn_1_2->addEquate($stn_2_2);
+        
+        // FOR DEBUGGING: Print survey lines
+        //foreach($srvy_A->toLines() as $l) {
+        //    print "DBG: ".$l->toString();
+        //}
+        
+        // test it
+        $this->assertEquals("", $stn_1_2->toEquateString()); // not referencable
+        $this->assertEquals("", $stn_2_2->toEquateString()); // not referencable
+        $this->assertEquals(0, count($srvy_A->getDeepEquates())); // can be referenced deeper down (AB)
+        $this->assertEquals(0, count($srvy_AC->getDeepEquates())); // not referenceable
+        $this->assertEquals(1, count($srvy_AB->getDeepEquates())); // equate in child srvy (recursed from AB2a)
+        $this->assertEquals(0, count($srvy_AB1->getDeepEquates())); // not referenceable here, only @parent
+        $this->assertEquals(0, count($srvy_AB2->getDeepEquates())); // not referenceable here, only @parent
+        $this->assertEquals(0, count($srvy_AB2a->getDeepEquates())); // not referenceable here, only @parent
+        
+
+    }
+
     
     public function testParsingJoins()
     {   
