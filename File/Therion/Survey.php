@@ -330,6 +330,7 @@ class File_Therion_Survey
      * 
      * @return array File_Therion_Line objects
      * @todo finish implementation, implement proper escaping
+     * @todo skip deep equates that are already contained in normal equates
      */
     public function toLines()
     {
@@ -365,6 +366,8 @@ class File_Therion_Survey
             unset($stn);
         }
         unset($eqs);
+        // TODO: we can skip deep equates in case the equated stationRefs are
+        //       already contained in normal equate strings
         foreach ($this->getDeepEquates() as $stn) {
             //print "DBG: seen deepequated station: '".."' -> ''\n";
             $lines[] = new File_Therion_Line(

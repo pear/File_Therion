@@ -206,6 +206,10 @@ class File_Therion_SurveyTest extends File_TherionTestBase {
         
         // test line representation of those equates
         $lines = File_Therion_Line::filterNonEmpty($sample->toLines());
+        // FOR DEBUGGING: Print survey lines
+        //foreach($lines as $l) {
+        //    print "DBG: ".$l->toString();
+        //}
         $this->assertEquals( // investigate output slice of lines
             array(
                 "\tendcentreline",
