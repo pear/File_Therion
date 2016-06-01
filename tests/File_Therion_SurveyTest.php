@@ -175,6 +175,9 @@ class File_Therion_SurveyTest extends File_TherionTestBase {
         $shot21->setTo(new File_Therion_Station("2.3"));
         $cl2->addShot($shot21);
         
+        // test stations: expected are 8 because of 1<>1.1 mistake
+        $this->assertEquals(8, count($sample->getAllStations(-1)));
+        
         // set equal (lookup from the survey context):
         // - Fix 1 to 1.1 human error (introduced by station-names above)
         // - second station from first CL == last station from first CL
