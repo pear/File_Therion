@@ -131,7 +131,7 @@ class File_Therion_SurveyTest extends File_TherionTestBase {
     /**
      * Test equates
      */
-    public function testEquates()
+    public function testEquatingSimple()
     {        
         // make a survey
         $sample = new File_Therion_Survey("test");
@@ -214,12 +214,14 @@ class File_Therion_SurveyTest extends File_TherionTestBase {
             array(
                 "\tendcentreline",
                 "\tequate 1 1.1 2.3@subTest",
+                "\tequate 2.3@subTest 1",  // <- obsolete backref...
                 "\tsurvey subTest"
             ),
             array(
                 rtrim($lines[7]->toString()),
                 rtrim($lines[8]->toString()),
-                rtrim($lines[9]->toString())
+                rtrim($lines[9]->toString()),
+                rtrim($lines[10]->toString())
             )
         );
         
@@ -301,12 +303,27 @@ class File_Therion_SurveyTest extends File_TherionTestBase {
         // test it
         $this->assertEquals("", $stn_1_2->toEquateString()); // not referencable
         $this->assertEquals("", $stn_2_2->toEquateString()); // not referencable
-        $this->assertEquals(0, count($srvy_A->getDeepEquates())); // can be referenced deeper down (AB)
-        $this->assertEquals(0, count($srvy_AC->getDeepEquates())); // not referenceable
-        $this->assertEquals(1, count($srvy_AB->getDeepEquates())); // equate in child srvy
-        $this->assertEquals(0, count($srvy_AB1->getDeepEquates())); // not referenceable here, only @parent
-        $this->assertEquals(0, count($srvy_AB2->getDeepEquates())); // not referenceable here, only @parent
+        $this->assertEquals(0, count($srvy_A->getEquates(-1))); // can be referenced deeper down (AB)
+        $this->assertEquals(0, count($srvy_AC->getEquates(-1))); // not referenceable
+        $this->assertEquals(1, count($srvy_AB->getEquates(-1))); // equate in child srvy
+        $this->assertEquals(0, count($srvy_AB1->getEquates(-1))); // not referenceable here, only @parent
+        $this->assertEquals(0, count($srvy_AB2->getEquates(-1))); // not referenceable here, only @parent
 
+
+        // test line representation of those equates
+        $lines = File_Therion_Line::filterNonEmpty($srvy_A->toLines());
+        $this->assertEquals( // investigate output slice of lines
+            array(
+                "\tsurvey AB",
+                "\t\tequate 1.2@AB1 2.2@AB2",
+                "\t\tsurvey AB1"
+            ),
+            array(
+                rtrim($lines[1]->toString()),
+                rtrim($lines[2]->toString()),
+                rtrim($lines[3]->toString())
+            )
+        );
     }
     
     /**
@@ -360,17 +377,147 @@ class File_Therion_SurveyTest extends File_TherionTestBase {
         // test it
         $this->assertEquals("", $stn_1_2->toEquateString()); // not referencable
         $this->assertEquals("", $stn_2_2->toEquateString()); // not referencable
-        $this->assertEquals(0, count($srvy_A->getDeepEquates())); // can be referenced deeper down (AB)
-        $this->assertEquals(0, count($srvy_AC->getDeepEquates())); // not referenceable
-        $this->assertEquals(1, count($srvy_AB->getDeepEquates())); // equate in child srvy (recursed from AB2a)
-        $this->assertEquals(0, count($srvy_AB1->getDeepEquates())); // not referenceable here, only @parent
-        $this->assertEquals(0, count($srvy_AB2->getDeepEquates())); // not referenceable here, only @parent
-        $this->assertEquals(0, count($srvy_AB2a->getDeepEquates())); // not referenceable here, only @parent
+        $this->assertEquals(0, count($srvy_A->getEquates(-1))); // can be referenced deeper down (AB)
+        $this->assertEquals(0, count($srvy_AC->getEquates(-1))); // not referenceable
+        $this->assertEquals(1, count($srvy_AB->getEquates(-1))); // equate in child srvy (recursed from AB2a)
+        $this->assertEquals(0, count($srvy_AB1->getEquates(-1))); // not referenceable here, only @parent
+        $this->assertEquals(0, count($srvy_AB2->getEquates(-1))); // not referenceable here, only @parent
+        $this->assertEquals(0, count($srvy_AB2a->getEquates(-1))); // not referenceable here, only @parent
         
-
+        // test line representation of those equates
+        $lines = File_Therion_Line::filterNonEmpty($srvy_A->toLines());
+        $this->assertEquals( // investigate output slice of lines
+            array(
+                "\tsurvey AB",
+                "\t\tequate 1.2@AB1 2.2@AB2.AB2a",
+                "\t\tsurvey AB1",
+            ),
+            array(
+                rtrim($lines[1]->toString()),
+                rtrim($lines[2]->toString()),
+                rtrim($lines[3]->toString())
+            )
+        );
     }
-
     
+    /**
+     * Test deep equating
+     * 
+     * That is points that are equal but do not belong to the local survey
+     * but must be equated there because the points cannot see each other.
+     * 
+     * Survey A containts both survey AB and AC.
+     * Survey AB1 and AB2 is a child of AC.
+     * Survey AB2a is a child of AB2 and contains a station.
+     * Points of AB1 and AB2a are equated but cant reach them in local context.
+     * The equate command must be given in Survey AB but not in A (but it would
+     * be also valid there, given that the referencing is done correctly).
+     * Additionally AB has three local stations where the first and last are eq.
+     */
+    public function testEquatingOfMixedStations()
+    {
+        // make survey structure
+        $srvy_A   = new File_Therion_Survey("A");
+        $srvy_AB  = new File_Therion_Survey("AB");
+        $srvy_AC  = new File_Therion_Survey("AC");
+        $srvy_AB1 = new File_Therion_Survey("AB1");
+        $srvy_AB2 = new File_Therion_Survey("AB2");
+        $srvy_AB2a = new File_Therion_Survey("AB2a");
+        $srvy_A->addSurvey($srvy_AB);
+        $srvy_A->addSurvey($srvy_AC);
+        $srvy_AB->addSurvey($srvy_AB1);
+        $srvy_AB2->addSurvey($srvy_AB2a);
+        $srvy_AB->addSurvey($srvy_AB2);
+        
+        // prepare centreline data
+        $stn_0_1 = new File_Therion_Station("0.1");
+        $stn_0_2 = new File_Therion_Station("0.2");
+        $stn_0_3 = new File_Therion_Station("0.3");
+        $srvy_AB->addCentreline(new File_Therion_Centreline());
+        $srvy_AB->getCentrelines()[0]->addShot(
+            new File_Therion_Shot($stn_0_1, $stn_0_2)
+        );
+        $srvy_AB->getCentrelines()[0]->addShot(
+            new File_Therion_Shot($stn_0_2, $stn_0_3)
+        );
+        $stn_0_3->addEquate($stn_0_1);
+        
+        $stn_1_1 = new File_Therion_Station("1.1");
+        $stn_1_2 = new File_Therion_Station("1.2");
+        $srvy_AB1->addCentreline(new File_Therion_Centreline());
+        $srvy_AB1->getCentrelines()[0]->addShot(
+            new File_Therion_Shot($stn_1_1, $stn_1_2)
+        );
+        
+        $stn_2_1 = new File_Therion_Station("2.1");
+        $stn_2_2 = new File_Therion_Station("2.2");
+        $stn_2_3 = new File_Therion_Station("2.3");
+        $stn_2_4 = new File_Therion_Station("2.4");
+        $srvy_AB2a->addCentreline(new File_Therion_Centreline());
+        $srvy_AB2a->getCentrelines()[0]->addShot(
+            new File_Therion_Shot($stn_2_1, $stn_2_2)
+        );
+        $srvy_AB2a->getCentrelines()[0]->addShot(
+            new File_Therion_Shot($stn_2_2, $stn_2_3)
+        );
+        $srvy_AB2a->getCentrelines()[0]->addShot(
+            new File_Therion_Shot($stn_2_3, $stn_2_4)
+        );
+        $stn_2_3->addEquate($stn_2_4); // local equate
+        $stn_1_2->addEquate($stn_2_2);
+        $stn_0_2->addEquate($stn_2_2);
+        
+        // FOR DEBUGGING: Print survey lines
+        //foreach($srvy_A->toLines() as $l) {
+        //    print "DBG: ".$l->toString();
+        //}
+        
+        // test it
+        $this->assertEquals("", $stn_1_2->toEquateString()); // not referencable
+        $this->assertEquals("", $stn_2_2->toEquateString()); // not referencable
+        $this->assertEquals(0, count($srvy_A->getEquates(-1))); // can be referenced deeper down (AB)
+        $this->assertEquals(0, count($srvy_AC->getEquates(-1))); // not referenceable
+        $this->assertEquals(4, count($srvy_AB->getEquates(-1))); // equate in child srvy (recursed from AB2a)
+        $this->assertEquals(0, count($srvy_AB1->getEquates(-1))); // not referenceable here, only @parent
+        $this->assertEquals(0, count($srvy_AB2->getEquates(-1))); // not referenceable here, only @parent
+        $this->assertEquals(1, count($srvy_AB2a->getEquates(-1))); // local referenceable, but higher ref not referenceable
+        
+        // test line representation of those equates
+        $lines = File_Therion_Line::filterNonEmpty($srvy_A->toLines());
+        $this->assertEquals( // investigate output slice of lines
+            array(
+                "\t\tendcentreline",
+                "\t\tequate 0.2 2.2@AB2.AB2a", // obsoleted by below
+                "\t\tequate 0.3 0.1",
+                "\t\tequate 1.2@AB1 2.2@AB2.AB2a",
+                "\t\tequate 2.2@AB2.AB2a 1.2@AB1 0.2", // contains equate #1
+                "\t\tsurvey AB1",
+                
+                // local equate of AB2a
+                "\t\t\t\tendcentreline",
+                "\t\t\t\tequate 2.3 2.4",
+                "\t\t\tendsurvey AB2a",
+            ),
+            array(
+                rtrim($lines[6]->toString()),
+                rtrim($lines[7]->toString()),
+                rtrim($lines[8]->toString()),
+                rtrim($lines[9]->toString()),
+                rtrim($lines[10]->toString()),
+                rtrim($lines[11]->toString()),
+                
+                // local equate of AB2a
+                rtrim($lines[24]->toString()),
+                rtrim($lines[25]->toString()),
+                rtrim($lines[26]->toString()),
+            )
+        );
+    }
+    
+    
+    /**
+     * Test join parsing
+     */
     public function testParsingJoins()
     {   
         // Basic survey structure with simple data

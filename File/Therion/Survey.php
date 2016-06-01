@@ -330,7 +330,7 @@ class File_Therion_Survey
      * 
      * @return array File_Therion_Line objects
      * @todo finish implementation, implement proper escaping
-     * @todo skip deep equates that are already contained in normal equates
+     * @todo combine equates for nicer output
      */
     public function toLines()
     {
@@ -359,22 +359,19 @@ class File_Therion_Survey
         unset($sobj);
         
         // equates
-        foreach ($this->getEquates() as $stn) {
+        foreach ($this->getEquates(-1) as $stn) {
                 //print "DBG: seen equated station: '".."' -> ''\n";
                 $lines[] = new File_Therion_Line(
                     $stn->toEquateString($this), "", $baseIndent);
             unset($stn);
         }
         unset($eqs);
-        // TODO: we can skip deep equates in case the equated stationRefs are
-        //       already contained in normal equate strings
-        foreach ($this->getDeepEquates() as $stn) {
-            //print "DBG: seen deepequated station: '".."' -> ''\n";
-            $lines[] = new File_Therion_Line(
-                $stn->toEquateString($this), "", $baseIndent);
-            unset($stn);
-        }
-        unset($eqs);
+        // TODO: we can combine equate strings in case the equated stationRefs
+        //        are already contained in other (bigger?) equate strings
+        //        This can be detected here by introducing code that consoli-
+        //        dates equates based on generated lines  after generation 
+        //        (sort by equate length and check if shorter ones are fully 
+        //         contained in previous longer ones, if so skip)
         
         // scraps
         foreach ($this->getScraps() as $sobj) {
@@ -461,41 +458,24 @@ class File_Therion_Survey
         $this->_name = $id;
     }
     
-    
     /**
      * Get equated stations of this survey.
      * 
-     * This evaluates all stations of this survey and returns those, wo have
-     * forward equates that are valid seen from the local survey context.
+     * All local stations with valid equates (viewed from this survey) are
+     * returned as array of {@link File_Therion_Station) objects.
+     * Valid equates are those that are resolvable from this survey context
+     * (i.e. the equated station is visible from the local context, because it
+     * is either local or in a subsurvey).
      * 
-     * Backlinked equates will be skipped if the survey context of the forward-
-     * linked station equals the equated stations context (i.e. skip the
-     * backlink when forward-link was already considered).
+     * Optionally you may return also stations with equates in subsurveys.
+     * Set $maxDepth to <code>-1</code> for this.
+     * Parameter $maxDepth controls considered stations depth.
+     * - -1 = recurse endlessly
+     * - 0  = only local stations (default)
+     * - >1 = recurse down to this level (1=first child level, etc)
      * 
-     * @return array of {@link File_Therion_Station} objects
-     */
-    public function getEquates()
-    {
-        // inspect all local stations from all local centrelines
-        $equated_stations = array();
-        foreach ($this->getAllStations(0) as $stn) {
-            if ($stn->toEquateString($this) != "") {
-                // viewed from this survey, the station has
-                // some resolvable equates.
-                // Backlinks in same context are skipped automatically from
-                // the Station class toEquateString() method.
-                $equated_stations[] = $stn;
-            }
-        }
-        
-        return $equated_stations;
-    }
-    
-    /**
-     * Get equated stations of lower level surveys.
-     * 
-     * This evaluates all stations of lower level surveys and returns those,
-     * wo have equates that are valid seen from the local survey context but
+     * Recursing evaluates all stations of lower level surveys and returns those,
+     * those, wo have equates that are valid seen from the local survey context
      * cannot be fully referenced in the next deeper survey context of
      * the survey structure path they belong to.
      * 
@@ -504,15 +484,20 @@ class File_Therion_Survey
      * from another survey which is not part of this surveys tree (station is
      * not local and not in a child survey) but share a common parent survey.
      * 
-     * Essentially, this reports all station eqautes of all subsurveys that are
-     * only fully referenceable from the local perspective of this survey.
+     * Essentially, this reports all station equates of all (sub)surveys that
+     * are only fully referenceable from the local perspective of this survey.
      * 
+     * If you want all equated stations from all subsurveys regardless if they
+     * are referenceable, you can collect them yourself by getting all stations
+     * ({@link getAllStations()}) and testing each station for equates.
+     * 
+     * @param int $maxDepth recursion depth
      * @return array of {@link File_Therion_Station} objects
      */
-    public function getDeepEquates()
+    public function getEquates($maxDepth = 0)
     {        
         // get all stations with equates from all subsurveys
-        $allStns = $this->getAllStations(-1);
+        $allStns = $this->getAllStations($maxDepth);
         
         // now see, if the equating string result differs dependig on context:
         // - when they are equal, this means, that the station equates could be
@@ -526,8 +511,24 @@ class File_Therion_Survey
             // skip station if it has no equates defined
             if (count($stn->getEquates()) == 0 ) continue;
             
+            // generate string reference of equates in this context
             $localEqres  = $stn->toEquateString($this);
             $localEqresC = count(explode(" ", $localEqres));
+            
+            $localEqresSRT = explode(" ", $localEqres); // sorted stringrefs
+            sort($localEqresSRT);
+            
+            // if this station is local to this survey, dont check children
+            if ($stn->getSurveyContext() === $this
+                && $localEqresC > 1) {
+                // viewed from this survey, the station has
+                // some resolvable equates.
+                // Backlinks in same context are skipped automatically from
+                // the Station class toEquateString() method.
+                $equated_stations[] = $stn;
+                $processedEquates[] = $localEqresSRT; // cache result
+                continue;
+            }
             
             foreach($this->getSurveys() as $srvy) {
                 // check if the stations parent survey structure belongs
@@ -547,8 +548,6 @@ class File_Therion_Survey
                 $childEqresC = count(explode(" ", $childEqres));
                 if ($childEqresC < $localEqresC) {
                     // filter duplicates (backlinks!) without altering order
-                    $localEqresSRT = explode(" ", $localEqres);
-                    sort($localEqresSRT);
                     if (!in_array($localEqresSRT, $processedEquates)) {
                         // stations equates could not be referenced to the
                         // extend as we have seen it in local context!
