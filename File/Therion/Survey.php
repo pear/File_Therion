@@ -725,7 +725,7 @@ class File_Therion_Survey
      * - 0  = only local stations (default)
      * - >1 = recurse down to this level (1=first child level, etc)
      * 
-     * @param boolean $maxDepth
+     * @param int $maxDepth
      * @return array containing {@link File_Therion_Station} objects
      */
     public function getAllStations($maxDepth = 0)
