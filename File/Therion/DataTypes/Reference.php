@@ -186,7 +186,7 @@ class File_Therion_Reference
      * possible path being resolved.
      * When the Objects context is null, an UnexpectedValueException is thrown.
      * When the Objects context is not reachable from the reference context, 
-     * a File_Therion_InvalidReferenceException will be thrown.
+     * a {@link File_Therion_InvalidReferenceException} will be thrown.
      * 
      * Technically the search is done by walking the objects survey context
      * structure upwards until the viewing survey context is reached.
