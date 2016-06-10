@@ -37,6 +37,13 @@ class File_Therion_DirectWriter implements File_Therion_Writer
     protected $overwrite = true;
     
     /**
+     * Create nonexisting directorys?
+     * 
+     * @var boolean
+     */
+    protected $createDirs = true;
+    
+    /**
      * Write a Therion file structure.
      * 
      * This will be called by File_Therion->write() to actually perform
@@ -63,9 +70,22 @@ class File_Therion_DirectWriter implements File_Therion_Writer
             
         } else {
             if (!file_exists(dirname($filename))) {
-                throw new File_Therion_IOException(
-                    "File '$filename' could not be created: dir '"
-                    .dirname($filename)."' does not exist!");
+                // create dir structure if allowed
+                if ($this->createDirs) {
+                    $created = mkdir(dirname($filename), 0755, true);
+                    if (!$created) {
+                        throw new File_Therion_IOException(
+                            "File '$filename' could not be created: path '"
+                            .dirname($filename)."' could not be created!");
+                    }
+                } else {
+                    throw new File_Therion_IOException(
+                        "File '$filename' could not be created: dir '"
+                        .dirname($filename)."' does not exist and creating "
+                        ."of path is prohibited!");
+                }
+                
+                
             }
             if (!is_writable(dirname($filename))) {
                 throw new File_Therion_IOException(
@@ -93,13 +113,23 @@ class File_Therion_DirectWriter implements File_Therion_Writer
     
     
     /**
-     * Switch overwriting permission
+     * Switch overwriting permission.
      * 
      * @param boolean
      */
     public function switchOverwrite($yesno)
     {
         $this->overwrite = ($yesno == true);
+    }
+    
+    /**
+     * Switch automatic creation of intermediate directorys.
+     * 
+     * @param boolean
+     */
+    public function switchCreateDirs($yesno)
+    {
+        $this->createDirs = ($yesno == true);
     }
 }
 
