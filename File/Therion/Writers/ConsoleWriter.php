@@ -36,9 +36,15 @@ class File_Therion_ConsoleWriter implements File_Therion_Writer
      */
     public function write(File_Therion $file) {
 
+        // print file name as comment
+        print "# file: ".$file->getFilename()."".PHP_EOL;
+
         // go through all $_lines buffer objects and create writable string;
         $stringContent = $file->toString();
         print $stringContent;
+        
+        // print footer
+        print "# endfile: ".$file->getFilename()."".PHP_EOL;
         
     }
     
