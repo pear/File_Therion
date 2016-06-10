@@ -62,15 +62,31 @@ class File_TherionWriterTest extends File_TherionTestBase {
         $srcFile = $this->testdata_base_therion.'/basics/rabbit.th';
         $th = new File_Therion($srcFile);
         $th->fetch();
-        //$th->evalInputCMD();
+        $th->evalInputCMD();
         $th->addLine(new File_Therion_Line("# Custom test file header"), 'start');
+        
+        // add another test survey as raw lines
+        $testlines = array(
+            "survey foobar",
+            "  # just an empty test survey...",
+            "  ",
+            "  # here comes a scrap:",
+            "  scrap fooScrap1 -scale [295.0 203.0 995.0 207.5 0.0 0.0 0 -36 m]",
+            "    point 629.0 269.5 debris",
+            "  endscrap",
+            "  # end of scrap data",
+            "endsurvey"
+        );
+        foreach (array_reverse($testlines) as $l) {
+            $th->addLine(new File_Therion_Line($l), 4);
+        }
         
         // test console writer (dumps content to terminal)
         // (this could be handy if i want to inspect generated content of file)
         //$th->write(new File_Therion_ConsoleWriter());
         
         // setup clean outfile
-        $tgtFile = $this->testdata_base_out.'/structuredWriter/test_rabbit.th';
+        $tgtFile = $this->testdata_base_out.'/structuredWriter/index.th';
         if (file_exists($tgtFile)) unlink($tgtFile); // clean outfile
         
         $writer = new File_Therion_StructuredWriter();
@@ -79,8 +95,27 @@ class File_TherionWriterTest extends File_TherionTestBase {
         $th->setFilename($tgtFile);
         $th->write($writer);
         
+        // other future test ideas:
+        //$writer->changeTemplate('File_Therion_Survey', '$(base)/therion/$(name).th');
+        //$writer->changeTemplate('File_Therion_Scrap', '$(root)/scraps/$(parent)/$(name).th2');
         
-        
+        /*
+         * Test results
+         */
+        $expectedFiles = array(
+            '/structuredWriter/index.th',
+            '/structuredWriter/rabbit/',
+            '/structuredWriter/rabbit/rabbit.th',
+            '/structuredWriter/rabbit/rabbit.th2',
+            '/structuredWriter/rabbit/foobar',
+            '/structuredWriter/rabbit/foobar/foobar.th',
+            '/structuredWriter/rabbit/foobar/foobar.th2',
+        );
+        foreach ($expectedFiles as $fl) {
+            $this->assertTrue(
+                file_exists($this->testdata_base_out.$fl),
+                "file exists: ".$fl);
+        }
         
         $this->markTestIncomplete("TODO: implement content checking");
 

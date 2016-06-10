@@ -15,12 +15,12 @@
 /**
  * The writer creates nested file structures with input commands.
  * 
- * The survey structure is written in a nested fashion where:
+ * The default survey structure is written in a nested fashion where:
  * - each survey forms a new directory in the parent folder
  * - each surveys content go into a separate .th file
- * - each surveys scrap data go into a separate .th2 file
+ * - each surveys scrap data go into a separate .th2 file per survey
  * - subsurveys are handled like that too, but the files are
- *   linked with input-commands together.
+ *   linked together with input-commands.
  * 
  * The exact file generation is controlled with file path templates.
  * Everytime a template generates a new path at the current context,
@@ -47,7 +47,7 @@ class File_Therion_StructuredWriter
      * @var array
      */
     protected $_fp_tpl = array(
-        'File_Therion_Survey'  =>  '$(base)/$(name).th',
+        'File_Therion_Survey'  =>  '$(base)/$(name)/$(name).th',
         'File_Therion_Scrap'   =>  '$(base)/$(parent).th2'
     );
     
@@ -59,6 +59,17 @@ class File_Therion_StructuredWriter
      * @var array of File_Therion objects
      */
     protected $_files = array();
+    
+    /**
+     * Registered input commands.
+     * 
+     * This gets filled by {@link handleLines()}.
+     * It is used to suppress multiple occurences of the same input-command
+     * at the same file.
+     * 
+     * @var array index=filename, value=array of input cmds
+     */
+    protected $_inputCMDs = array();
     
     
     /**
@@ -90,8 +101,8 @@ class File_Therion_StructuredWriter
         
         // finally write the contents to disk
         foreach ($this->_files as $fo) {
-            //parent::write($fo);  // use directWriter parent for this
-            $fo->write(new File_Therion_ConsoleWriter());
+            parent::write($fo);  // use directWriter parent for this
+            // Debug purpose: $fo->write(new File_Therion_ConsoleWriter());
         }
         
     }
@@ -129,7 +140,7 @@ class File_Therion_StructuredWriter
             $fp = $this->resolveTemplate($line, $file, $ctx);
             $fh = $this->getFileInstance($fp);
             if (!is_null($fh) && $fh !== $file) {
-               // print "DBG: ---CTX SWITCH---".$line->toString();
+                // print "DBG: ---CTX SWITCH---".$line->toString();
                 // add the current line to resolved file
                 $fh->addLine($line);
                 
@@ -140,10 +151,18 @@ class File_Therion_StructuredWriter
                 
                 // add 'input' command for file inclusion to local file
                 $previousLineIndent = is_null($previousLine)? '' : $previousLine->getIndent();
-                $ifile = $fh->getFilename($file->getFilename());
+                $file_fn = $file->getFilename();
+                $ifile   = $fh->getFilename($file_fn);
                 $inputcmd = new File_Therion_Line(
                     'input '.$ifile, '', $previousLineIndent);
-                $file->addLine($inputcmd);
+                if (!array_key_exists($file_fn, $this->_inputCMDs)
+                    || !in_array($inputcmd, $this->_inputCMDs[$file_fn])) {
+                    
+                    $file->addLine($inputcmd);
+                    
+                    // store for further comparison used for suppressing dupes
+                    $this->_inputCMDs[$file_fn][] = $inputcmd;
+                }
                 
                 // continue with the following local line
                 // as the current line was already processed
@@ -186,6 +205,7 @@ class File_Therion_StructuredWriter
      * Recognized $items are class names of Therion objects.
      * 
      * Valid template variables are:
+     * - root:      The full directory path of initial file
      * - base:      The full directory path of the parent survey
      * - name:      Name of the current object
      * - parent:    Name of the current survey context (parent survey)
@@ -269,11 +289,13 @@ class File_Therion_StructuredWriter
              */
             $obj_name   = $lineArg;
             $obj_parent = array_pop($ctx);
+            $root_path  = dirname($this->_files[0]->getFilename());
             
             /*
              * Parse template into real filepath
              */
             $fp = $tpl; // load template
+            $fp = preg_replace('/\$\(root\)/',   $root_path, $fp);   // $(root)
             $fp = preg_replace('/\$\(base\)/',   $ctx_path, $fp);    // $(base)
             $fp = preg_replace('/\$\(name\)/',   $obj_name, $fp);    // $(name)
             $fp = preg_replace('/\$\(parent\)/', $obj_parent, $fp);  // $(survey)
