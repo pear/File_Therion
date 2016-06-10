@@ -41,6 +41,7 @@ require_once 'File/Therion/Join.php';
 require_once 'File/Therion/Writers/WriterInterface.php';
 require_once 'File/Therion/Writers/DirectWriter.php';
 require_once 'File/Therion/Writers/ConsoleWriter.php';
+require_once 'File/Therion/Writers/StructuredWriter.php';
 require_once 'File/Therion/Readers/ReaderInterface.php';
 require_once 'File/Therion/Readers/FileReader.php';
 
@@ -896,11 +897,26 @@ class File_Therion implements Countable
     /**
      * Get physical file name of this file object.
      * 
+     * @param string $relPath return only relative path compared to argument
      * @return string  filename
+     * @throws InvalidArgumentException in case $relPath is no string
      */
-    public function getFilename()
+    public function getFilename($relPath = "")
     {
-         return $this->_filename;
+        if (!is_string($relPath)) {
+            throw new InvalidArgumentException(
+                'Invalid relPath type supplied ('.gettype($relPath).')!'
+            );
+        }
+        
+        $path = $this->_filename;
+        
+        if ($relPath) {
+            $path = str_replace(dirname($relPath), '', $path);
+            $path = preg_replace('/^\/+/', '', $path); // strip leading slashes
+        }
+        
+        return $path;
     }
      
      
