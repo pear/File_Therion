@@ -1092,7 +1092,8 @@ class File_Therion implements Countable
      * $lvls parameter:
      * - null: endless recursion (default)
      * -    0: no input
-     * -   >0: nested levels
+     * -    1: only local inputs
+     * -   >1: nested levels
      * 
      * @param  int $lvls remaining levels to input
      * @throws InvalidArgumentException when input command is invalid pointer
@@ -1120,16 +1121,26 @@ class File_Therion implements Countable
             }
         }
         
-        // scan all local files and search for 'input' commands
-        for ($i=count($this->_lines)-1; $i>0; $i--) {
+        // scan all local lines and search for 'input' commands.
+        // (the scan is performed from end-to-start to make expanding the
+        //  the fetched lines convinient)
+        for ($i=count($this->_lines)-1; $i>=0; $i--) {
             $curline  =& $this->_lines[$i];
             $lineData = $curline->getDatafields();
             if (isset($lineData[0]) && $lineData[0] == 'input') {
                 $remotePath = $lineData[1]; // get path argument from command
                 
-                // expand the remote file argument as viewed from
-                // the local filename
-                $remotePath = dirname($this->_filename).'/'.$remotePath;
+                // Get path reference:
+                // - absolute paths are used as is,
+                // - relative ones are expanded from the local file directory               
+                if (preg_match('%^/|^[a-z]:%i', $remotePath)) {
+                    // path is absolute: use as is
+                    
+                } else {
+                    // path is relative: expand the remote file argument 
+                    // as viewed from the local filename
+                    $remotePath = dirname($this->_filename).'/'.$remotePath;
+                }
                 
                 // when file-basename has no filename extension, append ".th".
                 if (!preg_match('/\.\w+$/', $remotePath)) {
@@ -1165,7 +1176,7 @@ class File_Therion implements Countable
                     .$curline->getComment(),    //   ... and with old comment
                     $curline->getIndent()       // preserve indenting
                 );
-                $this->addLine($commtdOri, $i+1, true);  // replace that line
+                $this->addLine($commtdOri, $i, true);  // replace that line
                 
                 // add retrieved file lines to local buffer in place of $i;
                 // do not add "encoding" command in subfile but reencode the
@@ -1195,12 +1206,13 @@ class File_Therion implements Countable
                             $newData, $newComment, $newIndent);
                             
                         // add the line to the sourcing file
-                        if ($i+2 <= count($this->getLines())) {
-                            $this->addLine($subLine, $i+2); // pushing content down
+                        if ($i+1 <= count($this->getLines())) {
+                            // add somewhere in the middle
+                            $this->addLine($subLine, $i+1); // pushing content down
                         } else {
                             // add to end: this happens, when the input command
                             // was on the very last line.
-                             $this->addLine($subLine, $i+1);
+                             $this->addLine($subLine, 'end');
                         }
                     }
                 }

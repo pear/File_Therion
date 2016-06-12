@@ -458,20 +458,56 @@ class File_TherionTest extends File_TherionTestBase {
         // expect those lines minus one nested occurence of "encoding"
         $this->assertEquals(74+936-1, count($th), "parsed line number does not match sample");
         
-        // test recursing limit
+        // test recursing limit (1 level down)
         // @todo: this should be better tested with custom created nested data
         $th = new File_Therion($this->testdata_base_therion.'/basics/rabbit.th');
         $th->fetch();
         $th->evalInputCMD(1);
         // expect those lines minus one nested occurence of "encoding"
         $this->assertEquals(74+936-1, count($th), "parsed line number does not match sample");
+        $lines = $th->getLines();
+        $this->assertEquals( // ensure commented original input command
+            '  #input rabbit.th2 # (resolved below)',
+            rtrim($lines[41]->toString())
+        );
         
-        // test recursing limit
+        
+        // test recursing limit (0=local only)
         // @todo: this should be better tested with custom created nested data
         $th = new File_Therion($this->testdata_base_therion.'/basics/rabbit.th');
         $th->fetch();
         $th->evalInputCMD(0);
         $this->assertEquals(74, count($th), "parsed line number does not match sample");
+    }
+    
+    /**
+     * Test fetching of referenced content with only lone input command
+     */
+    public function testSimpleFetching_loneInput()
+    {
+        // only an input command
+        $th = new File_Therion('no_file');
+        $th->addLine("input ".$this->testdata_base_therion.'/basics/rabbit.th');
+        $this->assertEquals(1, count($th), "parsed line number does not match sample");
+        $th->evalInputCMD(1);
+        $this->assertEquals(74, count($th), "parsed line number does not match sample");
+        
+        // input command at sole end
+        $th = new File_Therion('no_file');
+        $th->addLine("declination 0.3  # some random stuff");
+        $th->addLine("input ".$this->testdata_base_therion.'/basics/rabbit.th');
+        $this->assertEquals(2, count($th), "parsed line number does not match sample");
+        $th->evalInputCMD(1);
+        $this->assertEquals(75, count($th), "parsed line number does not match sample");
+        
+        // input command on the very first line
+        $th = new File_Therion('no_file');
+        $th->addLine("input ".$this->testdata_base_therion.'/basics/rabbit.th');
+        $th->addLine("declination 0.3  # some random stuff");
+        $this->assertEquals(2, count($th), "parsed line number does not match sample");
+        $th->evalInputCMD(1);
+        $this->assertEquals(75, count($th), "parsed line number does not match sample");
+
     }
 
 
@@ -635,12 +671,13 @@ class File_TherionTest extends File_TherionTestBase {
             $recursor = $i;
             $th = File_Therion::parse(
                 $this->testdata_base_own.'/recursetest/cave.th', $recursor);
-    
+                
             $this->assertEquals(1, count($th->getSurveys()));
             $this->assertEquals($i, $recursor, "Recursing variable touched!");
             $survey = array_shift($th->getSurveys());
             $this->assertEquals(
-                $expectedCentrelines, count($survey->getCentrelines())
+                $expectedCentrelines, count($survey->getCentrelines()),
+                "Recursor was $recursor, srvy='".$survey->getName()."'"
             );
         }
         
