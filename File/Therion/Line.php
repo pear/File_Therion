@@ -268,10 +268,21 @@ class File_Therion_Line implements Countable
     {
         $c = $this->getContent();
         
+        // TODO Known Workarounds for splitting datafields
+        // The quick and dirty pattern below is still insufficient. It fails in 
+        // some cases but currently i lack the time to invent a better one.
+        // Therefore the following workaround introduces a shorthand method for
+        // some known cases where problems have arisen.
+        $r = array();
+        if (preg_match('/(input) (.+)$/', $c, $r)) {
+            return array($r[1], $r[2]);
+        }
+        
         // this pattern tries to grep all possible non-quoted and quoted
         // string tokens.
         // this pattern is still insufficient as it will not get ""foo"" etc,
         // however it should already grep most of the possible combinations.
+        // Note: Maybe some preg_split() code and postprocessing the results may be easier...
         $p ='((?:\[[@\s\w\d.\-]+\])|(?:"(?:""|[@\s\w.:-_\-])+")|(?:[@\d\w.:\-_]+)|(?:"")|(?:\[\]))';
         $r = array();
         $pr = preg_match_all($p, $c, $r);
