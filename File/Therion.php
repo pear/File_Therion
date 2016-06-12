@@ -464,16 +464,19 @@ class File_Therion implements Countable
      * // result: line-0="startline", line-1="somecontent"
      * 
      * // add another simple line (explicitely to the end):
-     * $th->addLine(new File_Therion_Line("final"));
+     * $th->addLine(new File_Therion_Line("final"), 'end');
      * // result: line-0="startline", line-1="somecontent", line-3="final"
      * 
      * // replace line-1:
      * $th->addLine(new File_Therion_Line("othercontent"), 1, true);
      * // result: line-0="startline", line-1="othercontent", line-3="final"
-     * 
      * </code>
      * 
-     * @param File_Therion_Line $line Line to add
+     * Instead of Line objects you may also add a string as $line argument. In
+     * this case a new Line object will be parsed for you. Right spaces and
+     * newline will be trimmed.
+     * 
+     * @param File_Therion_Line|string $line Line to add
      * @param int  $index At which logical position to add (-1=end, 0=first line, ...)
      * @param bool $replace when true, the target line will be overwritten
      * @throws InvalidArgumentException
@@ -481,6 +484,11 @@ class File_Therion implements Countable
      */
     public function addLine($line, $index=-1, $replace=false)
     {
+        // enable short string variant
+        if (is_string($line)) {
+            $line = File_Therion_Line::parse(rtrim($line));
+        }
+        
         if (!is_a($line, 'File_Therion_Line')) {
             throw new InvalidArgumentException(
                 'addLine(): Invalid $line argument! '.

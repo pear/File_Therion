@@ -79,16 +79,7 @@ class File_TherionTest extends File_TherionTestBase {
         $sample = new File_Therion("no_file");
         $this->assertEquals(array(), $sample->getLines());
         
-        // expect exception in case of wrong parameter
-        $exception = null;
-        try {
-            $sample = new File_Therion("no_file");
-            $sample->addLine("string");
-        } catch (Exception $e) {
-            $exception = $e;
-        }
-        $this->assertInstanceOf('InvalidArgumentException', $exception);
-        
+        // expect exception in case of wrong parameter        
         $exception = null;
         try {
             $sample = new File_Therion("no_file");
@@ -111,6 +102,11 @@ class File_TherionTest extends File_TherionTestBase {
         // adding a line
         $sample = new File_Therion("no_file");
         $sample->addLine(new File_Therion_Line("some content"));
+        $this->assertEquals(1, count($sample));
+        
+        // adding a line (string mode)
+        $sample = new File_Therion("no_file");
+        $sample->addLine("some string");
         $this->assertEquals(1, count($sample));
         
         // adding many lines
