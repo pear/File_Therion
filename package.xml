@@ -19,10 +19,10 @@
 
 
     <!-- Information for this release -->
-    <date>2016-06-14</date>
+    <date>2016-xx-xx</date>
     <version>
-        <release>0.2.0</release>
-        <api>0.2.0</api>
+        <release>0.3.0</release>
+        <api>0.3.0</api>
     </version>
     <stability>
         <release>alpha</release>
@@ -30,22 +30,7 @@
     </stability>
     <license uri="http://www.gnu.org/licenses/lgpl-3.0.en.html">LGPLv3</license>
     <notes>
-        This release features some major enhancements and bugfixes compared to
-        0.1.0. Basic examples parse well, data part is usable in many aspects.
-        The rabbit example is nearly fully supported, one major missing feature
-        is lacking surface support.
-        
-        Please refer to the APIdocs TODO list for details on what is missing.
-
-        * Added better equate handling (now at stations, deep equates supported)
-        * Parsing of data files now correctly reuses parsed station objects
-        * Better handling for string references (eg. foo@barsurvey)
-        * Adjusted Station->getName() to report full name by default
-        * Added loop detection to survey structure
-        * Added a function to get all (recursive) surveyed stations of survey
-        * Added a StructuredWriter to write survey into several files
-        * Parsing input commands: support for absolute file paths
-        * ... and various smaller enhancements and bug fixes
+        ...
     </notes>
 
     <contents>
@@ -158,6 +143,36 @@
 
     <!-- older versions -->
     <changelog>
+        <release>
+            <date>2016-06-14</date>
+            <version>
+                <release>0.2.0</release>
+                <api>0.2.0</api>
+            </version>
+            <stability>
+                <release>alpha</release>
+                <api>alpha</api>
+            </stability>
+            <license uri="http://www.gnu.org/licenses/lgpl-3.0.en.html">LGPLv3</license>
+            <notes>
+                This release features some major enhancements and bugfixes compared to
+                0.1.0. Basic examples parse well, data part is usable in many aspects.
+                The rabbit example is nearly fully supported, one major missing feature
+                is lacking surface support.
+                
+                Please refer to the APIdocs TODO list for details on what is missing.
+
+                * Added better equate handling (now at stations, deep equates supported)
+                * Parsing of data files now correctly reuses parsed station objects
+                * Better handling for string references (eg. foo@barsurvey)
+                * Adjusted Station->getName() to report full name by default
+                * Added loop detection to survey structure
+                * Added a function to get all (recursive) surveyed stations of survey
+                * Added a StructuredWriter to write survey into several files
+                * Parsing input commands: support for absolute file paths
+                * ... and various smaller enhancements and bug fixes
+            </notes>
+        </release>
         <release>
             <date>2016-04-22</date>
             <version>
