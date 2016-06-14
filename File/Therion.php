@@ -102,6 +102,7 @@ require_once 'File/Therion/Readers/FileReader.php';
  * @copyright  2016 Benedikt Hallinger
  * @license    http://www.gnu.org/licenses/lgpl-3.0.txt LGPLv3
  * @link       http://pear.php.net/package/File_Therion/
+ * @todo Therion config files not supported yet - add support
  */
 class File_Therion implements Countable
 {
