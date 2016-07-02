@@ -259,7 +259,7 @@ class File_Therion_Line implements Countable
      * Unescaping will be performed, so each array entry has only valid data
      * suitable for proper processing.
      * 
-     * @see {@link escape()} for escaping rules as per therion book
+     * @see escape() for escaping rules as per therion book
      * @return array
      * @throws File_Therion_SyntaxException in case of quoting errors of this Line
      * @todo support corner cases such as ""foo"" (which is valid='"foo"')

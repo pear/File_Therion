@@ -35,7 +35,7 @@ abstract class File_Therion_BasicObject
      * This defines the options available in the concrete object.
      * When inheriting from this class, redeclare the array.
      * 
-     * @see {@link _getSet_dataOrOption()}
+     * @see _getSet_dataOrOption()
      * @var array assoc array
      */
     protected $_options = array(
@@ -125,7 +125,7 @@ abstract class File_Therion_BasicObject
      *
      * @param array $option option (or associative array of options) to set
      * @param array $value when $options is no array: value to set
-     * @see {@link $_options}
+     * @see $_options
      * @throws InvalidArgumentException when option is not defined
      */
     public function setOption($option, $value=null)
@@ -161,7 +161,7 @@ abstract class File_Therion_BasicObject
      *
      * @param string $option option key to get
      * @return mixed depending on option
-     * @see {@link $_options}
+     * @see $_options
      * @throws InvalidArgumentException when option is not defined
      */
      public function getOption($option)
@@ -222,7 +222,7 @@ abstract class File_Therion_BasicObject
      *
      * @param array $key name (or associative array of data) to set
      * @param array $value when $key is no array: value to set
-     * @see {@link $_data}
+     * @see $_data
      * @throws InvalidArgumentException when option is not defined
      */
      protected function setData($key, $value=null)
@@ -249,7 +249,7 @@ abstract class File_Therion_BasicObject
      *
      * @param string $key data key to get
      * @return mixed depending on option
-     * @see {@link $_data}
+     * @see $_data
      * @throws InvalidArgumentException when option is not defined
      */
      protected function getData($key)

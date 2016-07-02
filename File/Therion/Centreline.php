@@ -486,7 +486,7 @@ class File_Therion_Centreline
      * Get all surveying team members.
      * 
      * @return array array of File_Therion_Person objects.
-     * @see {@link getTeamRoles()} for querying team roles.
+     * @see getTeamRoles() for querying team roles.
      */
     public function getTeam()
     {
@@ -910,7 +910,7 @@ class File_Therion_Centreline
      * - key 'spec': value is specification
      * 
      * @return array
-     * @see {@link setExtend()}
+     * @see setExtend()
      */
     public function getExtends()
     {

@@ -868,7 +868,7 @@ class File_Therion implements Countable
      * commands.
      * 
      * @return string The file contents as string
-     * @see {@link setEncoding()}
+     * @see setEncoding()
      * @todo Line endings should not depend on Line class implementation
      */
     public function toString()

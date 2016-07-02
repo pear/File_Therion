@@ -976,7 +976,7 @@ class File_Therion_Shot
      * @param string $from Unit to convert from
      * @param string $to   Unit to convert to
      * @return float converted value
-     * @see {@link setUnit()} and {@link $_units} for possible units
+     * @see setUnit() and $_units for possible units
      * @throws InvalidArgumentException
      * @todo implement me please (grads/degrees currently raw implemented)
      */
