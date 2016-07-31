@@ -117,7 +117,124 @@ class File_TherionWriterTest extends File_TherionTestBase {
 
     }
     
+    /**
+     * Tests some alternative folder structure (each survey in nestes folders with subfolder "therion")
+     * 
+     * - .../base/therion/index.th                -> all baselevel lines
+     * - .../base/main/therion/foobase.th         -> first survey level
+     * - .../base/main/sub1/therion/sub1.th       -> second survey level
+     * - .../base/main/sub1/sub2/therion/sub2.th  -> third survey level
+     */
+    public function testStructuredWriter_nestedAndSeparated()
+    {
+        $tgtFile = $this->testdata_base_out.'/structuredWriter/nas/therion/index_nas.th';
+        
+        // setup clean outfile
+        if (file_exists($tgtFile)) unlink($tgtFile); // clean outfile
+        
+        
+        $th = new File_Therion($tgtFile);
+        $th->addLine(new File_Therion_Line("# Custom test index-file header"), 'start');
+        
+        // add test survey as raw lines
+        $testlines = array(
+            "survey main",
+            "  # main survey does not have a scrap.",
+            "  survey sub0",
+            "    # just an empty test survey...",
+            "    # this one has no subsurveys but a scrap",
+            "    ",
+            "    # here comes a scrap:",
+            "    scrap fooScrap1 -scale [295.0 203.0 995.0 207.5 0.0 0.0 0 -36 m]",
+            "      point 629.0 269.5 debris",
+            "    endscrap",
+            "    # end of scrap data",
+            "  endsurvey",
+            "  ",
+            "  survey sub1",
+            "    # just an empty test survey...",
+            "    ",
+            "    # here comes another scrap:",
+            "    scrap fooScrap2 -scale [295.0 203.0 995.0 207.5 0.0 0.0 0 -36 m]",
+            "      point 629.0 269.5 debris",
+            "    endscrap",
+            "    # end of scrap data",
+            "    ",
+            "    survey sub2a",
+            "      # just an empty test survey...",
+            "      ",
+            "      # here comes another scrap:",
+            "      scrap fooScrap2subsrvy1 -scale [295.0 203.0 995.0 207.5 0.0 0.0 0 -36 m]",
+            "        point 629.0 269.5 debris",
+            "      endscrap",
+            "      # end of scrap data",
+            "    endsurvey",
+            "    ",
+            "    survey sub2b",
+            "      # just an empty test survey...",
+            "      ",
+            "      # here comes another scrap:",
+            "      scrap fooScrap2subsrvy2 -scale [295.0 203.0 995.0 207.5 0.0 0.0 0 -36 m]",
+            "        point 629.0 269.5 debris",
+            "      endscrap",
+            "      # end of scrap data",
+            "      ",
+            "      survey sub3a",
+            "        # just an empty test survey...",
+            "        ",
+            "        # here comes another scrap:",
+            "        scrap fooScrap2subsrvy2 -scale [295.0 203.0 995.0 207.5 0.0 0.0 0 -36 m]",
+            "          point 629.0 269.5 debris",
+            "        endscrap",
+            "        # end of scrap data",
+            "      endsurvey",
+            "    endsurvey",
+            "  endsurvey",
+            "endsurvey"
+        );
+        foreach ($testlines as $l) {
+            $th->addLine(new File_Therion_Line($l));
+        }
+        
+        // test console writer (dumps content to terminal)
+        // (this could be handy if i want to inspect generated content of file)
+        //$th->write(new File_Therion_ConsoleWriter());
+        
+        // setup writer
+        $writer = new File_Therion_StructuredWriter();
+        $writer->changeTemplate('File_Therion_Survey', '$(base)/../$(name)/therion/$(name).th');
+        $writer->changeTemplate('File_Therion_Scrap', '$(base)/$(parent).th2');
+        
+        // write!
+        $th->write($writer);
 
+        
+        /*
+         * Test results
+         */
+        $expectedFiles = array(
+            '/structuredWriter/nas/therion/index_nas.th',
+            '/structuredWriter/nas/main/therion/main.th',
+            '/structuredWriter/nas/main/sub0/therion/sub0.th',
+            '/structuredWriter/nas/main/sub0/therion/sub0.th2',
+            '/structuredWriter/nas/main/sub1/therion/sub1.th',
+            '/structuredWriter/nas/main/sub1/therion/sub1.th2',
+            '/structuredWriter/nas/main/sub1/sub2a/therion/sub2a.th',
+            '/structuredWriter/nas/main/sub1/sub2a/therion/sub2a.th2',
+            '/structuredWriter/nas/main/sub1/sub2b/therion/sub2b.th',
+            '/structuredWriter/nas/main/sub1/sub2b/therion/sub2b.th2',
+            '/structuredWriter/nas/main/sub1/sub2b/sub3a/therion/sub3a.th',
+            '/structuredWriter/nas/main/sub1/sub2b/sub3a/therion/sub3a.th2',
+        );
+        foreach ($expectedFiles as $fl) {
+            $this->assertTrue(
+                file_exists($this->testdata_base_out.$fl),
+                "file exists: ".$fl);
+        }
+        
+        $this->markTestIncomplete("TODO: implement content checking");
+
+    }
 
 }
 ?>
