@@ -13,7 +13,14 @@
  */
 
 /**
- * The writer creates nested file structures with input commands.
+ * The writer creates nested file structures linked with 'input' commands.
+ * 
+ * The exact file generation is controlled with file path templates.
+ * Everytime a template generates a new path at the current context,
+ * an input command is created in the parent file and a new file is
+ * created instead.
+ * The actual write is performed using the basic DirectWriter (options from
+ * there apply in this writer too); Existing target files are overwritten.
  * 
  * The default survey structure is written in a nested fashion where:
  * - each survey forms a new directory in the parent folder
@@ -22,12 +29,21 @@
  * - subsurveys are handled like that too, but the files are
  *   linked together with input-commands.
  * 
- * The exact file generation is controlled with file path templates.
- * Everytime a template generates a new path at the current context,
- * an input command is created in the parent file and a new file is
- * created instead.
- * The actual write is performed using the basic DirectWriter.
- * Existing target files are overwritten.
+ * An alternative structure could be one, where you want to introduce
+ * another subfolder for therions data, so the therion files do not interfer
+ * with other files (eg. photos) stored in the default folder structure:
+ * <code>
+ * $writer->changeTemplate('File_Therion_Survey', '$(base)/../$(name)/therion/$(name).th');
+ * $writer->changeTemplate('File_Therion_Scrap', '$(base)/$(parent).th2');
+ * </code>
+ * With this, each survey still forms a subfolder containing folders for the
+ * subsurveys. Therion data however will go into a subfolder "therion"
+ * (example assumes a survey structure like "main/sub1/sub2"):
+ * - .../main/therion/main.th            -> first survey level
+ * - .../main/sub1/therion/sub1.th       -> second survey level data
+ * - .../main/sub1/therion/sub1.th2      -> second survey level scraps
+ * - .../main/sub1/sub2/therion/sub2.th  -> third survey level data
+ * - .../main/sub1/sub2/therion/sub2.th2 -> third survey level scraps
  *
  * @category   file
  * @package    File_Therion_Writers

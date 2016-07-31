@@ -14,7 +14,8 @@ files).
 
 
 This readme is rather limited so far. The source code features comments and
-also some examples.
+also some examples. For now you may refer to the phpunit test cases to get
+code examples (sorry).
 For general therion usage please refer to therions documentation.
 - Therion dokuwiki: http://therion.speleo.sk/wiki/doku.php
 - Therion book (thbook.pdf): http://therion.speleo.sk/downloads/thbook.pdf
