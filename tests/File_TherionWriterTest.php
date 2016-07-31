@@ -57,8 +57,12 @@ class File_TherionWriterTest extends File_TherionTestBase {
 
     }
     
-    public function testStructuredWriter()
+    public function testStructuredWriter_basic()
     {
+        // setup clean outfile
+        $tgtFile = $this->testdata_base_out.'/structuredWriter/basic/index.th';
+        if (file_exists($tgtFile)) unlink($tgtFile); // clean outfile
+        
         $srcFile = $this->testdata_base_therion.'/basics/rabbit.th';
         $th = new File_Therion($srcFile);
         $th->fetch();
@@ -85,31 +89,23 @@ class File_TherionWriterTest extends File_TherionTestBase {
         // (this could be handy if i want to inspect generated content of file)
         //$th->write(new File_Therion_ConsoleWriter());
         
-        // setup clean outfile
-        $tgtFile = $this->testdata_base_out.'/structuredWriter/index.th';
-        if (file_exists($tgtFile)) unlink($tgtFile); // clean outfile
-        
         $writer = new File_Therion_StructuredWriter();
         
         // write!
         $th->setFilename($tgtFile);
         $th->write($writer);
         
-        // other future test ideas:
-        //$writer->changeTemplate('File_Therion_Survey', '$(base)/therion/$(name).th');
-        //$writer->changeTemplate('File_Therion_Scrap', '$(root)/scraps/$(parent)/$(name).th2');
-        
         /*
          * Test results
          */
         $expectedFiles = array(
-            '/structuredWriter/index.th',
-            '/structuredWriter/rabbit/',
-            '/structuredWriter/rabbit/rabbit.th',
-            '/structuredWriter/rabbit/rabbit.th2',
-            '/structuredWriter/rabbit/foobar',
-            '/structuredWriter/rabbit/foobar/foobar.th',
-            '/structuredWriter/rabbit/foobar/foobar.th2',
+            '/structuredWriter/basic/index.th',
+            '/structuredWriter/basic/rabbit/',
+            '/structuredWriter/basic/rabbit/rabbit.th',
+            '/structuredWriter/basic/rabbit/rabbit.th2',
+            '/structuredWriter/basic/rabbit/foobar',
+            '/structuredWriter/basic/rabbit/foobar/foobar.th',
+            '/structuredWriter/basic/rabbit/foobar/foobar.th2',
         );
         foreach ($expectedFiles as $fl) {
             $this->assertTrue(
@@ -120,6 +116,8 @@ class File_TherionWriterTest extends File_TherionTestBase {
         $this->markTestIncomplete("TODO: implement content checking");
 
     }
+    
+
 
 }
 ?>
