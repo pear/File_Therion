@@ -688,7 +688,7 @@ class File_Therion implements Countable
      * @return array of File_Therion_* objects (empty array if no such objects)
      * @throws InvalidArgumentException
      */
-    protected function getObjects($filter = null)
+    public function getObjects($filter = null)
     {
          if (is_null($filter)) {
             return $this->_objects;
