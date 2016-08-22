@@ -30,7 +30,8 @@
     </stability>
     <license uri="http://www.gnu.org/licenses/lgpl-3.0.en.html">LGPLv3</license>
     <notes>
-        ...
+        * Implemented File_Therion::updateLines(); its now possible to create data files out of the object model!
+        * Prepared wrapping feature in directWriter (Option can be set now, but still not functional yet!)
     </notes>
 
     <contents>

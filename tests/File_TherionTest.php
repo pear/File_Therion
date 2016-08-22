@@ -724,6 +724,24 @@ class File_TherionTest extends File_TherionTestBase {
         
     }
     
+    
+    /**
+     * Test line generation out of objects
+     * 
+     * @todo more checks needed
+     */
+    public function testUpdateLines()
+    {
+        // Simple example
+        $th = new File_therion("not_existing_file");
+        $survey = new File_Therion_Survey("foosurvey");
+        
+        $th->addObject($survey);
+        $th->updateLines();
+        
+        $this->assertEquals($survey->toLines(), $th->getLines());
+    }
+    
     public function testEncodings()
     {
         // TODO Implement me

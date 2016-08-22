@@ -412,15 +412,31 @@ class File_Therion implements Countable
      * Update the internal line representation of this file from contained objects.
      * 
      * This will generate therion file lines out of the associated objects.
+     * Be aware that this will clear already existing line content!
      * 
-     * @todo implement me
+     * @todo check if toString() variants is neccessary (see comments for more info)
      */
     public function updateLines()
     {
-        $this->_lines = array(); // clean existing line content
+        $this->clearLines(); // clean existing line content
         
-         // walk trough the associated objects and ask them to generate lines;
-         // populate
+        // walk trough the associated objects and ask them to generate lines
+        foreach ($this->_objects as $o) {
+            if (method_exists($o, "toLines")) {
+                // usually all relevant objects should implement toLines()!
+                foreach ($o->toLines() as $l) {
+                    $this->addLine($l);
+                }
+                
+            } elseif(method_exists($o, "toString")) {
+                // some more primitive ones just have toString... i havent checked, but i think those should not be able to
+                // be part of a therion file anyway. @todo: Please verify once time is available
+                $this->addLine($o->toString());
+                
+            } else {
+                throw new InvalidArgumentException("internal object (".get_class($o).") not supported! this is a software bug!");
+            }
+        }
     }
      
      
