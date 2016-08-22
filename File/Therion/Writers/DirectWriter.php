@@ -44,16 +44,6 @@ class File_Therion_DirectWriter implements File_Therion_Writer
     protected $createDirs = true;
     
     /**
-     * Wrapping of the file.
-     * 
-     * This controls the wrapping column when writing
-     * 
-     * @access protected
-     * @var int column to wrap at (0=no wrapping)
-     */
-    protected $_wrapAt = 0;
-    
-    /**
      * Write a Therion file structure.
      * 
      * This will be called by File_Therion->write() to actually perform
@@ -142,16 +132,7 @@ class File_Therion_DirectWriter implements File_Therion_Writer
     {
         $this->createDirs = ($yesno == true);
     }
-    
-    /**
-     * Change wrapping column
-     * 
-     * @param int
-     */
-    public function setWrapping($wrapAt)
-    {
-        $this->_wrapAt = $wrapAt;
-    }
+
 }
 
 ?>
