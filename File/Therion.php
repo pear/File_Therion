@@ -174,15 +174,6 @@ class File_Therion implements Countable
      */
     protected $_objects = array();
     
-    /**
-     * Wrapping of the file.
-     * 
-     * This controls the wrapping column when writing
-     * 
-     * @access protected
-     * @var int column to wrap at (0=no wrapping)
-     */
-    protected $_wrapAt = 0;
     
     /**
     * Returns the current release version, may be called statically
