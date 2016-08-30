@@ -512,50 +512,6 @@ class File_Therion_Shot
      * Get shot left dimensions.
      * 
      * @return float
-     * @obsolete use getLeftDimension() instead
-     */
-    public function getLeft()
-    {
-        return $this->getLeftDimension();
-    }
-    
-    /**
-     * Get shot right dimensions.
-     * 
-     * @return float
-     * @obsolete use getRightDimension() instead
-     */
-    public function getRight()
-    {
-        return $this->getRightDimension();
-    }
-    
-    /**
-     * Get shot up (height to ceiling) dimensions.
-     * 
-     * @return float
-     * @obsolete use getUpDimension() instead
-     */
-    public function getUp()
-    {
-        return $this->getUpDimension();
-    }
-    
-    /**
-     * Get shot down (hieght to ground) dimensions.
-     * 
-     * @return float
-     * @obsolete use getDownDimension() instead
-     */
-    public function getDown()
-    {
-        return $this->getDownDimension();
-    }
-    
-    /**
-     * Get shot left dimensions.
-     * 
-     * @return float
      */
     public function getLeftDimension()
     {
