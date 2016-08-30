@@ -459,7 +459,7 @@ class File_Therion_Shot
      
      
     /**
-     * Get from (source) station name.
+     * Get from (source) station.
      * 
      * @return File_Therion_Station station object
      */
@@ -469,7 +469,7 @@ class File_Therion_Shot
     }
     
     /**
-     * Get to (targeted) station name.
+     * Get to (targeted) station.
      * 
      * @return File_Therion_Station station object
      */
