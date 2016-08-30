@@ -102,14 +102,19 @@ class File_Therion_Survey
     /**
      * Create a new therion survey object.
      *
-     * @param string $id Name of the survey
-     * @todo Restrict naming convention, not all characters are allowed!
+     * Survey ID is a therion keyword, thus restricted to a sequence of
+     * A-Z, a-z, 0-9 and _-/ characters (not starting with ‘-’).
+     * If you want to set an alternate cleartext name, use
+     * <code>$survey->setOption('your survey name');</code>.
+     *
+     * @param string $id ID of the survey (note this is a therion keyword)
      */
     public function __construct($id, $options = array())
     {
-        if (!is_string($id) || $id == "") {
+        if (!is_string($id) || $id == ""
+            || !File_Therion_Line::checkSyntax_keyword($id, false)) {
             throw new InvalidArgumentException(
-                "survey ID must be nonempty string!");
+                "survey ID must be nonempty therion keyword string!");
         }
         
         $this->_name = $id;

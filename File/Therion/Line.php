@@ -691,6 +691,27 @@ class File_Therion_Line implements Countable
         
         return $filtered;
     }
+
+    /**
+     * Check syntax on Therion keywords.
+     *
+     * Therion keywords are a sequence of A-Z, a-z, 0-9 and _-/ characters
+     * (not starting with ‘-’).
+     * Extended keyword can also contain +*.,' characters, but not
+     * on the first position.
+     *
+     * @param string  $subject   String to check
+     * @param boolean $extended  TRUE to enable check on "extended keyword"
+     * @return boolean
+     */
+    public static function checkSyntax_keyword($subject, $extended = false)
+    {
+        if ($extended) {
+            return (true == preg_match('/^[A-Za-z0-9_\/][A-Za-z0-9_\/\-\+\*\.,\']*$/', $subject));
+        } else {
+            return (true == preg_match('/^[A-Za-z0-9_\/][A-Za-z0-9_\/\-]*$/', $subject));
+        }
+    }
 }
     
 ?>

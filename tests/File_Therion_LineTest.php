@@ -703,5 +703,55 @@ class File_Therion_LineTest extends File_TherionTestBase
             $sample->extractOptions(true)
         );
     }
+
+
+    /**
+     * Test Syntax for keywords
+     */
+    public function testKeywordSyntax()
+    {
+        /* Therion keywords are a sequence of A-Z, a-z, 0-9 and _-/ characters
+        * (not starting with ‘-’).
+        * Extended keyword can also contain +*.,' characters, but not
+        * on the first position.
+        */
+        $testsNormal = [  // test normal keywords
+            ["A", true],
+            ["abc", true],
+            ["Some String", false],
+            ["", false],
+            ["AbC_123/foo-Bar", true],
+            ["/AbC_123/foo-Bar", true],
+            ["-AbC_123/foo-Bar", false],
+            ["a+c", false],
+            ['"abc"', false],
+        ];
+        $testsExt = [  // test extended keywords
+            ["A", true],
+            ["abc", true],
+            ["Some String", false],
+            ["", false],
+            ["AbC_123/foo-Bar", true],
+            ["/AbC_123/foo-Bar", true],
+            ["-AbC_123/foo-Bar", false],
+            ["a+c", true],
+            ['"abc"', false],
+            ["AbC_123/foo-Bar+more*key,Words...'", true],
+            ["-AbC_123/foo-Bar+more*key,Words'", false],
+            ["'AbC_123/foo-Bar+more*key,Words'", false],
+            ["+AbC_123/foo-Bar+more*key,Words'", false],
+            ["*AbC_123/foo-Bar+more*key,Words'", false],
+            [".AbC_123/foo-Bar+more*key,Words'", false],
+            [",AbC_123/foo-Bar+more*key,Words'", false],
+            ["'AbC_123/foo-Bar+more*key,Words'", false],
+        ];
+
+        foreach ($testsNormal as list($t, $exp)) {
+            $this->assertEquals($exp, File_Therion_Line::checkSyntax_keyword($t, false), "normal keyword: \$t='$t'");
+        }
+        foreach ($testsExt as list($t, $exp)) {
+            $this->assertEquals($exp, File_Therion_Line::checkSyntax_keyword($t, true), "ext keyword: \$t='$t'");
+        }
+    }
 }
 ?>
