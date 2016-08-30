@@ -112,6 +112,35 @@ class File_Therion_StationTest extends File_TherionTestBase {
         $this->assertEquals('bar1baz', $station->getName(true));
         $this->assertEquals('bar1baz', $station->getName());
         
+        
+        $station = new File_Therion_Station("-");
+        $this->assertEquals('-', $station->getName(false));
+        $this->assertEquals('-', $station->getName(true));
+        $this->assertEquals('-', $station->getName());
+        
+        $station->setStationNames("pre", null);
+        $this->assertEquals('-', $station->getName(false));
+        $this->assertEquals('-', $station->getName(true));
+        $this->assertEquals('-', $station->getName());
+        $station->applyStationNames();
+        $this->assertEquals('-', $station->getName(false));
+        $this->assertEquals('-', $station->getName(true));
+        $this->assertEquals('-', $station->getName());
+        
+        $station = new File_Therion_Station(".");
+        $this->assertEquals('.', $station->getName(false));
+        $this->assertEquals('.', $station->getName(true));
+        $this->assertEquals('.', $station->getName());
+        
+        $station->setStationNames("pre", null);
+        $this->assertEquals('.', $station->getName(false));
+        $this->assertEquals('.', $station->getName(true));
+        $this->assertEquals('.', $station->getName());
+        $station->applyStationNames();
+        $this->assertEquals('.', $station->getName(false));
+        $this->assertEquals('.', $station->getName(true));
+        $this->assertEquals('.', $station->getName());
+        
     }
     
     

@@ -134,12 +134,17 @@ class File_Therion_Station implements File_Therion_IReferenceable
      * If the station has a set prefix/postfix, this will be applied,
      * unless the $applyNames parameter is set to false.
      * 
-     * @param boolean $applyNames true return name without applied pre-/postfix
+     * If the station is a anonymous one (original name is dash or dot),
+     * the prefix/postfix will always be ommitted.
+     * Please bear in mind that if you manually set a prefix/postfix as part
+     * of the stations raw name, you need to handle that yourself!
+     * 
+     * @param boolean $applyNames false: return name without applied pre-/postfix
      * @return string Original or prefixed+postfixed name
      */
     public function getName($applyNames=true)
     {
-        if (!$applyNames) {
+        if (!$applyNames || $this->_name == "." || $this->_name == "-") {
             return $this->_name;
             
         } else {
@@ -588,8 +593,10 @@ class File_Therion_Station implements File_Therion_IReferenceable
      */
     public function applyStationNames()
     {
-        $prePost = $this->getStationNames();
-        $this->setName($prePost[0].$this->getName(false).$prePost[1]);
+        if ($this->getName() != "-" && $this->getName(false) != ".") {
+            $prePost = $this->getStationNames();
+            $this->setName($prePost[0].$this->getName(false).$prePost[1]);
+        }
         
         $this->setStationNames("", ""); // reset station prefix/postfix setting
     }
