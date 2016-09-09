@@ -748,6 +748,26 @@ class File_TherionTest extends File_TherionTestBase {
         $this->markTestIncomplete("This test has not been implemented yet.");
     }
     
+    /**
+     * Test header functoinality
+     */
+    public function testHeader()
+    {
+        // adding a line (string mode)
+        $sample = new File_Therion("no_file");
+        $sample->addLine("some string");
+        $this->assertEquals(1, count($sample));
+        $sample->setHeader("# testHeader");
+        $this->assertEquals(2, count($sample));
+        
+        $this->assertEquals(
+            array(
+                File_Therion_Line::parse("# testHeader"),
+                File_Therion_Line::parse('some string'),
+            ),
+            $sample->getLines()
+        );
+    }
 
 }
 ?>

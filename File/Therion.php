@@ -106,6 +106,10 @@ require_once 'File/Therion/Readers/FileReader.php';
  */
 class File_Therion implements Countable
 {
+    /**
+     * Header to be put into any generated file
+     */
+    protected $_header = "";
 
     /**
      * Reader used for this file.
@@ -645,7 +649,14 @@ class File_Therion implements Countable
      */
     public function getLines()
     {
-         return $this->_lines;
+        if ($this->getHeader()) {
+            return array_merge(
+                    array(File_Therion_Line::parse($this->getHeader())),
+                    $this->_lines
+                );
+        } else {
+            return $this->_lines;
+        }
     }
      
      
@@ -944,6 +955,26 @@ class File_Therion implements Countable
         
         return $path;
     }
+    
+    /**
+     * Set header string, that will be printed to generated files.
+     * 
+     * @param string New header string
+     */
+    public function setHeader($header)
+    {
+        $this->_header = $header;
+    }
+    
+    /**
+     * Get current header string.
+     * 
+     * @return string
+     */
+    public function getHeader()
+    {
+        return $this->_header;
+    }
      
      
     /**
@@ -976,10 +1007,10 @@ class File_Therion implements Countable
     public function count($logical=false)
     {
         if ($logical) {
-            return count($this->_lines);  // count line objects
+            return count($this->getLines());  // count line objects
         } else {
             $r = 0;
-            foreach ($this->_lines as $l) {
+            foreach ($this->getLines() as $l) {
                 $r += count($l); // count wrapped lines
             }
             return $r;
