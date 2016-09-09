@@ -389,7 +389,7 @@ class File_Therion_SurveyTest extends File_TherionTestBase {
         $this->assertEquals( // investigate output slice of lines
             array(
                 "\tsurvey AB",
-                "\t\tequate 1.2@AB1 2.2@AB2.AB2a",
+                "\t\tequate 1.2@AB1 2.2@AB2a.AB2",
                 "\t\tsurvey AB1",
             ),
             array(
@@ -487,10 +487,10 @@ class File_Therion_SurveyTest extends File_TherionTestBase {
         $this->assertEquals( // investigate output slice of lines
             array(
                 "\t\tendcentreline",
-                "\t\tequate 0.2 2.2@AB2.AB2a", // obsoleted by below
+                "\t\tequate 0.2 2.2@AB2a.AB2", // obsoleted by below
                 "\t\tequate 0.3 0.1",
-                "\t\tequate 1.2@AB1 2.2@AB2.AB2a",
-                "\t\tequate 2.2@AB2.AB2a 1.2@AB1 0.2", // contains equate #1
+                "\t\tequate 1.2@AB1 2.2@AB2a.AB2",
+                "\t\tequate 2.2@AB2a.AB2 1.2@AB1 0.2", // contains equate #1
                 "\t\tsurvey AB1",
                 
                 // local equate of AB2a

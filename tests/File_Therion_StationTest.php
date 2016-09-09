@@ -288,9 +288,9 @@ class File_Therion_StationTest extends File_TherionTestBase {
         
         // test higher view context
         $this->assertEquals(
-            "equate 2b@surveyBatA 1 2@surveyBatA 3@surveyBatA.surveyCatB",
-            //                    ^--- 1 is visible again!     ^
-            //                   deeper context resolved ------|
+            "equate 2b@surveyBatA 1 2@surveyBatA 3@surveyCatB.surveyBatA",
+            //                    ^--- 1 is visible again!   ^
+            //                   deeper context resolved ----|
             $station2b->toEquateString($surveyA)
         );
         

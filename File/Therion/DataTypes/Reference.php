@@ -18,10 +18,10 @@
  * Some objects like Stations, scraps, etc. can be referenced. An example is an
  * equate command linking two stations together. If the station is not locally
  * known, it must be referenced and resolved. Therion provides a special syntax
- * for this: "<ID>@<Survey>.<SubSurvey>", so an object can be referenced in
- * upper survey structures. Note that it is not possible to reference objects
+ * for this: "<ID>@<SubSurvey>.<Survey>", so an object can be referenced in
+ * survey structures. Note that it is not possible to reference objects
  * in parent surveys, only lower levels may be referenced.
- * 
+ *
  * A Reference-object implements a specific object as viewed from some context.
  * 
  * The main intention of this class is PACKAGE INTERNAL USE, to make dealing
@@ -157,6 +157,13 @@ class File_Therion_Reference
      * {@link toString()}. The reference addresses the current referenced object
      * viewed from the reference view-context.
      * You usually don't need to call this yourself ({@see toString()}).
+     *
+     * As of therion 5.3.16 and Survex 1.2.16 the reference syntax looks like
+     * with deep nested structures the path syntax is resolved right-to-left as
+     * top-down, with the dot just beeing an alternate @-sign.
+     * eg.: "1.1@deepest.notSoDeep.topSurvey":
+     * saying"1.1 at deepest@notSoDeep@topSurvey", while topSurvey is the next
+     * reachable level from the current viewed one.
      */
     public function updateStringReference()
     {        
@@ -169,7 +176,7 @@ class File_Therion_Reference
             foreach ($resolvedPath as $sp) {
                 $names[] = $sp->getName();
             }
-            $this->_stringRef .= "@".implode('.', $names);
+            $this->_stringRef .= "@".implode('.', array_reverse($names));
         }
     }
     
@@ -302,7 +309,7 @@ class File_Therion_Reference
         // dissolve stringref
         $parts   = explode("@", $this->_stringRef, 2);
         $id      = array_shift($parts);
-        $address = explode(".", array_shift($parts));
+        $address = array_reverse(explode(".", array_shift($parts)));
         
         // try to find the addressed survey in substructure,
         // do this by walking down the right path

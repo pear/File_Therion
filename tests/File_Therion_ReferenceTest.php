@@ -98,7 +98,7 @@ class File_Therion_ReferenceTest extends File_TherionTestBase {
         
         // fake resolving
         $ref = new File_Therion_Reference($station, null);
-        $this->assertEquals("1@surveyA.surveyBatA", $ref->toString());
+        $this->assertEquals("1@surveyBatA.surveyA", $ref->toString());
     }
     
     
@@ -119,9 +119,9 @@ class File_Therion_ReferenceTest extends File_TherionTestBase {
         $station1 = new File_Therion_Station("1"); // 1@surveyA
         $station1->setSurveyContext($surveyA);
         $station2 = new File_Therion_Station("2");
-        $station2->setSurveyContext($surveyBatA);  // 2@surveyA.surveyBatA
+        $station2->setSurveyContext($surveyBatA);  // 2@surveyBatAsurveyA
         $station3 = new File_Therion_Station("3");
-        $station3->setSurveyContext($surveyCatB);  // 3@A.B.C
+        $station3->setSurveyContext($surveyCatB);  // 3@C.B.A
     
         
         // Reference: Station 1 viewed from surveyA
@@ -171,7 +171,7 @@ class File_Therion_ReferenceTest extends File_TherionTestBase {
             array($surveyBatA, $surveyCatB),        
             $ref->getSurveyPath()
         );
-        $this->assertEquals("3@surveyBatA.surveyCatB", $ref->toString());
+        $this->assertEquals("3@surveyCatB.surveyBatA", $ref->toString());
         
     }
     
@@ -199,11 +199,11 @@ class File_Therion_ReferenceTest extends File_TherionTestBase {
         $surveyA->getCentrelines()[0]->addShot(
             new File_Therion_Shot($station1, "-") );
         
-        $station2 = new File_Therion_Station("2"); // 2@surveyA.surveyBatA
+        $station2 = new File_Therion_Station("2"); // 2@surveyBatA.surveyA
         $surveyBatA->getCentrelines()[0]->addShot(
             new File_Therion_Shot($station2, "-") );
          
-        $station3 = new File_Therion_Station("3"); // 3@A.B.C
+        $station3 = new File_Therion_Station("3"); // 3@C.B.A
         $surveyCatB->getCentrelines()[0]->addShot(
             new File_Therion_Shot($station3, "-") );
         
@@ -223,7 +223,7 @@ class File_Therion_ReferenceTest extends File_TherionTestBase {
         $this->assertEquals($station2, $obj);
         
         // nested station 3 viewed from top survey
-        $ref = new File_Therion_Reference("3@surveyBatA.surveyCatB", $surveyA);
+        $ref = new File_Therion_Reference("3@surveyCatB.surveyBatA", $surveyA);
         $obj = $ref->getObject();
         $this->assertEquals($station3, $obj);
         
