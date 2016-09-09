@@ -725,6 +725,7 @@ class File_Therion_LineTest extends File_TherionTestBase
             ["-AbC_123/foo-Bar", false],
             ["a+c", false],
             ['"abc"', false],
+            ["1.1", false],
         ];
         $testsExt = [  // test extended keywords
             ["A", true],
@@ -736,6 +737,7 @@ class File_Therion_LineTest extends File_TherionTestBase
             ["-AbC_123/foo-Bar", false],
             ["a+c", true],
             ['"abc"', false],
+            ["1.1", true],
             ["AbC_123/foo-Bar+more*key,Words...'", true],
             ["-AbC_123/foo-Bar+more*key,Words'", false],
             ["'AbC_123/foo-Bar+more*key,Words'", false],

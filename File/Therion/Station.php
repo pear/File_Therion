@@ -116,16 +116,29 @@ class File_Therion_Station implements File_Therion_IReferenceable
     /**
      * Set Name/ID of this station.
      * 
+     * Station name is a therion keyword and as such may only contain
+     * alphanumeric characters and additionally ‘_’ and ‘-’.
+     * 
      * @param string
      * @throws InvalidArgumentException
+     * @todo The syntax check for station name is probably stronger than necessary; Survex manual is a little unclear here.
      */
     public function setName($name)
-    {
-        if (!is_string($name)) {
+    {   
+        if (is_string($name) && $name != ""
+            && File_Therion_Line::checkSyntax_keyword($name, true)) {
+            $this->_name = $name;
+        
+        } elseif(is_string($name) && ($name == "." || $name == "-")) {
+            // support anonymous station names too
+            $this->_name = $name;
+        
+        } else {
             throw new InvalidArgumentException(
-                "station name expects string value, ".gettype($name)." given");
+                "station name must be nonempty therion keyword string, '$name' given");
         }
-        $this->_name = $name;
+        
+       
     }
     
     /**
