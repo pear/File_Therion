@@ -903,7 +903,7 @@ class File_Therion implements Countable
     {
         // Iterate over line objects composing a string
         $ret = "";
-        foreach ($this->_lines as $line) {
+        foreach ($this->getLines() as $line) {
             if ($this->_wrapAt > 0) {
                 // todo: honor wrapping request by user
                 throw new File_Therion_Exception('WRAPPING FEATURE NOT IMPLEMENTED');

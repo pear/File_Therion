@@ -109,6 +109,7 @@ class File_Therion_StructuredWriter
         
         // initialize root file
         $rootFile = new File_Therion($file->getFilename());
+        $rootFile->setHeader($file->getHeader());
         $this->_files[] = $rootFile;
         
         // now feed this inital buffer to the handleLines() routine.
@@ -347,6 +348,7 @@ class File_Therion_StructuredWriter
         
         // no matching file: create new
         $fnew = new File_Therion($filename);
+        $fnew->setHeader($this->_files[0]->getHeader()); // add header from root file
         $this->_files[] = $fnew;
         return $fnew;
     }
