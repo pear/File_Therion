@@ -489,11 +489,17 @@ class File_Therion_Centreline
     /**
      * Get declination of this centreline.
      *
-     * @return array [0]=Declination angle; [1]=unit
+     * returns null in case declination was not set.
+     *
+     * @return null|array [0]=Declination angle; [1]=unit
      */
     public function getDeclination()
     {
-        return $this->getData('declination');
+        if (count($this->getData('declination')) >0 ) {
+            return $this->getData('declination');
+        } else {
+            return null;
+        }
     }
     
     /**
@@ -1300,10 +1306,12 @@ class File_Therion_Centreline
         $lines[] = new File_Therion_Line(""); // add line spacer
 
         // declination
-        // @todo: implement proper handling!!! currently assuming 2-item-array from parse
-        $lines[] = new File_Therion_Line(
-                "declination ".implode(" ", $this->getData('declination')),
-                "", $baseIndent); 
+        $decl = $this->getDeclination();
+        if (!is_null($decl)) {
+            $lines[] = new File_Therion_Line(
+                "declination ".implode(" ", $decl),
+                "", $baseIndent);
+        }
         
 
         // shots, units and data definitions.
