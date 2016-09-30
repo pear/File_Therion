@@ -254,10 +254,18 @@ class File_Therion_Centreline
                                 break;
                                 
                                 case 'copyright':
-                                case 'declination':
                                     // just add these as arrays
                                     // todo: better handling of type syntax
                                     $centreline->setData($command, $lineData);
+                                break;
+
+                                case 'declination':
+                                    if (count($lineData) != 2) {
+                                        throw new File_Therion_SyntaxException(
+                                                "Wrong declination arg count: "
+                                                .count($lineData));
+                                    }
+                                    $this->setDeclination($lineData[0], $lineData[1]);
                                 break;
                                 
                                 case 'team':
@@ -464,6 +472,28 @@ class File_Therion_Centreline
         
         return $centreline;
         
+    }
+
+    /**
+     * Set declination of this centreline.
+     *
+     * @param float  $decl Declination angle
+     * @param string $unit Unit ("degrees" ...)
+     * @todo add parameter checks
+     */
+    public function setDeclination($decl, $unit="degrees")
+    {
+        $this->setData('declination', array($decl, $unit));
+    }
+
+    /**
+     * Get declination of this centreline.
+     *
+     * @return array [0]=Declination angle; [1]=unit
+     */
+    public function getDeclination()
+    {
+        return $this->getData('declination');
     }
     
     /**
@@ -1178,7 +1208,7 @@ class File_Therion_Centreline
      * Generate line content from this object.
      * 
      * @return array File_Therion_Line objects
-     * @todo finish implementation, implement proper escaping
+     * @todo finish implementation, implement proper escaping, implement proper declination handling etc
      */
     public function toLines()
     {
@@ -1268,6 +1298,12 @@ class File_Therion_Centreline
         }
         
         $lines[] = new File_Therion_Line(""); // add line spacer
+
+        // declination
+        // @todo: implement proper handling!!! currently assuming 2-item-array from parse
+        $lines[] = new File_Therion_Line(
+                "declination ".implode(" ", $this->getData('declination')),
+                "", $baseIndent); 
         
 
         // shots, units and data definitions.
