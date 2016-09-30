@@ -352,6 +352,7 @@ class File_Therion_Shot
      * 
      * @param boolean $normalize return unaliased field names
      * @return array ordered array with keywords
+     * @todo support diving style
      */
     public function getOrder($normalize = false)
     {
@@ -370,6 +371,7 @@ class File_Therion_Shot
      * 
      * @param array $order therion names of datafields in correct order
      * @throws InvalidArgumentException
+     * @todo support diving style
      */
     public function setOrder($order)
     {
