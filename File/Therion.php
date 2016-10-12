@@ -399,7 +399,7 @@ class File_Therion implements Countable
      * changes made by {@link addLine()} get discarded. Please refer to
      * the readers documentation if you want to avoid this.
      * 
-     * After fetching physical content, you may call {@link updateObjects()
+     * After fetching physical content, you may call {@link updateObjects()}
      * to generate Therion data model objects out of it.
      * (Some Reader implementeations may already do this for you!)
      *

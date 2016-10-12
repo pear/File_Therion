@@ -655,7 +655,7 @@ class File_Therion_Centreline
      * 
      * When no date is set, NULL will be returned.
      * Otherwise a date object is returned OR if there is a date interval,
-     * an array containing two date objectsreturned.
+     * an array containing two date objects returned.
      * 
      * @return null|array|File_Therion_Date therion date
      */
