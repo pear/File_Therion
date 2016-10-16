@@ -410,9 +410,9 @@ class File_Therion_Station implements File_Therion_IReferenceable
      * Without centreline context, fixing stations is not meaningful.
      * Please also look at the therion manual.
      * 
-     * @param float $x X value of coordinate
-     * @param float $y Y value of coordinate
-     * @param float $z Z (height) value of coordinate
+     * @param float $x X value of coordinate (Rechtswert in Gauss-Krueger)
+     * @param float $y Y value of coordinate (Hochwert in Gauss-Krueger)
+     * @param float $z Z (height) value of coordinate (usually Meters above sea level)
      * @param float $stdX standard deviation for X
      * @param float $stdY standard deviation for Y
      * @param float $stdZ standard deviation for Z
@@ -433,12 +433,13 @@ class File_Therion_Station implements File_Therion_IReferenceable
      * returned.
      * 
      * Content is an associative array; the keys are 'coords', 'std' and 'cs':
-     * - the value of 'coords' is coordinates array(x,y,z)
+     * - the value of 'coords' is coordinates array(x,y,z), see {@link setFix()}
      * - the value of 'std' is standard deviation for the coordinate values
      * 
      * The coordinates are relative to a specified coordinate system that will
      * usually get set at the centreline level.
-     * Without centreline context, fixing stations is not meaningful.
+     * Without centreline context linked to a coordinate system,
+     * fixing stations is not meaningful.
      * Please also look at the therion manual.
      * 
      * @return array like described at {@link $_fixes}
