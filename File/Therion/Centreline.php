@@ -1312,7 +1312,14 @@ class File_Therion_Centreline
                 "declination ".implode(" ", $decl),
                 "", $baseIndent);
         }
-        
+
+        // Coordinate System
+        $cs = $this->getCoordinateSystem();
+        if ($cs != "") {
+            $lines[] = new File_Therion_Line(
+                "cs $cs",
+                "", $baseIndent);
+        }        
 
         // shots, units and data definitions.
         // this comes from the shot objects.
