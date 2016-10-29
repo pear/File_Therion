@@ -773,6 +773,69 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
             File_Therion_Line::filterNonEmpty($centreline->toLines())
         );
     }
+    
+    /**
+     * Test eplicit printing of default units
+     * @todo implement proper content checking
+     */
+    public function testExplicitUnitsPrinting()
+    {
+        // test data
+        $shot_1 = new File_Therion_Shot('0', '1', 10, 123, 45);
+        $shot_2 = new File_Therion_Shot('1', '2', 10, 231, 0);
+        $shot_2->setUnit('bearing', 'degrees');
+        $shot_3 = new File_Therion_Shot('2', '3', 10, 321, -45);
+        $shot_3->setUnit('length',  'meters');
+        $shot_3->setUnit('bearing', 'grads');
+        $shot_3->setUnit('clino',   'grads');
+             
+        // First sample without default printing
+        $centreline1 = new File_Therion_Centreline();
+        $this->assertEquals(
+            array(
+                'length'    => null,
+                'bearing'   => null,
+                'gradient'  => null,
+                'left'      => null,
+                'right'     => null,
+                'up'        => null,
+                'down'      => null
+            ),
+            $centreline1->getUnit('all')
+        );
+        $centreline1->addShot($shot_1);
+        $centreline1->addShot($shot_2);
+        $centreline1->addShot($shot_3);
+        $this->assertEquals(  // TODO: Implement proper content Checking!
+            9,
+            count(File_Therion_Line::filterNonEmpty($centreline1->toLines()))
+        );
+        
+        // Now with default printing
+        $centreline2 = new File_Therion_Centreline();
+        $centreline2->setUnit('bearing', 'degrees');
+        $centreline2->setUnit('clino', 'degrees');
+        $centreline2->setUnit('length', 'm');
+        $this->assertEquals(
+            array(
+                'length'    => new File_Therion_Unit(null, 'm'),
+                'bearing'   => new File_Therion_Unit(null, 'degrees'),
+                'gradient'  => new File_Therion_Unit(null, 'degrees'),
+                'left'      => null,
+                'right'     => null,
+                'up'        => null,
+                'down'      => null
+            ),
+            $centreline2->getUnit('all')
+        );
+        $centreline2->addShot($shot_1);
+        $centreline2->addShot($shot_2);
+        $centreline2->addShot($shot_3);
+        $this->assertEquals(  // TODO: Implement proper content Checking!
+            10,
+            count(File_Therion_Line::filterNonEmpty($centreline2->toLines()))
+        );
+    }
 
 }
 ?>

@@ -29,7 +29,6 @@
  * @copyright  2016 Benedikt Hallinger
  * @license    http://www.gnu.org/licenses/lgpl-3.0.txt LGPLv3
  * @link       http://pear.php.net/package/File_Therion/
- * @todo Implement conversion methods (or move them here)
  */
 class File_Therion_Unit
     implements File_Therion_DataType
@@ -80,11 +79,11 @@ class File_Therion_Unit
         // angle units
         'degree'  => array(
             'type'  => 'angle',
-            'alias' => array('deg')
+            'alias' => array('degrees', 'deg')
         ),
         'minute'  => array(
             'type'  => 'angle',
-            'alias' => array('min')
+            'alias' => array('minutes', 'min')
         ),
         'grad'  => array(
             'type'  => 'angle',
@@ -236,15 +235,25 @@ class File_Therion_Unit
      * Convert this unit into another one.
      *
      * Converts the quantity of this unit into the type specified.
-     * If you want to preserve this object, make a copy beforehand.
+     * If you want to preserve this object, make a copy beforehand!
      * 
-     * @param string target type
+     * @param string|File_Therion_Unit target type
      * @throws InvalidArgumentException when units are incompatible
      * @throws File_Therion_Exception when type/alias is not known.
-     * @todo implement me please
+     * @todo implement me please (grads/degrees currently raw implemented)
      */
-    public function convertTo($type)
+    public function convertTo($typeP)
     {
+        if (is_a($typeP, 'File_Therion_Unit')) {
+            $type = $typeP->getType(true);
+        } elseif(is_string($typeP)) {
+            $type = $typeP;
+        } else {
+            throw InvalidArgumentException(
+                'wrong $typeP parameter, expected string or File_Therion_Unit'
+            );
+        }
+        
         /*
          * check class compatibility:
          * only types of the same class may be converted
@@ -265,9 +274,32 @@ class File_Therion_Unit
         }
         
         /*
-         * perform conversion
+         * perform conversion and store new type
          */
-        throw new Exception("not implemented yet, sorry");
+        
+        // factors define possible conversions
+        $factors['degree']['grad'] = 10/9;
+        $factors['grad']['degree'] = 9/10;
+        // @todo: more to come!
+        
+        
+        // check requested conversion against available factors
+        if (!array_key_exists($src, $factors)) {
+            throw new InvalidArgumentException(
+                "unsupported conversion: $src->$tgt ($src unknown)");
+        }
+        if (!array_key_exists($tgt, $factors[$src])) {
+            throw new InvalidArgumentException(
+                "unsupported conversion: $src->$tgt ($tgt unknown)");
+        }
+        
+        // perform conversion
+        $convResult = $this->getQuantity() * $factors[$src][$tgt];
+        
+        // store result
+        $this->setQuantity($convResult);
+        $this->setType($type);
+        
     }
     
     
@@ -297,6 +329,7 @@ class File_Therion_Unit
     /**
      * Gets class of unit type ("angle" or "length")
      * 
+     * @param string $type type name
      * @return string "angle" or "length"
      */
     public static function getUnitClass($type)

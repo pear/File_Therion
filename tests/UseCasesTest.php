@@ -78,8 +78,8 @@ class File_TherionUseCaseTest extends File_TherionTestBase {
         $this->assertEquals(15, count($shots));
         foreach ($shots as $s) {
             $this->assertEquals("normal", $s->getStyle());
-            $this->assertEquals("grads", $s->getUnit("compass"));
-            $this->assertEquals("grads", $s->getUnit("clino"));
+            $this->assertEquals(new File_Therion_Unit(null,'grads'), $s->getUnit("compass"));
+            $this->assertEquals(new File_Therion_Unit(null,'grads'), $s->getUnit("clino"));
             $this->assertEquals(
                 array("from", "to", "compass", "clino", "tape"),
                 $s->getOrder() // values as-given

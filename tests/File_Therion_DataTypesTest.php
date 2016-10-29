@@ -192,6 +192,38 @@ class File_Therion_DataTypesTest extends File_TherionTestBase {
         $this->assertEquals("5.3 deg", $sample->toString());        // default behavior
         $this->assertEquals("5.3 deg", $sample->toString(false));   // explicit original
         $this->assertEquals("5.3 degree", $sample->toString(true)); // normalized
+    }
+        
+        
+    /**
+     * Test units calculations
+     * 
+     * @todo just raw tests implemented, more needed
+     */
+    public function testUnitConversions()
+    {
+        $sample = new File_Therion_Unit(0, 'degrees');
+        $sample->convertTo("grads");
+        $this->assertEquals("grads", $sample->getType());
+        $this->assertEquals(0, $sample->getQuantity());
+ 
+        $sample = new File_Therion_Unit(360, 'degrees');
+        $sample->convertTo("grads");
+        $this->assertEquals("grads", $sample->getType());
+        $this->assertEquals(400, $sample->getQuantity());
+        
+        $sample = new File_Therion_Unit(0, 'grads');
+        $sample->convertTo("degree");
+        $this->assertEquals("degree", $sample->getType());
+        $this->assertEquals(0, $sample->getQuantity());
+        
+        $sample = new File_Therion_Unit(400, 'grads');
+        $sample->convertTo("degree");
+        $this->assertEquals("degree", $sample->getType());
+        $this->assertEquals(360, $sample->getQuantity());
+        
+
+        // todo: more tests!
        
     }
 

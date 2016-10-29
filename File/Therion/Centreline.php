@@ -45,6 +45,15 @@ class File_Therion_Centreline
         'id' => "",
     );
     
+    /**
+     * Shot template for initializing units etc
+     * 
+     * Will be initialized in construtor and updated from {@link setUnit()}
+     * 
+     * @var File_Therion_Shot
+     */
+    protected $_shotTPL = null;
+    
     
     /**
      * Basic data elements.
@@ -142,6 +151,7 @@ class File_Therion_Centreline
     public function __construct(array $options = array())
     {
         $this->setOption($options);
+        $this->_shotTPL = new File_Therion_Shot(); // init shot template
     }
     
     
@@ -973,6 +983,10 @@ class File_Therion_Centreline
      * to-station with the survey context of the centreline; as a given station
      * could only be part of one centreline.
      * 
+     * The shots units declarations will be updated using the current default
+     * units settings of the centreline (see {@link setUnit()}), but only if
+     * the shot does not already have a more specific units setting.
+     * 
      * You need to use {@link File_Therion_Equate}s when you need to set
      * stations equal.
      * 
@@ -990,6 +1004,13 @@ class File_Therion_Centreline
         if (is_array($names)) {
             $shot->getFrom()->setStationNames($names[0], $names[1]);
             $shot->getTo()->setStationNames($names[0], $names[1]);
+        }
+        
+        // update shot units in case they are not yet initialized
+        foreach ($shot->getUnit('all') as $uname => $uobj) {
+            if (is_null($uobj)) {
+                $shot->setUnit($uname, $this->_shotTPL->getUnit($uname));
+            }
         }
         
         // add shot to centreline
@@ -1472,6 +1493,40 @@ class File_Therion_Centreline
     public function getSurveyContext()
     {
         return $this->_survey;
+    }
+    
+    /**
+     * Set default unit for shots.
+     * 
+     * The unit will be used to initialize all newly added shots, if the
+     * corresponding unit of that shot is not set so far. If the new shot to
+     * be added already has an associated unit, that will take precedence.
+     * If you want to change that shot, you need to convert the shot
+     * ({@see File_Therion_Shot} for details).
+     * 
+     * @param string $type Measurement type ('clino', 'bearing', ...)
+     * @param null|string|File_Therion_Unit $unit Unit instance
+     * @throws InvalidArgumentException
+     */
+    public function setUnit($type, $unit)
+    {
+        // adjust shot template. This will take care of all the checks etc
+        $this->_shotTPL->setUnit($type, $unit);
+    }
+    
+    /**
+     * Get current default unit for shots.
+     * 
+     * See {@link setUnit()} for details.
+     * 
+     * @see setUnit()
+     * @param string $type Measurement type ('clino', 'bearing', ...) or 'all'
+     * @return File_Therion_Unit|array Unit object or associative array of unit objects
+     */
+    public function getUnit($type)
+    {
+        // just return the shot templates data
+        return $this->_shotTPL->getUnit($type);
     }
     
 }

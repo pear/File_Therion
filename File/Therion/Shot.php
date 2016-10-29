@@ -66,19 +66,20 @@ class File_Therion_Shot
      * @var array  
      */
     protected $_units = array(
-        'length'    => 'meters',
-        'bearing'   => 'degrees',
-        'gradient'  => 'degrees',
-        'left'      => 'meters',
-        'right'     => 'meters',
-        'up'        => 'meters',
-        'down'      => 'meters'
+        'length'    => null,
+        'bearing'   => null,
+        'gradient'  => null,
+        'left'      => null,
+        'right'     => null,
+        'up'        => null,
+        'down'      => null
     );
     
     /**
      * Basic normalized data elements.
      * 
-     * @var array  
+     * @var array
+     * @todo since the inception of the Unit class, unit-objects could be used as centralised data storage. Changing to this would obsolete setUnit as the unit is implicitely mandatory at the other setters, which then must accept unit objects only. For parsing unspecified units, it would be good to have a "default"(=NULL) type. A change like this would probably break backward compatibility, however...
      */
     protected $_data = array(
         'from'      => null, // Station
@@ -115,12 +116,15 @@ class File_Therion_Shot
      * 
      * The shot will be initialized with default style, data ordering and
      * units (see {@link $_style}, {@link $_order} and {@link $_units}).
+     * If no ordering is specified, the default ordering will be used.
+     * If no units are specified, they will remain "unknown", so the system
+     * local therion defaults take precedence when generated data is compiled.
      * 
      * You may optionally supply basic shot data using the constructors params.
      * Please refer to the named methods for further information on expected
      * types and formats.
      * 
-     * After creating, style, ordering and data can be changed/added.
+     * After creating, units, style, ordering and data can be changed/added.  
      * 
      * @param string|File_Therion_Station $from
      * @param string|File_Therion_Station $to
@@ -404,39 +408,64 @@ class File_Therion_Shot
     /**
      * Set unit for measurements of this shot.
      * 
-     * 
      * @param string $type Measurement type ('clino', 'bearing', ...)
-     * @param string $unit Unit: deg, degree[s]; grad[s], ...
+     * @param null|string|File_Therion_Unit $unit Unit instance
      * @throws InvalidArgumentException
-     * @todo support other units than degree
-     * @todo unit checking
      */
     public function setUnit($type, $unit)
     {
         $ntype = File_Therion_Shot::unaliasField($type);
         if (!array_key_exists($ntype, $this->_units)) {
             throw new InvalidArgumentException(
-                "Unsupported unit type '$type'" );
+                "Unsupported field type '$type'" );
         }
         
-        // normalize unit names
-        $unit = preg_replace('/deg|degrees?/', 'degrees', $unit);
-        $unit = preg_replace('/grads?/', 'grads', $unit);
-        // todo: more units!
-        // length units supported: meter[s], centimeter[s], inch[es], feet[s], yard[s] (also m,
-        // cm, in, ft, yd). Angle units supported: degree[s], minute[s] (also deg, min), grad[s],
-        // mil[s], percent[age] (clino only). A degree value may be entered in decimal notation
-        // (x.y) or in a special notation for degrees, minutes and seconds (deg[:min[:sec]]).
+        if (is_null($unit)) {
+            // just set the type to null (reset to default) and go home
+            $this->_units[$ntype] = null;
+            return;
+        } elseif(is_string($unit)) {
+            // convert to object, thereby check syntax
+            $unit = new File_Therion_Unit(null, $unit);
+        } elseif (is_a($unit, 'File_Therion_Unit')) {
+            // nothing to see here, go along!
+        } else {
+             throw new InvalidArgumentException(
+                "Unsupported parameter unit (".gettype($unit).")" );
+        }
         
+        // lets see if the unit class corresponds to the desired field
+        $allowedClasses = array(
+            'length'    => 'length',
+            'bearing'   => 'angle',
+            'gradient'  => 'angle',
+            'left'      => 'length',
+            'right'     => 'length',
+            'up'        => 'length',
+            'down'      => 'length'
+        );
+        $typeClass = File_Therion_Unit::getUnitClass($unit->getType());
+        if ($typeClass != $allowedClasses[$ntype]) {
+            throw new File_Therion_Exception(
+                "unit class mismatch (".$unit->getType()."=$typeClass;"
+                ." but expected ".$allowedClasses[$ntype].")"
+            );
+        }
         
+        // set unit type for the measurement
         $this->_units[$ntype] = $unit;
+        
     }
     
     /**
      * Get current unit for measurement.
      * 
+     * Returns the unit definition for this shot field.
+     * If it was unset so far, NULL will be returned, indicating that the local
+     * therion default should be used for interpreting the data.
+     * 
      * @param string $type Measurement type ('clino', 'bearing', ...) or 'all'
-     * @return string|array Unit: degrees; grads, ...; array when $type='all'
+     * @return File_Therion_Unit|array Unit object or associative array of unit objects
      */
     public function getUnit($type)
     {
@@ -820,11 +849,10 @@ class File_Therion_Shot
      * If no default unit was changed, an empty array is returned.
      * Otherwise (or if $all was selected) Lines will be generated.
      * 
-     * @param boolean $all If true, return also default units (that is: all)
      * @return array with File_Therion_Line objects (or empty)
-     * @todo support unit factor: string like [factor]
+     * @todo support unit factor: string like "units clino [factor] degrees"
      */
-    public function toLinesUnitsDef($all=false)
+    public function toLinesUnitsDef()
     {
         $unitsStrings = array(); // unit to instruments
         // walk each unit setting and add in case of deviation
@@ -832,8 +860,9 @@ class File_Therion_Shot
             // skip if station: from, to
             if (in_array($inst, array('from', 'to'))) continue;
             
-            $unit = $this->getUnit($inst);
-            if ($all || ($unit != 'meters' && $unit != 'degrees')) {
+            $unitObj = $this->getUnit($inst);
+            if (!is_null($unitObj)) {
+                $unit = $unitObj->getType();
                 if (!array_key_exists($unit, $unitsStrings)) {
                     $unitsStrings[$unit] = array($inst);
                 } else {
@@ -872,9 +901,14 @@ class File_Therion_Shot
             throw new InvalidArgumentException("bearing '$b' not type float!");
         }
         
-        $unit = $this->getUnit('bearing');
-        if ($unit == 'degrees' || $unit == 'grads') {
-            $max = ($unit=='degrees')? 360.0 : 400.0;
+        // @todo: maybe move this code into units conversion method?
+        $unitObj = $this->getUnit('bearing');
+        if (is_null($unitObj)) {
+            throw new File_Therion_Exception("Calculating BackBearing requires explicit unit set!");
+        }
+        $unit = $unitObj->getType(true);
+        if ($unit == 'degree' || $unit == 'grad') {
+            $max = ($unit=='degree')? 360.0 : 400.0;
             if ($b >= $max/2) {
                 $r = $b-$max/2;
             } else {
@@ -894,12 +928,13 @@ class File_Therion_Shot
      * Calculate backwards clino reading.
      * 
      * @return float between -90 and 90 (when unit is degrees)
+     * @todo support other units
      */
     public function getBackGradient()
     {
         $b = $this->getGradient();
         if (!is_float($b)) {
-            throw new InvalidArgumentException("bearing '$b' not type float!");
+            throw new InvalidArgumentException("gradient '$b' not type float!");
         }
         
         $r = $b*-1;
@@ -971,36 +1006,6 @@ class File_Therion_Shot
         return $r;
     }
     
-    /**
-     * Convert value between units.
-     * 
-     * @param float  $value
-     * @param string $from Unit to convert from
-     * @param string $to   Unit to convert to
-     * @return float converted value
-     * @see setUnit() and $_units for possible units
-     * @throws InvalidArgumentException
-     * @todo implement me please (grads/degrees currently raw implemented)
-     */
-    public static function convertValue($value, $from, $to)
-    {
-        // todo: support aliases
-        
-        // factors define possible conversions
-        $factors['degrees']['grads'] = 10/9;
-        $factors['grads']['degrees'] = 9/10;
-        
-        if (!array_key_exists($from, $factors)) {
-            throw new InvalidArgumentException(
-                "unsupported conversion: $from->$to ($from unknown)");
-        }
-        if (!array_key_exists($to, $factors[$from])) {
-            throw new InvalidArgumentException(
-                "unsupported conversion: $from->$to ($to unknown)");
-        }
-        
-        return $value * $factors[$from][$to];
-    }
     
     /**
      * Tell if this shot is a splay shot due to naming conventions.

@@ -554,11 +554,11 @@ class File_TherionTest extends File_TherionTestBase {
         // test units of centreline
         $this->assertEquals(15, count($centreline));
         $shots = $centreline->getShots();        
-        $this->assertEquals('meters', $shots[0]->getUnit('length'));
-        $this->assertEquals('grads', $shots[0]->getUnit('compass'));
-        $this->assertEquals('grads', $shots[0]->getUnit('clino'));
-        $this->assertEquals('grads', $shots[0]->getUnit('bearing'));
-        $this->assertEquals('grads', $shots[0]->getUnit('gradient'));
+        $this->assertEquals(null, $shots[0]->getUnit('length'));
+        $this->assertEquals(new File_Therion_Unit(null,'grads'), $shots[0]->getUnit('compass'));
+        $this->assertEquals(new File_Therion_Unit(null,'grads'), $shots[0]->getUnit('clino'));
+        $this->assertEquals(new File_Therion_Unit(null,'grads'), $shots[0]->getUnit('bearing'));
+        $this->assertEquals(new File_Therion_Unit(null,'grads'), $shots[0]->getUnit('gradient'));
         
         // test some shots (13)
         $this->assertEquals('13', $shots[13]->getFrom()->getName());

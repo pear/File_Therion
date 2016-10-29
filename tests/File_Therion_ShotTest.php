@@ -210,11 +210,13 @@ class File_Therion_ShotTest extends File_TherionTestBase {
         foreach (range(0, 360) as $co) {
             $sample = new File_Therion_Shot();
             $sample->setBearing($co);
+            $sample->setUnit('bearing', 'degrees');
             $c = $sample->getBearing();  // get possibly converted value
             $bc = $sample->getBackBearing();
             
             $sampleB = new File_Therion_Shot();
             $sampleB->setBearing($bc);
+            $sampleB->setUnit('bearing', 'degrees');
             $bco = $sampleB->getBackBearing();
             
             $c=($c==360)? 0 : $c;       // expect 360 to be adjusted to 0
@@ -235,8 +237,8 @@ class File_Therion_ShotTest extends File_TherionTestBase {
             $sampleB->setBearing($bc);
             $bco = $sampleB->getBackBearing();
             
-            $c=($c==400)? 0 : $c;       // expect 360 to be adjusted to 0
-            $bco=($bco==400)? 0 : $bco; // expect 360 to be adjusted to 0
+            $c=($c==400)? 0 : $c;       // expect 400 to be adjusted to 0
+            $bco=($bco==400)? 0 : $bco; // expect 400 to be adjusted to 0
             $this->assertEquals($c, $bco, "grad=$c (co=$co); bc=$bc; bco=$bco");
         }
     }
@@ -314,10 +316,10 @@ class File_Therion_ShotTest extends File_TherionTestBase {
     {
         $sample = new File_Therion_Shot();
         $sample->setUnit('clino', 'grads');
-        $this->assertEquals('grads', $sample->getUnit('clino'));
+        $this->assertEquals('grads', $sample->getUnit('clino')->getType());
         
         $sample->setUnit('clino', 'grad');
-        $this->assertEquals('grads', $sample->getUnit('clino'));
+        $this->assertEquals('grad', $sample->getUnit('clino')->getType());
     }
     
     /**
@@ -340,23 +342,5 @@ class File_Therion_ShotTest extends File_TherionTestBase {
         );
     }
     
-    /**
-     * Test units calculations
-     * 
-     * @todo just raw tests implemented, more needed
-     */
-    public function testUnitsCalculations()
-    {
-        $this->assertEquals(
-            0, File_Therion_Shot::convertValue(0, 'degrees', 'grads') );
-        $this->assertEquals(
-            400, File_Therion_Shot::convertValue(360, 'degrees', 'grads') );
-        $this->assertEquals(
-            0, File_Therion_Shot::convertValue(0, 'grads', 'degrees') );
-        $this->assertEquals(
-            360, File_Therion_Shot::convertValue(400, 'grads', 'degrees') );
-
-        // todo: more tests!
-    }
 }
 ?>
