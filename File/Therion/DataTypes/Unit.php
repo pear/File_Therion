@@ -121,9 +121,10 @@ class File_Therion_Unit
     /**
      * Get string representation
      *
+     * @param boolean $normalize if TRUE, return unaliased name
      * @return Therion compliant String of this unit instance
      */
-    public function toString()
+    public function toString($normalize = false)
     {
         $r = "";
         if (!is_null($this->getQuantity())) {
@@ -131,7 +132,7 @@ class File_Therion_Unit
             $r .= " ";
         }
         
-        $r .= $this->getType(false);
+        $r .= $this->getType($normalize);
         
         return $r;
     }

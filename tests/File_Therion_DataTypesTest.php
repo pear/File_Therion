@@ -187,6 +187,11 @@ class File_Therion_DataTypesTest extends File_TherionTestBase {
         $this->assertEquals("deg", $sample->getType(false)); // explicit original
         $this->assertEquals("degree", $sample->getType(true));   // normalized
         $this->assertEquals(5.3, $sample->getQuantity());
+        
+        // toString() testing
+        $this->assertEquals("5.3 deg", $sample->toString());        // default behavior
+        $this->assertEquals("5.3 deg", $sample->toString(false));   // explicit original
+        $this->assertEquals("5.3 degree", $sample->toString(true)); // normalized
        
     }
 
