@@ -814,7 +814,7 @@ class File_Therion_Station implements File_Therion_IReferenceable
                 // ignore the station, when it has no survey context:
                 // it is unresolvable, most probably because the stations
                 // "home survey" is not in the dataset or dataset inconsistent.
-                if (is_a('File_Therion_Survey',$es->getSurveyContext())) {
+                if (is_a($es->getSurveyContext(), 'File_Therion_Survey')) {
                     // rethrow exception because some other error occured
                     throw $exc;
                 }
