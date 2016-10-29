@@ -62,6 +62,7 @@
                         <file name="Date.php" role="php" />
                         <file name="Person.php" role="php" />
                         <file name="Reference.php" role="php" />
+                        <file name="Unit.php" role="php" />
                     </dir>
                     <dir name="Readers">
                         <file name="ReaderInterface.php" role="php" />

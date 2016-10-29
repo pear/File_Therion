@@ -148,7 +148,47 @@ class File_Therion_DataTypesTest extends File_TherionTestBase {
         $this->assertEquals('"Benedikt ""Beni""/Hallinger"', $sample->toString());
     }
     
-    
+    /**
+     * Test Datatype Unit.
+     */
+    public function testUnit()
+    {
+        // test basic instantiation
+        $sample = new File_Therion_Unit(5.3, 'meter');
+        $sample = new File_Therion_Unit(5.3, 'meters'); // aliased
+        $sample = new File_Therion_Unit(5.3, 'm');      // aliased
+        
+        // test wrong instantiation
+        $exc = null;
+        try {
+             $sample = new File_Therion_Unit(5.3, 'Meters');
+        } catch (Exception $e) {
+            $exc = $e;
+        }
+        $this->assertInstanceOf('File_Therion_Exception', $exc);
+       
+        
+        // testing of parsing direct string values
+        $sample = File_Therion_Unit::parse("meters");
+        $this->assertInstanceOf('File_Therion_Unit', $sample);
+        $sample = File_Therion_Unit::parse("5.3 meters");
+        $this->assertInstanceOf('File_Therion_Unit', $sample);
+        
+        // testing of type mapping
+        $sample = File_Therion_Unit::parse("meters");
+        $this->assertInstanceOf('File_Therion_Unit', $sample);
+        $this->assertEquals("meters", $sample->getType());      // default
+        $this->assertEquals("meters", $sample->getType(false)); // explicit original
+        $this->assertEquals("meter", $sample->getType(true));   // normalized
+        $this->assertEquals(null, $sample->getQuantity());
+        
+        $sample = new File_Therion_Unit(5.3, 'deg'); // aliased
+        $this->assertEquals("deg", $sample->getType());      // default
+        $this->assertEquals("deg", $sample->getType(false)); // explicit original
+        $this->assertEquals("degree", $sample->getType(true));   // normalized
+        $this->assertEquals(5.3, $sample->getQuantity());
+       
+    }
 
 }
 ?>

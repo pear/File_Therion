@@ -26,6 +26,7 @@ require_once 'File/Therion/DataTypes/DataTypeInterface.php';
 require_once 'File/Therion/DataTypes/Person.php';
 require_once 'File/Therion/DataTypes/Date.php';
 require_once 'File/Therion/DataTypes/Reference.php';
+require_once 'File/Therion/DataTypes/Unit.php';
 require_once 'File/Therion/Line.php';
 require_once 'File/Therion/Survey.php';
 require_once 'File/Therion/Centreline.php';
