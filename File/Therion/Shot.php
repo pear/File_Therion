@@ -447,7 +447,7 @@ class File_Therion_Shot
         $typeClass = File_Therion_Unit::getUnitClass($unit->getType());
         if ($typeClass != $allowedClasses[$ntype]) {
             throw new File_Therion_Exception(
-                "unit class mismatch (".$unit->getType()."=$typeClass;"
+                "unit class mismatch for type $ntype (".$unit->getType()."=$typeClass;"
                 ." but expected ".$allowedClasses[$ntype].")"
             );
         }
