@@ -158,6 +158,10 @@ class File_Therion_DataTypesTest extends File_TherionTestBase {
         $sample = new File_Therion_Unit(5.3, 'meters'); // aliased
         $sample = new File_Therion_Unit(5.3, 'm');      // aliased
         
+        // testing implicit __toString() call
+        $test = "test: $sample";
+        $this->assertEquals("test: 5.3 m", $test);
+        
         // test wrong instantiation
         $exc = null;
         try {

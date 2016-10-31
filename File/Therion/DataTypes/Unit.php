@@ -121,7 +121,7 @@ class File_Therion_Unit
      * Get string representation
      *
      * @param boolean $normalize if TRUE, return unaliased name
-     * @return Therion compliant String of this unit instance
+     * @return Therion compliant String of this unit instance ("1.5 meter")
      */
     public function toString($normalize = false)
     {

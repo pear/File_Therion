@@ -79,7 +79,12 @@ class File_Therion_Shot
      * Basic normalized data elements.
      * 
      * @var array
-     * @todo since the inception of the Unit class, unit-objects could be used as centralised data storage. Changing to this would obsolete setUnit as the unit is implicitely mandatory at the other setters, which then must accept unit objects only. For parsing unspecified units, it would be good to have a "default"(=NULL) type. A change like this would probably break backward compatibility, however...
+     * @todo since the inception of the Unit class, unit-objects could be used
+     *       as centralised data storage. Changing to this would obsolete
+     *       setUnit as the unit is implicitely mandatory at the other setters,
+     *       which then must accept unit objects only. For parsing unspecified
+     *       units, it would be good to have a "default"(=NULL) type. A change
+     *       like this would probably break backward compatibility, however...
      */
     protected $_data = array(
         'from'      => null, // Station
