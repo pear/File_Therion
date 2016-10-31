@@ -458,5 +458,13 @@ class File_Therion_ScrapLinePoint
         }
         
     }
+    
+    /**
+     * Magic __toString() method calls toString().
+     */
+    public function __toString()
+    {
+        return $this->toString();
+    }
 }
 ?>

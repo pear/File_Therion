@@ -1,6 +1,6 @@
 <?php
 /**
- * Therion datatype interface.
+ * Therion datatype.
  *
  * PHP version 5
  *
@@ -13,7 +13,7 @@
  */
 
 /**
- * Interface defining basic dataType expected functions
+ * Abstract class defining basic dataType expected functions
  *
  * @category   file
  * @package    File_Therion_DataTypes
@@ -22,14 +22,14 @@
  * @license    http://www.gnu.org/licenses/lgpl-3.0.txt LGPLv3
  * @link       http://pear.php.net/package/File_Therion/
  */
-interface File_Therion_DataType
+abstract class File_Therion_DataType
 {
     /**
      * Get string representation
      *
      * @return Therion compliant String of this type
      */
-    public function toString();
+    public abstract function toString();
 
 
     /**
@@ -38,9 +38,15 @@ interface File_Therion_DataType
      * @param $string data to parse
      * @return mixed crafted object
      */
-    public static function parse($string);
+    public static abstract function parse($string);
     
-    
+    /**
+     * Magic __toString() method calls toString().
+     */
+    public function __toString()
+    {
+        return $this->toString();
+    }
 }
 
 ?>

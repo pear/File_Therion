@@ -49,7 +49,7 @@
  * @link       http://pear.php.net/package/File_Therion/
  */
 class File_Therion_Reference
-    implements File_Therion_DataType
+    extends File_Therion_DataType
 {
     
     /**

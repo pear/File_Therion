@@ -528,6 +528,14 @@ class File_Therion_Line implements Countable
         //print("DBG: getIndent='".$this->getIndent()."'; getContent='".$this->getContent()."'; SEP='".$commentSep."'; getComment='".$this->getComment()."'\n");
         return $this->getIndent().$this->getContent().$commentSep.$this->getComment().$this->_eol;
     }
+    
+    /**
+     * Magic __toString() method calls toString().
+     */
+    public function __toString()
+    {
+        return $this->toString();
+    }
  
     /**
      * Say if this is just a comment or empty line.

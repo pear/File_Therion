@@ -913,6 +913,14 @@ class File_Therion implements Countable
         }
         return $ret;
     }
+    
+    /**
+     * Magic __toString() method calls toString().
+     */
+    public function __toString()
+    {
+        return $this->toString();
+    }
      
     /**
      * Set filename of this file object.

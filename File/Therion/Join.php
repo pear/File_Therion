@@ -240,6 +240,14 @@ class File_Therion_Join
     }
     
     /**
+     * Magic __toString() method calls toString().
+     */
+    public function __toString()
+    {
+        return $this->toString();
+    }
+    
+    /**
      * Return Line representation of this command.
      * 
      * @return {@link File_Therion_Line} object
