@@ -108,6 +108,7 @@ class File_Therion_Survey
      * <code>$survey->setOption('your survey name');</code>.
      *
      * @param string $id ID of the survey (note this is a therion keyword)
+     * @param array $options associative options array to set
      */
     public function __construct($id, $options = array())
     {
