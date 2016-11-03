@@ -83,7 +83,7 @@ abstract class File_Therion_BasicObject
         if ($key!==null) {
             if (!array_key_exists($key, $this->{"$type"})) {
                 throw new InvalidArgumentException(
-                    "$type: Invalid key name '$key'");
+                    "$type: Invalid $type name '$key'");
             }
         }
         
