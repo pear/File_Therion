@@ -327,7 +327,10 @@ class File_Therion_Unit
     
     
     /**
-     * Gets class of unit type ("angle" or "length")
+     * Gets class of unit type ("angle" or "length").
+     * 
+     * If you want to get the class of the current instance,
+     * try {@link getClass()} instead.
      * 
      * @param string $type type name
      * @return string "angle" or "length"
@@ -341,6 +344,15 @@ class File_Therion_Unit
         return File_Therion_Unit::$_typemap[$t]['type'];
     }
     
+    /**
+     * Gets class of this units instance type ("angle" or "length")
+     * 
+     * @return string "angle" or "length"
+     */
+    public function getClass()
+    {
+        return File_Therion_Unit::getUnitClass($this->getType());
+    }
 }
 
 ?>
