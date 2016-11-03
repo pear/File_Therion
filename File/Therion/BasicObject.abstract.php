@@ -255,7 +255,8 @@ abstract class File_Therion_BasicObject
      */
      protected function getData($key)
      {
-          return $this->_data[$key];
+         $this->_verify('_data', $key, null);
+         return $this->_data[$key];
      }
     
     
