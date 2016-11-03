@@ -57,7 +57,7 @@ class File_Therion_Unit
         // length units
         'meter'  => array(
             'type'  => 'length',
-            'alias' => array('meters', 'm')
+            'alias' => array('meters', 'metres', 'm')
         ),
         'centimeter'  => array(
             'type'  => 'length',
