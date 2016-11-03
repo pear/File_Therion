@@ -117,7 +117,7 @@ abstract class File_Therion_BasicObject
      * There are two call modes:
      * <code>
      * //set single option:
-     * $obj->setOptions($key, $value);
+     * $obj->setOption($key, $value);
      * 
      * // set several options at once using assoc array:
      * $opts = array('key1' => 'value', 'key2' => 'value', ...);
