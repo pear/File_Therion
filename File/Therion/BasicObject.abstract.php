@@ -66,14 +66,17 @@ abstract class File_Therion_BasicObject
      * This will test existence and type of the passed key and value and
      * throw an appropriate exception in case of problems.
      * 
-     * @param string     $type  name of local object variable
-     * @param string     $key   key to check (if != null)
-     * @param string     $value value to check against (if != null)
+     * @param string     $type    name of local object variable
+     * @param string     $key     key to check (if != null)
+     * @param string     $value   value to check against (if != null)
+     * @param string     $altname alternative type-name for error output
      * @return true in case everything was ok
      * @throws InvalidArgumentException in case of verification failure
      */
-    protected function _verify($type, $key=null, $value=null)
+    protected function _verify($type, $key=null, $value=null, $altname="")
     {
+        if (!$altname) $altname = ltrim($type, '_');
+        
         // check basic existence of type
         if (!isset($this->{"$type"})) {
             throw new InvalidArgumentException("Invalid type name '$type'");
@@ -83,7 +86,7 @@ abstract class File_Therion_BasicObject
         if ($key!==null) {
             if (!array_key_exists($key, $this->{"$type"})) {
                 throw new InvalidArgumentException(
-                    "$type: Invalid $type name '$key'");
+                    "Invalid $altname name '$key'");
             }
         }
         
@@ -94,7 +97,7 @@ abstract class File_Therion_BasicObject
             ) {
             if (gettype($this->{"$type"}[$key]) !== gettype($value)) {
                 throw new InvalidArgumentException(
-                    "$type [$key]: Invalid value type '".gettype($value)."'! "
+                    "$altname [$key]: Invalid value type '".gettype($value)."'! "
                     ."passed option='$key'; type='".gettype($value)
                     ."'; expected='".gettype($this->{"$type"}[$key])."'"
                     ."; value='".$value."'"
