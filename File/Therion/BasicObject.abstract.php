@@ -166,7 +166,8 @@ abstract class File_Therion_BasicObject
      */
      public function getOption($option)
      {
-          return $this->_options[$option];
+         $this->_verify('_options', $option, null);
+         return $this->_options[$option];
      }
      
      
