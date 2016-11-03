@@ -836,6 +836,90 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
             count(File_Therion_Line::filterNonEmpty($centreline2->toLines()))
         );
     }
+    
+    /**
+     * Test parsing of grade
+     */
+    public function testParsingGrade()
+    {
+        // with string as grade
+        $sampleLines = array(
+            File_Therion_Line::parse('centreline'),
+            File_Therion_Line::parse('  grade BCRA5'),
+            File_Therion_Line::parse('  units compass clino grads'),
+            File_Therion_Line::parse('  data normal from to compass clino tape'),
+            File_Therion_Line::parse('  0     1   200       -5      6.4 '),
+            File_Therion_Line::parse('  1     2    73        8      5.2 '),
+            File_Therion_Line::parse('  2     3    42        0      2.09'),
+            File_Therion_Line::parse('endcentreline'),            
+        );
+        $sample = File_Therion_Centreline::parse($sampleLines);
+        $this->assertInstanceOf('File_Therion_Centreline', $sample);
+        $this->assertEquals(1, count($sample->getGrade()));
+        $this->assertEquals(
+            array(new File_Therion_Grade("BCRA5")),
+            $sample->getGrade()
+        );
+        
+        // with several strings as grade
+        $sampleLines = array(
+            File_Therion_Line::parse('centreline'),
+            File_Therion_Line::parse('  grade BCRA5 test'),
+            File_Therion_Line::parse('  units compass clino grads'),
+            File_Therion_Line::parse('  data normal from to compass clino tape'),
+            File_Therion_Line::parse('  0     1   200       -5      6.4 '),
+            File_Therion_Line::parse('  1     2    73        8      5.2 '),
+            File_Therion_Line::parse('  2     3    42        0      2.09'),
+            File_Therion_Line::parse('endcentreline'),            
+        );
+        $sample = File_Therion_Centreline::parse($sampleLines);
+        $this->assertInstanceOf('File_Therion_Centreline', $sample);
+        $this->assertEquals(2, count($sample->getGrade()));
+        $this->assertEquals(
+            array(new File_Therion_Grade("BCRA5"), new File_Therion_Grade("test")),
+            $sample->getGrade()
+        );
+    }
+    
+    /**
+     * Test generation of grade references
+     * 
+     * @todo the check of the generated lines is heavily dependent on the centerline-data format generated internally.
+     */
+    public function testGeneratingGrade()
+    {
+        // with string as grade
+        $centreline1 = new File_Therion_Centreline();
+        $centreline1->addShot(new File_Therion_Shot('0', '1', 10, 123, 45));
+        $centreline1->setGrade('BCRA5');
+        $this->assertEquals(
+            array(
+                File_Therion_Line::parse('centreline'),
+                File_Therion_Line::parse("\tgrade BCRA5"),
+                File_Therion_Line::parse("\tdata\tnormal\tfrom\tto\tlength\tbearing\tgradient\tleft\tright\tup\tdown"),
+                File_Therion_Line::parse("\t\t\t0\t1\t10\t123\t45\t0\t0\t0\t0"),
+                File_Therion_Line::parse('endcentreline')
+            ),
+            File_Therion_Line::filterNonEmpty($centreline1->toLines())
+        );
+        
+        
+        // with object as grade
+        $grade = new File_Therion_Grade('test');
+        $centreline2 = new File_Therion_Centreline();
+        $centreline2->addShot(new File_Therion_Shot('0', '1', 10, 123, 45));
+        $centreline2->setGrade($grade);
+        $this->assertEquals(
+            array(
+                File_Therion_Line::parse('centreline'),
+                File_Therion_Line::parse("\tgrade test"),
+                File_Therion_Line::parse("\tdata\tnormal\tfrom\tto\tlength\tbearing\tgradient\tleft\tright\tup\tdown"),
+                File_Therion_Line::parse("\t\t\t0\t1\t10\t123\t45\t0\t0\t0\t0"),
+                File_Therion_Line::parse('endcentreline')
+            ),
+            File_Therion_Line::filterNonEmpty($centreline2->toLines())
+        );
+    }
 
 }
 ?>

@@ -34,6 +34,7 @@ require_once 'File/Therion/Shot.php';
 require_once 'File/Therion/Station.php';
 require_once 'File/Therion/Map.php';
 require_once 'File/Therion/Surface.php';
+require_once 'File/Therion/Grade.php';
 require_once 'File/Therion/Scrap.php';
 require_once 'File/Therion/ScrapPoint.php';
 require_once 'File/Therion/ScrapLine.php';

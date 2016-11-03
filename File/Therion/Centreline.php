@@ -73,6 +73,7 @@ class File_Therion_Centreline
         'sd'          => array(), // assoc: [<quantity>]=(<value> <units>)
         'cs'          => "",      // <coordinate system>
         'station-names' => null, // <prefix> <postfix>; null=leave alone
+        'grade'       => array(), // grade <grade list>
     );
     
     /**
@@ -356,6 +357,23 @@ class File_Therion_Centreline
                                         $lineData[0]);
                                 break;
                                 
+                                case 'sd':
+                                    // TODO: implement me please; for now its just ignored
+                                break;
+                                
+                                case 'grade':
+                                    // grade definition(s)
+                                    // they will be evaluated as a whole at the end, becaus there may
+                                    // be several grade definitions in the data.
+                                    // As per Therion definition, only the last grade command is evaluated.
+                                    if (count($lineData) < 1) {
+                                        throw new File_Therion_SyntaxException(
+                                                "Wrong grade arg count "
+                                                .count($lineData));
+                                    }
+                                    $centreline->setGrade($lineData);
+                                break;
+                                
                                 
                                 
                                 default:
@@ -478,6 +496,7 @@ class File_Therion_Centreline
                 break;
             }
         }
+        
         
         
         return $centreline;
@@ -1341,6 +1360,13 @@ class File_Therion_Centreline
                 "cs $cs",
                 "", $baseIndent);
         }        
+        
+        // Grade(s)
+        foreach ($this->getGrade() as $grade) {
+            $lines[] = new File_Therion_Line(
+                "grade ".$grade->getName(),
+                "", $baseIndent);
+        }
 
         // shots, units and data definitions.
         // this comes from the shot objects.
@@ -1529,6 +1555,67 @@ class File_Therion_Centreline
         return $this->_shotTPL->getUnit($type);
     }
     
+    /**
+     * Set grade(s) applying to this centreline.
+     * 
+     * When $grade is a string, a new empty internal Grade object will be
+     * created implicitely. use this to reference grade names already
+     * built into therion.
+     * When passing an array, you can either pass Grade objects or
+     * strings to reference the grade definition names.
+     * To delete all grade definitions from the centreline,
+     * use NULL as $grade.
+     * 
+     * @param File_Therion_Grade|array|string|null $grade
+     * @throws InvalidArgumentException
+     */
+    public function setGrade($grade)
+    {
+        if (is_null($grade)) {
+            // clear grade settings
+            $this->setData('grade', array());
+            
+        } elseif (is_string($grade)) {
+            // only string should be referenced, so create
+            // a new internal object for user convinience.
+            $this->setGrade(new File_Therion_Grade($grade));
+            
+        } elseif (is_a($grade, 'File_Therion_Grade')) {
+            // actual single grade object used.
+            $this->setData('grade', array($grade));
+            
+        } elseif (is_array($grade)) {
+            // several grades referenced
+            // todo: check types (better checks needed!)
+            $ng = array();
+            foreach ($grade as $g) {
+                if (is_string($g)) {
+                    // again, convert string into object for
+                    // user convinience.
+                    $g = new File_Therion_Grade($g);
+                }
+                if (!is_a($g, 'File_Therion_Grade')) {
+                    throw new InvalidArgumentException('invalid $grade parameter in array');
+                }
+                array_push($ng, $g);
+            }
+            // apply checked array
+            $this->setData('grade', $ng);
+            
+        } else {
+            throw new InvalidArgumentException('invalid $grade parameter');
+        }
+    }
+    
+    /**
+     * Get grade definition(s) of this centreline.
+     * 
+     * @return array
+     */
+    public function getGrade()
+    {
+        return $this->getData('grade');
+    }
 }
 
 ?>
