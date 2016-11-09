@@ -21,6 +21,8 @@
  * created instead.
  * The actual write is performed using the basic DirectWriter (options from
  * there apply in this writer too); Existing target files are overwritten.
+ * The encoding-setting of the generated subfiles is expected to be the same
+ * as for the initial root file item passed to the writer.
  * 
  * The default survey structure is written in a nested fashion where:
  * - each survey forms a new directory in the parent folder
@@ -109,6 +111,7 @@ class File_Therion_StructuredWriter
         
         // initialize root file
         $rootFile = new File_Therion($file->getFilename());
+        $rootFile->setEncoding($file->getEncoding());
         $rootFile->setHeader($file->getHeader());
         $this->_files[] = $rootFile;
         
@@ -348,6 +351,7 @@ class File_Therion_StructuredWriter
         
         // no matching file: create new
         $fnew = new File_Therion($filename);
+	$fnew->setEncoding($this->_files[0]->getEncoding()); // set encoding
         $fnew->setHeader($this->_files[0]->getHeader()); // add header from root file
         $this->_files[] = $fnew;
         return $fnew;
