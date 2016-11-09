@@ -53,6 +53,9 @@ class File_TherionWriterTest extends File_TherionTestBase {
         $lastTGTLine = array_pop($tgtData);        // ...(verify that it really
         $this->assertEquals("\n", $lastTGTLine);   //     was a newline there!)
         
+        // adjust for spacing in encoding line
+        $srcData[0] = preg_replace('/(?<=\w) +/', ' ', $srcData[0]);
+        
         $this->assertEquals($srcData, $tgtData); // check that content is same
 
     }

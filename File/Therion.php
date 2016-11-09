@@ -92,6 +92,7 @@ require_once 'File/Therion/Readers/FileReader.php';
  * // $survey->....  // do many things: craft data model
  * $tgt = "some/local/target.th"; // usually local file
  * $th = new File_Therion($tgt);  // Instanciate new data target
+ * $th->setEncoding('UTF-8');     // don't forget to indicate encoding
  * $th->addObject($survey);       // associate therion data model objects
  * $th->updateLines();            // update internal lines using data objects
  * $th->write();                  // physically write to data target $tgt
@@ -146,7 +147,7 @@ class File_Therion implements Countable
      * 
      * @var string
      */
-    protected $_encoding = 'UTF-8';
+    protected $_encoding = null;
     
     /**
      * Currently supported encodings by therion.
@@ -475,7 +476,7 @@ class File_Therion implements Countable
      * Note that addLine() will not take care of wrapping; make sure
      * that the line content remains consistent.
      * 
-     * Be sure to use the right encoding for your data (-> {@link setEncoding()}
+     * Be sure to use the correct encoding for your data (-> {@link setEncoding()}
      * and {@link encode()} for more details).
      * 
      * Example:
@@ -499,6 +500,10 @@ class File_Therion implements Countable
      * Instead of Line objects you may also add a string as $line argument. In
      * this case a new Line object will be parsed for you. Right spaces and
      * newline will be trimmed.
+     * 
+     * Note that the lines content is expected to be already encoded in the
+     * current files encoding. If the codesets differ, encode them first.
+     * See {@link encode()} for encoding or use phps own functions.
      * 
      * @param File_Therion_Line|string $line Line to add
      * @param int  $index At which logical position to add (-1=end, 0=first line, ...)
@@ -639,6 +644,7 @@ class File_Therion implements Countable
             if (isset($mostCurrentLineData[0])
                 && strtolower($mostCurrentLineData[0]) == 'encoding') {
                 $this->setEncoding($mostCurrentLineData[1]);
+                array_pop($this->_lines); // remove last encoding line
             }
         }
     }
@@ -651,14 +657,23 @@ class File_Therion implements Countable
      */
     public function getLines()
     {
-        if ($this->getHeader()) {
-            return array_merge(
-                    array(File_Therion_Line::parse($this->getHeader())),
-                    $this->_lines
-                );
-        } else {
-            return $this->_lines;
+        $retLines = array();
+        
+        // add encoding as first line, if the
+        // encoding was set properly and we had other lines
+        if ((count($this->_lines) || $this->getHeader())
+            && $this->getEncoding()) {
+            $retLines[] = new File_Therion_Line(
+                "encoding ".$this->getEncoding()
+            );
         }
+        
+        // add custom header if set
+        if ($this->getHeader()) {
+            $retLines[] = File_Therion_Line::parse($this->getHeader());
+        }
+        
+        return array_merge($retLines, $this->_lines);
     }
      
      
@@ -892,13 +907,7 @@ class File_Therion implements Countable
      * If wrapping was requested, the file content will be wrapped at the
      * given column (see {@link setWrapping()}.
      * 
-     * If no encoding is contained in internal line data, a suitable
-     * encoding line will be added with the current active encoding setting.
-     * The string however will be returned in UTF-8 regardless of any encoding
-     * commands.
-     * 
      * @return string The file contents as string
-     * @see setEncoding()
      * @todo Line endings should not depend on Line class implementation
      */
     public function toString()
@@ -1032,7 +1041,6 @@ class File_Therion implements Countable
      * Set encoding of input/output files.
      * 
      * This will tell what encoding to use.
-     * The default assumed encoding is UTF-8.
      * 
      * This method only signals which encoding the data should be in and will
      * not actively change encoding. Make sure your data matches the encoding
@@ -1041,12 +1049,20 @@ class File_Therion implements Countable
      * Only a small subset of PHP encoding names are supported by therion,
      * see {@link $_supportedEncodings} for a list.
      * 
-     * @param string $codeset
+     * When NULL is given, the current encoding will be reset to "unknown".
+     * 
+     * @param string|null $codeset
      * @throws InvalidArgumentException when unsupported encoding is used
      */
     public function setEncoding($codeset)
     {
-        $this->_encoding = $this->_getEncodingName($codeset);
+        $enc = null;
+        if (!is_null($codeset)) {
+            // test if name resolves; that is, it is known and supported
+            $enc = $this->_getEncodingName($codeset);
+        }
+            
+        $this->_encoding = $codeset;
     }
     
     /**
@@ -1062,19 +1078,25 @@ class File_Therion implements Countable
     /**
      * Encode data.
      * 
-     * Will check encoding supported by therion.
+     * Will check if target-encoding is supported by therion.
      * 
-     * @param string $data
-     * @param string $toEncoding
-     * @param string $fromEncoding
-     * @return $data in toEncoding.
+     * If $strictCheck is set to TRUE, the from encoding will also be
+     * verified against supported therion encodings.
+     * Use this in case the source encoding is a known therion file.
+     * 
+     * @param string $data         String to encode
+     * @param string $toEncoding   target encoding
+     * @param string $fromEncoding source encoding
+     * @param boolean $strictCheck enable from-encoding compatibility check
+     * @return $data in $toEncoding.
      * @throws InvalidArgumentException in case encoding is not supported.
      * @throws File_Therion_Exception when encoding fails.
      */
-    public function encode($data, $toEncoding, $fromEncoding)
+    public function encode($data, $toEncoding, $fromEncoding, $strictCheck = false)
     {
-        // get normalized names (throws InvalidArgumentException when unknown)
-        $from = $this->_getEncodingName($fromEncoding);
+        // get normalized PHP and therion compatible names
+        // (throws InvalidArgumentException when unknown)
+        $from = ($strictCheck)? $this->_getEncodingName($fromEncoding) : $fromEncoding;
         $to   = $this->_getEncodingName($toEncoding);
         
         // perform encoding and check for errors
@@ -1089,7 +1111,7 @@ class File_Therion implements Countable
     
     
     /**
-     * Get internal name of encoding name.
+     * Get internal (PHP compatible) name of encoding name.
      * 
      * @param string $name
      * @return string
@@ -1146,6 +1168,9 @@ class File_Therion implements Countable
      * (see {@link setReader()}).
      * With the default FileReader this means that we will assume the filename
      * to be relative to the local file on a local mounted disk.
+     * 
+     * Please note that referenced files will be converted to the parent 
+     * file encoding (all 'input' content is encoded to this files codeset).
      * 
      * To limit the number of possible nested levels you may specify the
      * $lvls parameter:
@@ -1247,18 +1272,28 @@ class File_Therion implements Countable
                         $newIndent = $curline->getIndent().$subLine->getIndent();
                         
                         // get data and translate to proper encoding
-                        $newData = $this->encode(
-                                $subLine->getContent(),
-                                $this->getEncoding(),
-                                $tmpFile->getEncoding()
-                            );
-                        
-                        // get comment and translate to proper encoding
-                        $newComment = $this->encode(
-                                $subLine->getComment(),
-                                $this->getEncoding(),
-                                $tmpFile->getEncoding()
-                            );
+                        $fromEnc = $this->getEncoding();
+                        $toEnc   = $tmpFile->getEncoding();
+                        if ($fromEnc && $toEnc) {
+                            $newData = $this->encode(
+                                    $subLine->getContent(),
+                                    $fromEnc,
+                                    $toEnc,
+                                    true
+                                );
+                            
+                            // get comment and translate to proper encoding
+                            $newComment = $this->encode(
+                                    $subLine->getComment(),
+                                    $fromEnc,
+                                    $toEnc,
+                                    true
+                                );
+                        } else {
+                            // keep data unencoded (fromEnc or toEnc was not available)
+                            $newData    = $subLine->getContent();
+                            $newComment =$subLine->getComment();
+                        }
                         
                         // create a new line object with new encoded content
                         $subline = new File_Therion_Line(

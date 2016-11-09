@@ -521,7 +521,7 @@ class File_TherionTest extends File_TherionTestBase {
         $th->fetch();
         $this->assertEquals(0, count($th->getSurveys()));
         $this->assertEquals(74, count($th), "parsed line number does not match sample");
-        $this->assertEquals('ISO8859-2', $th->getEncoding());
+        $this->assertEquals('iso8859-2', $th->getEncoding());
         
         // parse file contents into php therion objects
         $th->updateObjects();
@@ -742,10 +742,45 @@ class File_TherionTest extends File_TherionTestBase {
         $this->assertEquals($survey->toLines(), $th->getLines());
     }
     
-    public function testEncodings()
+    
+    /**
+     * Test setting of encoding
+     */
+    public function testSetEncoding()
     {
-        // TODO Implement me
-        $this->markTestIncomplete("This test has not been implemented yet.");
+        // test that encoding is returned only if content is there
+        $sample = new File_Therion('fooFile.th');
+        $this->assertEquals(0, count($sample->getLines()));
+        $sample->setHeader('# fooHeader');
+        $this->assertEquals(1, count($sample->getLines()));
+        $sample->setEncoding('UTF-8');
+        $this->assertEquals(2, count($sample->getLines()));
+        
+        // test that order of setEncoding() call does not matter
+        $sample = new File_Therion('fooFile.th');
+        $this->assertEquals(0, count($sample->getLines()));
+        $sample->setEncoding('UTF-8');
+        $this->assertEquals(0, count($sample->getLines()));
+        $sample->setHeader('# fooHeader');
+        $this->assertEquals(2, count($sample->getLines()));
+        
+        // Test adding line content
+        $sample = new File_Therion('fooFile.th');
+        $this->assertEquals(0, count($sample->getLines()));
+        $sample->setEncoding('UTF-8');
+        $this->assertEquals(0, count($sample->getLines()));
+        $sample->addLine('# fooLine');
+        $this->assertEquals(2, count($sample->getLines()));
+        
+        // Test reset of encoding to unknown
+        $sample = new File_Therion('fooFile.th');
+        $this->assertEquals(0, count($sample->getLines()));
+        $sample->setEncoding('UTF-8');
+        $this->assertEquals(0, count($sample->getLines()));
+        $sample->addLine('# fooLine');
+        $this->assertEquals(2, count($sample->getLines()));
+        $sample->setEncoding(null);
+        $this->assertEquals(1, count($sample->getLines()));
     }
     
     /**

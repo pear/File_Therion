@@ -37,7 +37,7 @@ class File_TherionUseCaseTest extends File_TherionTestBase {
         
         // assert expected contents:
         // only a survey is contained, everything else belongs to it
-        $this->assertEquals("ISO8859-2", $th->getEncoding());
+        $this->assertEquals("iso8859-2", $th->getEncoding());
         $this->assertEquals(1, count($th->getSurveys()));
         $this->assertEquals(0, count($th->getCentrelines()));
         $this->assertEquals(0, count($th->getMaps()));
