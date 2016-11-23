@@ -1,0 +1,26 @@
+{
+    "name": "pear/file_therion",
+    "description": "File_Therion provides an object oriented interface to Therions .th cave-data files.",
+    "license": "LGPL-3.0",
+    "type": "library",
+    "keywords": [
+        "pear",
+        "therion",
+        "cave",
+        "survey"
+    ],
+    "homepage": "http://pear.php.net/package/File_Therion",
+    "support": {
+        "issues": "http://pear.php.net/bugs/search.php?cmd=display&package_name[]=File_Therion",
+        "source": "https://github.com/pear/File_Therion"
+    },
+    "require": {
+        "pear/pear-core-minimal": "^1.10.1"
+    },
+    "include-path": ["."],
+    "autoload": {
+        "classmap": [
+            "File/"
+        ]
+    }
+}
