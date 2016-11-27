@@ -822,7 +822,11 @@ class File_Therion_Shot
                 // resolve station objects to string names
                 $strItems[] = File_Therion_Line::escape($od->getName($fsn));
             } else {
-                $strItems[] = File_Therion_Line::escape($od);
+                // correct for locale-issues (some locales print float numbers
+                // using commata, which is not therion compliant)
+                $s = File_Therion_Line::escape($od);
+                if (is_float($s)) $s = str_replace (',', '.', $s);
+                $strItems[] = File_Therion_Line::escape($s);
             }
         }
         
