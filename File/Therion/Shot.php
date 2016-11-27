@@ -817,12 +817,34 @@ class File_Therion_Shot
     public function toLines($fsn=false)
     {
         $strItems = array();
-        foreach ($this->getOrderedData() as $od) {
+        $orderedFields = $this->getOrderedData();
+        for ($i = 0; $i<count($orderedFields); $i++) {
+            $od = $orderedFields[$i];
+            
             if (is_a($od, 'File_Therion_Station')) {
                 // resolve station objects to string names
                 $strItems[] = File_Therion_Line::escape($od->getName($fsn));
+                
             } else {
-                $strItems[] = File_Therion_Line::escape($od);
+                // correct for locale-issues (some locales print float
+                // numbers using commata, which is not therion compliant);
+                // also thousands sep could pose a problem.
+                if (is_float($od)) {
+                    $locale_thousandsSep = localeconv()['thousands_sep'];
+                    if ($locale_thousandsSep != "") {
+                        $od = str_replace($locale_thousandsSep, '', $od);
+                    }
+                    
+                    $locale_decimalPoint = localeconv()['decimal_point'];
+                    if ($locale_decimalPoint != ".") {
+                        $od = str_replace($locale_decimalPoint, '.', $od);
+                    }
+                }
+                
+                // escape fields therion-like, if neccessary
+                $od = File_Therion_Line::escape($od);
+                
+                $strItems[] = $od;
             }
         }
         

@@ -342,5 +342,33 @@ class File_Therion_ShotTest extends File_TherionTestBase {
         );
     }
     
+    
+    /**
+     * Test alternate float point sign with known "wrong" setting
+     */
+    public function testFloatPointSign()
+    {
+        
+        $testLocale = "de_DE"; // TODO: Maybe check more than one
+        if (setlocale(LC_NUMERIC, $testLocale) !== false) {
+            $shot = new File_Therion_Shot("1", "2", 1234.56789);
+            
+            // test that the float was correctly set
+            $this->assertInternalType('float', $shot->getLength());
+            $this->assertEquals(1234.56789, $shot->getLength());
+            
+            // test that "wrong" string representation of float is present
+            $this->assertEquals("1234,56789", (string)$shot->getLength());
+            $this->assertEquals(1234.56789, $shot->getLength());
+            
+            // test that File_Therion_Shot handles this well
+            $this->assertEquals("1234.56789", preg_split("/\s+/", $shot->toLines())[3]);
+            
+            
+        } else {
+            $this->markTestIncomplete("locale '$testLocale' not installed");
+        }
+    }
+    
 }
 ?>
