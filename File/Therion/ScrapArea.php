@@ -359,7 +359,7 @@ class File_Therion_ScrapArea
      * @return Always throws File_Therion_SyntaxException when called.
      * @throws File_Therion_SyntaxException because options are not allowed.
      */
-    public function setOption() {
+    public function setOption($option, $value=null) {
         throw new File_Therion_SyntaxException(
             "Options are not allowed with scrap areas!");
     }
@@ -370,7 +370,7 @@ class File_Therion_ScrapArea
      * @return Always throws File_Therion_SyntaxException when called.
      * @throws File_Therion_SyntaxException because options are not allowed.
      */
-    public function getOption() {
+    public function getOption($option) {
         throw new File_Therion_SyntaxException(
             "Options are not allowed with scrap areas!");
     }
