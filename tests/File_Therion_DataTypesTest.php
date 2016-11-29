@@ -230,6 +230,56 @@ class File_Therion_DataTypesTest extends File_TherionTestBase {
         // todo: more tests!
        
     }
+    
+    /**
+     * Test unit locale handling
+     */
+    public function testUnitLocaleHandling()
+    {
+        $originalLocale = setlocale(LC_NUMERIC, 0);
+        
+        /*
+         * Test for known "wrong" locales
+         */
+        $testLocale = "de_DE"; // TODO: Maybe check more than one
+        if (setlocale(LC_NUMERIC, $testLocale) !== false) {
+            $sample = new File_Therion_Unit(5.3, 'deg');
+            $this->assertEquals(5.3, $sample->getQuantity());
+            $this->assertEquals("5,3", (string)$sample->getQuantity());
+                     
+            // test that File_Therion_Unit handles this well when
+            // string representation is requested
+            $this->assertEquals("5.3", preg_split("/\s+/", $sample->toString())[0]);
+            
+        } else {
+            $this->markTestIncomplete("locale '$testLocale' not installed");
+        }
+        
+        
+        /*
+         * Test for known "correct" locale too
+         */
+        if (setlocale(LC_NUMERIC, "C") !== false) {
+           $sample = new File_Therion_Unit(5.3, 'deg');
+            $this->assertEquals(5.3, $sample->getQuantity());
+            $this->assertEquals("5.3", (string)$sample->getQuantity());
+                     
+            // test that File_Therion_Unit handles this well when
+            // string representation is requested
+            $this->assertEquals("5.3", preg_split("/\s+/", $sample->toString())[0]);
+            
+            
+        } else {
+            $this->markTestIncomplete("locale '$testLocale' not installed");
+        }
+        
+        
+        // RESET locale (if neccesary)
+        $nowLocale = setlocale(LC_NUMERIC, 0);
+        if ($nowLocale != $originalLocale && false === setlocale(LC_NUMERIC, $originalLocale)) {
+            throw new Exception("ERROR: Reset of test locale failed!");
+        }
+    }
 
 }
 ?>

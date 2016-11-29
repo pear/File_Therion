@@ -829,16 +829,9 @@ class File_Therion_Shot
                 // correct for locale-issues (some locales print float
                 // numbers using commata, which is not therion compliant);
                 // also thousands sep could pose a problem.
+                
                 if (is_float($od)) {
-                    $locale_thousandsSep = localeconv()['thousands_sep'];
-                    if ($locale_thousandsSep != "") {
-                        $od = str_replace($locale_thousandsSep, '', $od);
-                    }
-                    
-                    $locale_decimalPoint = localeconv()['decimal_point'];
-                    if ($locale_decimalPoint != ".") {
-                        $od = str_replace($locale_decimalPoint, '.', $od);
-                    }
+                    $od = File_Therion_Unit::float2string($od);
                 }
                 
                 // escape fields therion-like, if neccessary

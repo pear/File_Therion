@@ -126,12 +126,18 @@ class File_Therion_Unit
     public function toString($normalize = false)
     {
         $r = "";
-        if (!is_null($this->getQuantity())) {
-            $r .= $this->getQuantity();
-            $r .= " ";
+        
+        $q = $this->getQuantity();
+        if (!is_null($q)) {
+            if (is_float($q)) $q = File_Therion_Unit::float2string($q);
+            $r .= $q;
         }
         
-        $r .= $this->getType($normalize);
+        $t = $this->getType($normalize);
+        if (!is_null($t)) {
+            $r .= " ";
+            $r .= $t;
+        }
         
         return $r;
     }
@@ -325,6 +331,39 @@ class File_Therion_Unit
         throw new File_Therion_Exception("unit name or alias '$type' not known");
     }
     
+    /**
+     * Normalize float values to therion compatible value.
+     * 
+     * The representation of float values is dependent on the locale in use.
+     * Some locales (de_AT  for instance) use comma as float point separator.
+     * Also, some locales use a thousands separator.
+     * 
+     * This method converts a float value to a therion compatible string, which
+     * is dot as separator and an empty thousands sign.
+     * 
+     * @param float $floatval
+     * @return string
+     * @throw InvalidArgumentException when $floatval is not an float.
+     */
+    public static function float2string($floatval)
+    {
+        if (!is_float($floatval)) {
+            throw new InvalidArgumentException("float expected, '"
+                    . gettype($floatval)."' given");
+        }
+        
+        $locale_thousandsSep = localeconv()['thousands_sep'];
+        if ($locale_thousandsSep != "") {
+            $floatval = str_replace($locale_thousandsSep, '', $floatval);
+        }
+
+        $locale_decimalPoint = localeconv()['decimal_point'];
+        if ($locale_decimalPoint != ".") {
+            $floatval = str_replace($locale_decimalPoint, '.', $floatval);
+        }
+
+        return $floatval;
+    }
     
     /**
      * Gets class of unit type ("angle" or "length").

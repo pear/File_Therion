@@ -348,7 +348,11 @@ class File_Therion_ShotTest extends File_TherionTestBase {
      */
     public function testFloatPointSign()
     {
+        $originalLocale = setlocale(LC_NUMERIC, 0);
         
+        /*
+         * Test for known "wrong" locales
+         */
         $testLocale = "de_DE"; // TODO: Maybe check more than one
         if (setlocale(LC_NUMERIC, $testLocale) !== false) {
             $shot = new File_Therion_Shot("1", "2", 1234.56789);
@@ -367,6 +371,36 @@ class File_Therion_ShotTest extends File_TherionTestBase {
             
         } else {
             $this->markTestIncomplete("locale '$testLocale' not installed");
+        }
+        
+        
+        /*
+         * Test for known "correct" locale too
+         */
+        if (setlocale(LC_NUMERIC, "C") !== false) {
+            $shot = new File_Therion_Shot("1", "2", 1234.56789);
+            
+            // test that the float was correctly set
+            $this->assertInternalType('float', $shot->getLength());
+            $this->assertEquals(1234.56789, $shot->getLength());
+            
+            // test that "wrong" string representation of float is present
+            $this->assertEquals("1234.56789", (string)$shot->getLength());
+            $this->assertEquals(1234.56789, $shot->getLength());
+            
+            // test that File_Therion_Shot handles this well
+            $this->assertEquals("1234.56789", preg_split("/\s+/", $shot->toLines())[3]);
+            
+            
+        } else {
+            $this->markTestIncomplete("locale '$testLocale' not installed");
+        }
+        
+        
+        // RESET locale (if neccesary)
+        $nowLocale = setlocale(LC_NUMERIC, 0);
+        if ($nowLocale != $originalLocale && false === setlocale(LC_NUMERIC, $originalLocale)) {
+            throw new Exception("ERROR: Reset of test locale failed!");
         }
     }
     
