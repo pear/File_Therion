@@ -426,12 +426,12 @@ class File_Therion_Station implements File_Therion_IReferenceable
     {
         // convert lat-lon (only when string was given):
         if (is_string($x)) {
-            $x = preg_replace('/°|\'/', ':', $x);
-            $x = str_replace('"', '', $x);
+            $x = preg_replace('/°|\'|"/', ':', $x);
+            $x = rtrim($x, ':');
         }
         if (is_string($y)) {
-            $y = preg_replace('/°|\'/', ':', $y);
-            $y = str_replace('"', '', $y);
+            $y = preg_replace('/°|\'|"/', ':', $y);
+            $y = rtrim($y, ':');
         }
         
         // apply fix:
