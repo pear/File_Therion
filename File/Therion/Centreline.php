@@ -1564,14 +1564,14 @@ class File_Therion_Centreline
      * When passing an array, you can either pass Grade objects or
      * strings to reference the grade definition names.
      * To delete all grade definitions from the centreline,
-     * use NULL as $grade.
+     * use NULL as $grade (the empty string works too).
      * 
      * @param File_Therion_Grade|array|string|null $grade
      * @throws InvalidArgumentException
      */
     public function setGrade($grade)
     {
-        if (is_null($grade)) {
+        if (is_null($grade) || $grade === "") {
             // clear grade settings
             $this->setData('grade', array());
             

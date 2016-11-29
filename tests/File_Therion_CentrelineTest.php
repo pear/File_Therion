@@ -904,6 +904,19 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
         );
         
         
+        // with empty grade (reset centreline1)
+        $centreline1->setGrade('');
+        $this->assertEquals(
+            array(
+                File_Therion_Line::parse('centreline'),
+                File_Therion_Line::parse("\tdata\tnormal\tfrom\tto\tlength\tbearing\tgradient\tleft\tright\tup\tdown"),
+                File_Therion_Line::parse("\t\t\t0\t1\t10\t123\t45\t0\t0\t0\t0"),
+                File_Therion_Line::parse('endcentreline')
+            ),
+            File_Therion_Line::filterNonEmpty($centreline1->toLines())
+        );
+        
+        
         // with object as grade
         $grade = new File_Therion_Grade('test');
         $centreline2 = new File_Therion_Centreline();
@@ -919,6 +932,7 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
             ),
             File_Therion_Line::filterNonEmpty($centreline2->toLines())
         );
+        
     }
 
 }
