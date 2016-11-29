@@ -301,5 +301,122 @@ class File_Therion_StationTest extends File_TherionTestBase {
         );
     }
     
+    /**
+     * Test fix conversion for lat-lon
+     */
+    public function testFixLatLonConversion()
+    {
+        $sample = new File_Therion_Station("1");
+        $sample->setFix("13°37'50.809\"", "47°32'37.627\"", 870);
+        $this->assertEquals(
+                array(
+                    "coords" => array("13:37:50.809", "47:32:37.627", 870),
+                    "std" => array(0, 0, 0)
+                ),
+                $sample->getFix()
+        );
+        $this->assertEquals(
+                array("fix", "1", "13:37:50.809", "47:32:37.627", "870", 0, 0, 0),
+                preg_split("/\s+/", $sample->toFixString())
+        );
+    }
+    
+    /**
+     * Test fix locale handling
+     */
+    public function testFixLocaleHandling()
+    {
+        $originalLocale = setlocale(LC_NUMERIC, 0);
+        
+        /*
+         * Test for known "wrong" locales
+         */
+        $testLocale = "de_DE"; // TODO: Maybe check more than one
+        if (setlocale(LC_NUMERIC, $testLocale) !== false) {
+            $sample = new File_Therion_Unit(5.3, 'deg');
+            $sample = new File_Therion_Station("1");
+            $sample->setFix(12345.678, 1234567.89, 8730.32);
+            $this->assertEquals(
+                    array(
+                        'coords' => array(12345.678, 1234567.89, 8730.32),
+                        "std" => array(0, 0, 0)
+                    ),
+                    $sample->getFix()
+            );
+            $this->assertEquals(
+                    array("fix", "1", "12345.678", "1234567.89", "8730.32", 0, 0, 0),
+                    preg_split("/\s+/", $sample->toFixString())
+            );
+                     
+            // test that File_Therion_Unit handles this well when
+            // string representation is requested
+            $sample = new File_Therion_Unit(5.3, 'deg');
+            $sample = new File_Therion_Station("1");
+            $sample->setFix(12345.678, 1234567.89, 8730.32);
+            $this->assertEquals(
+                    array(
+                        'coords' => array(12345.678, 1234567.89, 8730.32),
+                        "std" => array(0, 0, 0)
+                    ),
+                    $sample->getFix()
+            );
+            $this->assertEquals(
+                    array("fix", "1", "12345.678", "1234567.89", "8730.32", 0, 0, 0),
+                    preg_split("/\s+/", $sample->toFixString())
+            );
+            
+        } else {
+            $this->markTestIncomplete("locale '$testLocale' not installed");
+        }
+        
+        
+        /*
+         * Test for known "correct" locale too
+         */
+        if (setlocale(LC_NUMERIC, "C") !== false) {
+            $sample = new File_Therion_Unit(5.3, 'deg');
+            $sample = new File_Therion_Station("1");
+            $sample->setFix(12345.678, 1234567.89, 8730.32);
+            $this->assertEquals(
+                    array(
+                        'coords' => array(12345.678, 1234567.89, 8730.32),
+                        "std" => array(0, 0, 0)
+                    ),
+                    $sample->getFix()
+            );
+            $this->assertEquals(
+                    array("fix", "1", "12345.678", "1234567.89", "8730.32", 0, 0, 0),
+                    preg_split("/\s+/", $sample->toFixString())
+            );
+                     
+            // test that File_Therion_Unit handles this well when
+            // string representation is requested
+            $sample = new File_Therion_Unit(5.3, 'deg');
+            $sample = new File_Therion_Station("1");
+            $sample->setFix(12345.678, 1234567.89, 8730.32);
+            $this->assertEquals(
+                    array(
+                        'coords' => array(12345.678, 1234567.89, 8730.32),
+                        "std" => array(0, 0, 0)
+                    ),
+                    $sample->getFix()
+            );
+            $this->assertEquals(
+                    array("fix", "1", "12345.678", "1234567.89", "8730.32", 0, 0, 0),
+                    preg_split("/\s+/", $sample->toFixString())
+            );
+            
+        } else {
+            $this->markTestIncomplete("locale '$testLocale' not installed");
+        }
+        
+        
+        // RESET locale (if neccesary)
+        $nowLocale = setlocale(LC_NUMERIC, 0);
+        if ($nowLocale != $originalLocale && false === setlocale(LC_NUMERIC, $originalLocale)) {
+            throw new Exception("ERROR: Reset of test locale failed!");
+        }
+    }
+    
 }
 ?>

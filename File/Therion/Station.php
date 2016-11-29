@@ -410,6 +410,10 @@ class File_Therion_Station implements File_Therion_IReferenceable
      * Without centreline context, fixing stations is not meaningful.
      * Please also look at the therion manual.
      * 
+     * Latitude and longtitude in format nn°nn'nn.nn" is autoconverted to
+     * therions format (nn:nn:nn.nn).
+     * {@link getFix()} will return strings instead of floats then!
+     * 
      * @param float $x X value of coordinate (Rechtswert in Gauss-Krueger)
      * @param float $y Y value of coordinate (Hochwert in Gauss-Krueger)
      * @param float $z Z (height) value of coordinate (usually Meters above sea level)
@@ -420,6 +424,17 @@ class File_Therion_Station implements File_Therion_IReferenceable
      */
     public function setFix($x, $y, $z, $stdX=0, $stdY=0, $stdZ=0)
     {
+        // convert lat-lon (only when string was given):
+        if (is_string($x)) {
+            $x = preg_replace('/°|\'/', ':', $x);
+            $x = str_replace('"', '', $x);
+        }
+        if (is_string($y)) {
+            $y = preg_replace('/°|\'/', ':', $y);
+            $y = str_replace('"', '', $y);
+        }
+        
+        // apply fix:
         $this->_fixes = array(
             'coords' => array($x, $y, $z),
             'std'    => array($stdX, $stdY, $stdZ)
@@ -488,6 +503,26 @@ class File_Therion_Station implements File_Therion_IReferenceable
             return "";
         } else {
             $fixdata = $this->getFix();
+            
+            // correct locale influences in coords and std,
+            // but only when datatype is applicable
+            foreach (array('coords', 'std') as $w) {
+                $fixdata[$w] = array_map(
+                        function($n) {
+                            switch (gettype($n)) {
+                                case 'float':
+                                case 'double':
+                                    return File_Therion_Unit::float2string($n);
+                                case 'string':
+                                default:
+                                    return $n;
+                            }
+                        },
+                        $fixdata[$w]
+                );
+            }
+
+            // generate return data
             $fixstring = implode(" ", $fixdata['coords']);
             if (count($fixdata['std']) > 0) {
                 $fixstring .= " ".implode(" ", $fixdata['std']);
