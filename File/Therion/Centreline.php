@@ -77,23 +77,20 @@ class File_Therion_Centreline
     );
     
     /**
-     * Team members (surveying persons).
+     * Trips Stack to store date, explo-date, team and explo-team in order.
      * 
-     * Each array item is an assoc array containing:
-     * - key='persons'  = File_Therion_Person object
-     * - key='roles'    = array of strings with roles
+     * Each indexed entry contains an associative array with name and value:
+     * array(
+     *   [0] => array ( ['date'] => Date-Obj || array(DateObj, DateObj) )
+     *   [1] => array ( ['team'] => array(PersonObj, "role1", "roleN") )
+     *   [2] => array(  ['explo-date'] => Date-Obj || array(DateObj, DateObj) )
+     *   [3] => array ( ['explo-team'] => PersonObj )
+     *   [n] => array (...)
      * 
      * @var array
      */
-    protected $_team = array();
-    
-    /**
-     * Explo-Team members (exploring persons).
-     * 
-     * @var array with File_Therion_Person objects
-     */
-    protected $_exploteam = array();
-    
+    protected $_tripStack = array();
+        
     /**
      * Centreline data definition.
      * 
@@ -257,11 +254,11 @@ class File_Therion_Centreline
                                 
                                 case 'date':
                                     $pd = File_Therion_Date::parse($lineData[0]);
-                                    $centreline->setDate($pd);
+                                    $centreline->addDate($pd);
                                 break;
                                 case 'explo-date':
                                     $pd = File_Therion_Date::parse($lineData[0]);
-                                    $centreline->setExploDate($pd);
+                                    $centreline->addExploDate($pd);
                                 break;
                                 
                                 case 'copyright':
@@ -532,6 +529,91 @@ class File_Therion_Centreline
     }
     
     /**
+     * Clear a cateory from the internal trip stack.
+     * 
+     * The internal array will be reindexed.
+     * 
+     * @param string $key to clear; null=clear entire store
+     */
+    private function clearTripStack($key)
+    {
+        $newTripStack = array();
+        foreach ($this->_tripStack as $tripItem) {
+            list($tsKey, $tsItem) = each($tripItem);
+            if ($tsKey != $key && !is_null($key)) {
+                $newTripStack[][$tsKey] = $tsItem;
+            }
+        }
+        $this->_tripStack = $newTripStack;
+    }
+    
+    /**
+     * Add a date(s) or explo-date(s) to the tripStack
+     * 
+     * @param string $key
+     */
+    private function addDate2TripStack($key, $date) {
+        // Check parameter sanity
+        if ($key !== 'date' && $key !== 'explo-date') {
+            throw new InvalidArgumentException(
+                    "\$key is neither 'date' nor 'explo-date'");
+        }
+        if (is_array($date)) {
+            if (count($date) != 2) {
+                throw new InvalidArgumentException(
+                    "Invalid number of arguments - expected two date objects");
+            }
+            if (!is_a($date[0], 'File_Therion_Date')) {
+                throw new InvalidArgumentException(
+                    "Date is not of type File_Therion_Date");
+            }
+            if (!is_a($date[1], 'File_Therion_Date')) {
+                throw new InvalidArgumentException(
+                    "Date is not of type File_Therion_Date");
+            }  
+        } else {
+            if (!is_a($date, 'File_Therion_Date')) {
+                throw new InvalidArgumentException(
+                    "Date is not of type File_Therion_Date");
+            }
+        }
+        
+        // store date(s)
+        $this->_tripStack[] = array($key => $date);
+    }
+    
+    /**
+     * Fetch date(s) from internal Trip stack.
+     * 
+     * @param string $key type to get ('date', 'explo-date')
+     * @return null|File_Therion_Date|array
+     */
+    private function getDateFromTripStack($key)
+    {
+        $rv = array();
+        foreach ($this->_tripStack as $tripItem) {
+            list($tsKey, $tsItem) = each($tripItem);
+            if ($tsKey == $key) {
+                $rv = array_merge(
+                    $rv,
+                    is_array($tsItem)?$tsItem:array($tsItem)
+                );
+            }
+        }
+        
+        if (count($rv) == 0) {
+            // no explo-dates defined
+            return null;
+        } elseif (count($rv) == 1) {
+            // exactly one: return as date obj
+            return array_shift($rv);
+        } else {
+            // several date definitions found
+            return $rv;
+        }
+    }
+    
+    /**
      * Add a surveying team member.
      * 
      * @param File_Therion_Person $person team member
@@ -543,8 +625,8 @@ class File_Therion_Centreline
         if (!is_array($roles)) {
             $roles = array($roles);
         }
-          
-        $this->_team[] = array('person' => $person, 'roles' => $roles);
+        
+        $this->_tripStack[] = array('team' => array_merge(array($person), $roles));
     }
     
     /**
@@ -556,19 +638,21 @@ class File_Therion_Centreline
     public function getTeam()
     {
         $rv = array();
-        foreach ($this->_team as $tm) {
-            $rv[] = $tm['person'];
+        foreach ($this->_tripStack as $tripItem) {
+            list($tsKey, $tsItem) = each($tripItem);
+            if ($tsKey == 'team') {
+                $rv[] = $tsItem[0];
+            }
         }
         return $rv;
     }
     
     /**
      * Remove all associated team members.
-     * 
      */
     public function clearTeam()
     {
-        $this->_team = array();
+        $this->clearTripStack('team');
     }
     
     /**
@@ -582,16 +666,24 @@ class File_Therion_Centreline
      */
     public function getTeamRoles(File_Therion_Person $person)
     {
-        foreach ($this->_team as $tm) {
-            if ($person == $tm['person']) {
-                return $tm['roles'];
+        $personFound = false; // @todo: i have the impression this is not elegant
+        $rv = array();
+        foreach ($this->_tripStack as $tripItem) {
+            list($tsKey, $tsItem) = each($tripItem);
+            if ($tsKey == 'team' && array_shift($tsItem) === $person) {
+                $personFound = true;
+                $rv = array_merge($rv, $tsItem); // roles are the remaining vals
             }
         }
         
         // in case no such team member:
-        throw new OutOfBoundsException(
-            "No such team member: ".$person->toString()
-        );
+        if (!$personFound) {
+            throw new OutOfBoundsException(
+                "No such team member: ".$person->toString()
+            );
+        } else {
+            return $rv;
+        }
     }
     
     /**
@@ -601,7 +693,7 @@ class File_Therion_Centreline
      */
     public function addExploTeam(File_Therion_Person $person)
     {
-        $this->_exploteam[] = $person;
+        $this->_tripStack[] = array('explo-team' => $person);
     }
     
     /**
@@ -611,37 +703,36 @@ class File_Therion_Centreline
      */
     public function getExploTeam()
     {
-        return $this->_exploteam;
+        $rv = array();
+        foreach ($this->_tripStack as $tripItem) {
+            list($tsKey, $tsItem) = each($tripItem);
+            if ($tsKey == 'explo-team') {
+                $rv[] = $tsItem;
+            }
+        }
+        return $rv;
     }
     
     /**
      * Remove all associated exploring team members.
-     * 
      */
     public function clearExploTeam()
     {
-        $this->_exploteam = array();
+        $this->clearTripStack('explo-team');
     }
     
     /**
-     * Get survey date.
+     * Get survey date(s).
      * 
      * When no date is set, NULL will be returned.
-     * Otherwise a date object is returned OR if there is a date interval,
-     * an array containing two date objects is returned.
+     * If one date is set, a date object is returned.
+     * Otherwise an array containing all date objects is returned.
      * 
      * @return null|array|File_Therion_Date therion date
      */
     public function getDate()
     {
-        $dates = $this->getData('date');
-        if (count($dates) == 2) {
-            return $dates;
-        } elseif (count($dates) == 0) {
-            return null;
-        } else {
-            return $dates[0];
-        }
+        return $this->getDateFromTripStack('date');
     }
     
     /**
@@ -652,52 +743,32 @@ class File_Therion_Centreline
      * 
      * @param array|File_Therion_Date $date therion date or array for date interval
      * @throws InvalidArgumentException
-     * @todo: unsure if proper syntax is invocating "date <singledate>" several times instead!
      */
-    public function setDate($date)
+    public function addDate($date)
     {
-        if (is_array($date)) {
-            if (count($date) != 2) {
-                throw new InvalidArgumentException(
-                    "Invalid number of arguments - expected two date objects");
-            }
-            if (!is_a($date[0], 'File_Therion_Date')) {
-                throw new InvalidArgumentException(
-                    "Date is not of type File_Therion_Date");
-            }
-            if (!is_a($date[1], 'File_Therion_Date')) {
-                throw new InvalidArgumentException(
-                    "Date is not of type File_Therion_Date");
-            }
-        } else {
-            if (!is_a($date, 'File_Therion_Date')) {
-                throw new InvalidArgumentException(
-                    "Date is not of type File_Therion_Date");
-            }
-            $date = array($date);
-        }
-        $this->setData('date', $date);
+        $this->addDate2TripStack('date', $date);
+    }
+    
+    /**
+     * Remove all survey dates.
+     */
+    public function clearDate()
+    {
+        $this->clearTripStack('date');
     }
     
     /**
      * Get exploration date.
      * 
      * When no date is set, NULL will be returned.
-     * Otherwise a date object is returned OR if there is a date interval,
-     * an array containing two date objects returned.
+     * If one date is set, a date object is returned.
+     * Otherwise an array containing all date objects is returned.
      * 
      * @return null|array|File_Therion_Date therion date
      */
     public function getExploDate()
     {
-        $dates = $this->getData('explo-date');
-        if (count($dates) == 2) {
-            return $dates;
-        } elseif (count($dates) == 0) {
-            return null;
-        } else {
-            return $dates[0];
-        }
+        return $this->getDateFromTripStack('explo-date');
     }
     
     /**
@@ -705,29 +776,17 @@ class File_Therion_Centreline
      * 
      * @param File_Therion_Date $date therion date
      */
-    public function setExploDate(File_Therion_Date $date)
+    public function addExploDate(File_Therion_Date $date)
     {
-        if (is_array($date)) {
-            if (count($date) != 2) {
-                throw new InvalidArgumentException(
-                    "Invalid number of arguments - expected two date objects");
-            }
-            if (!is_a($date[0], 'File_Therion_Date')) {
-                throw new InvalidArgumentException(
-                    "Date is not of type File_Therion_Date");
-            }
-            if (!is_a($date[1], 'File_Therion_Date')) {
-                throw new InvalidArgumentException(
-                    "Date is not of type File_Therion_Date");
-            }
-        } else {
-            if (!is_a($date, 'File_Therion_Date')) {
-                throw new InvalidArgumentException(
-                    "Date is not of type File_Therion_Date");
-            }
-            $date = array($date);
-        }
-        $this->setData('explo-date', $date);
+        $this->addDate2TripStack('explo-date', $date);
+    }
+    
+    /**
+     * Remove all survey exploration dates.
+     */
+    public function clearExploDate()
+    {
+        $this->clearTripStack('explo-date');
     }
     
     /**
@@ -1307,52 +1366,51 @@ class File_Therion_Centreline
         
         $lines[] = new File_Therion_Line(""); // add line spacer
         
-        // explo-date
+        // Trip information
+        // date, explo-date, team, explo-team
         // TODO: im not sure if thbook means it like this, or if there are several
         // invocations of date commands with single date objects are expected.
-        if (!is_null($this->getExploDate())) {
-            $ds = "";
-            if (is_array($this->getExploDate())) {
-                // date interval: "date <date1> <date2>"
-                $ds .= $this->getExploDate()[0]->toString();
-                $ds .= " ".$this->getExploDate()[1]->toString();
-            } elseif (is_object($this->getExploDate())) {
-                $ds .= $this->getExploDate()->toString();
+        foreach ($this->_tripStack as $tripItem) {
+            /*
+                *   [0] => array ( ['date'] => Date-Obj || array(DateObj, DateObj) )
+                *   [1] => array ( ['team'] => array(PersonObj, "role1", "roleN") )
+                *   [2] => array(  ['explo-date'] => Date-Obj || array(DateObj, DateObj) )
+                *   [3] => array ( ['explo-team'] => PersonObj )
+                *   [n] => array (...)
+             */
+            list($trKey, $trValue) = each($tripItem);
+            $ds = ""; // value part of stringified command
+            
+            // Handling dates
+            if ($trKey == 'date' || $trKey == 'explo-date') {
+                if (is_array($trValue)) {
+                    // date interval: "date <date1> <date2>"
+                    while ($t = array_shift($trValue)) {
+                        $ds .= " ".$t->toString();
+                    }
+                } elseif (is_a($trValue, 'File_Therion_Date')) {
+                    // single date
+                    $ds .= $trValue->toString();
+                }
             }
             
-            if ($ds) {
-                $lines[] = new File_Therion_Line("explo-date ".$ds, "", $baseIndent);
-            }
-        }
-        
-        // explo-team
-        foreach ($this->getExploTeam() as $tm) {
-            $lines[] = new File_Therion_Line("explo-team ".$tm->toString(), "", $baseIndent);
-        }
-        
-        // date
-        // TODO: im not sure if thbook means it like this, or if there are several
-        // invocations of date commands with single date objects are expected.
-        if (!is_null($this->getDate())) {
-            $ds = "";
-            if (is_array($this->getDate())) {
-                // date interval: "date <date1> <date2>"
-                $ds .= $this->getDate()[0]->toString();
-                $ds .= " ".$this->getDate()[1]->toString();
-            } elseif (is_object($this->getDate())) {
-                $ds .= $this->getDate()->toString();
+            // Handling persons
+            if ($trKey == 'team' || $trKey == 'explo-team') {
+                if (is_array($trValue)) {
+                    // person array: associated role information
+                    //               first element is personObj, more are roles
+                    $ds .= array_shift($trValue)->toString();
+                    while ($role = array_shift($trValue)) {
+                        $ds .= " ".$role;
+                    }
+                } elseif (is_a($trValue, 'File_Therion_Person')) {
+                    // single person
+                    $ds .= $trValue->toString();
+                }
             }
             
-            if ($ds) {
-                $lines[] = new File_Therion_Line("date ".$ds, "", $baseIndent);
-            }
-        }
-        
-        // team
-        foreach ($this->getTeam() as $tm) {
-            $lines[] = new File_Therion_Line(
-                "team ".trim($tm->toString()." ".implode(" ", $this->getTeamRoles($tm))),
-                "", $baseIndent);
+            // adding handled trip item
+            $lines[] = new File_Therion_Line("$trKey ".trim($ds), "", $baseIndent);
         }
         
         $lines[] = new File_Therion_Line(""); // add line spacer

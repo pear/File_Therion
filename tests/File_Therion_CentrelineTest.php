@@ -648,10 +648,6 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
         $a=20; $b=21;   $tmp = $in[$a]; $in[$a] = $in[$b]; $in[$b] = $tmp;
         
         // changed order in header
-        $a=1; $b=4;   $tmp = $in[$a]; $in[$a] = $in[$b]; $in[$b] = $tmp;
-        $a=2; $b=5;   $tmp = $in[$a]; $in[$a] = $in[$b]; $in[$b] = $tmp;
-        $a=3; $b=4;   $tmp = $in[$a]; $in[$a] = $in[$b]; $in[$b] = $tmp;
-        $a=4; $b=5;   $tmp = $in[$a]; $in[$a] = $in[$b]; $in[$b] = $tmp;
         $a=6; $b=8;   $tmp = $in[$a]; $in[$a] = $in[$b]; $in[$b] = $tmp;
         $a=7; $b=8;   $tmp = $in[$a]; $in[$a] = $in[$b]; $in[$b] = $tmp;
         
