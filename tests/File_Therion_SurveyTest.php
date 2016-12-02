@@ -745,5 +745,26 @@ class File_Therion_SurveyTest extends File_TherionTestBase {
         );
     }
 
+    /**
+     * Test header comments
+     */
+    public function testHeaderComments()
+    {
+        $sample = new File_Therion_Survey("test");
+        $sample->addComment("some first comment");
+        $sample->addComment("another comment");
+        
+        $sampleLines = $sample->toLines();
+        $this->assertEquals(4, count($sampleLines));
+        $this->assertEquals(
+            array(
+                File_Therion_Line::parse('survey test'),
+                File_Therion_Line::parse("\t#some first comment"),
+                File_Therion_Line::parse("\t#another comment"),
+                File_Therion_Line::parse("endsurvey test"),
+            ),
+            $sampleLines
+        );
+    }
 }
 ?>

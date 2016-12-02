@@ -536,6 +536,17 @@ class File_Therion_Line implements Countable
     {
         return $this->toString();
     }
+    
+    /**
+     * Return this line as object.
+     * 
+     * This is mainly useful for internal processing when lines of subobjects
+     * are requested in bulk.
+     */
+    public function toLines()
+    {
+        return $this;
+    }
  
     /**
      * Say if this is just a comment or empty line.

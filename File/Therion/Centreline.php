@@ -1273,6 +1273,18 @@ class File_Therion_Centreline
          */
         $baseIndent = "\t";
         
+        // header type comment
+        // (this is a WORKAROUND implementation. Once object ordering is possible,
+        //  this must be rewritten and handled well)
+        // for now: just push the entire object stack, as it only contain comments.
+        foreach ($this->objStack as $osi) {
+            if (is_a($osi, 'File_Therion_Line')) {
+                // add all contained lines as header comment
+                $lines[] = $osi;
+                $osi->setIndent($baseIndent);
+            }
+        }
+        
         // copyright
         $copyright = $this->getData('copyright');
         if (count($copyright) > 0) {

@@ -19,6 +19,23 @@
  * The interface is restricted because other than options should be
  * explicitely defined with getters/setters.
  *
+ * @todo: Restructure internal object representation of commands.
+ *        This class really represents a therion multiline command. I would
+ *        probably a very good idea to rearrange the basic internal data
+ *        structure to consist of only three objects: Files, abstract 
+ *        multiline-commands and abstract single-line commands.
+ *        Multiline-commands would hold other multiline-commands and/or single
+ *        line commands.
+ *        Specific methods would deal with filtering the stack; it would be good
+ *        to have some generic protected methods here to help with this task.
+ *        The existing concrete classes would extend from the suitable basic
+ *        command-class and implement getters/setters etc, that can deal with
+ *        the objects contained in the abstract internal objectsStack.
+ *        => This way, ordering of objects could be supported properly.
+ *        => Another benefit would be, that internal handling of data structures
+ *           could possibly be much more simple as it is now.
+ * 
+ *        
  * @category   file
  * @package    File_Therion
  * @author     Benedikt Hallinger <beni@php.net>
@@ -29,6 +46,16 @@
 abstract class File_Therion_BasicObject
 {
     
+    /**
+     * Object data stack.
+     * 
+     * Therion objects can be ordered, so that the representing lines
+     * are generated in a specific order.
+     * A multiline therion command can hold several such objects.
+     */
+    protected $objStack = array();
+
+
     /**
      * Object options (title, ...).
      * 
@@ -319,6 +346,21 @@ abstract class File_Therion_BasicObject
         }
         
         return $options;
+    }
+    
+    /**
+     * Add a comment.
+     * 
+     * NOTICE: The current implementation does not support object ordering.
+     * Currently this is only useful for generating embedded header comments for
+     * Surveys and Centerlines.
+     * 
+     * @param string $text
+     * @todo support object ordering (see class comment todo in File_Therion_BasicObject)
+     */
+    public function addComment($text)
+    {
+        $this->objStack[] = new File_Therion_Line("", $text);
     }
 }
 
