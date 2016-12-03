@@ -83,6 +83,24 @@ class File_TherionWriterTest extends File_TherionTestBase {
         }
         
         // add another test survey as raw lines
+        // (as main survey besides rabbit survey!)
+        $testlines = array(
+            "survey mainSecondSurvey",
+            "  # just an empty test survey...",
+            "  ",
+            "  # here comes a scrap:",
+            "  scrap fooScrap2 -scale [295.0 203.0 995.0 207.5 0.0 0.0 0 -36 m]",
+            "    point 629.0 269.5 debris",
+            "  endscrap",
+            "  # end of scrap data",
+            "endsurvey"
+        );
+        
+        foreach (array_reverse($testlines) as $l) {
+            $th->addLine(new File_Therion_Line($l), 4);
+        }
+        
+        // add another test survey as raw lines
         // (as subsurvey to rabbit survey!)
         $testlines = array(
             "survey foobar",
@@ -97,7 +115,7 @@ class File_TherionWriterTest extends File_TherionTestBase {
         );
         
         foreach (array_reverse($testlines) as $l) {
-            $th->addLine(new File_Therion_Line($l), 7);
+            $th->addLine(new File_Therion_Line($l), 16);
         }
         
         // test console writer (dumps content to terminal)
@@ -122,6 +140,9 @@ class File_TherionWriterTest extends File_TherionTestBase {
             '/structuredWriter/basic/rabbit/foobar',
             '/structuredWriter/basic/rabbit/foobar/foobar.th',
             '/structuredWriter/basic/rabbit/foobar/foobar.th2',
+            '/structuredWriter/basic/mainSecondSurvey/',
+            '/structuredWriter/basic/mainSecondSurvey/mainSecondSurvey.th',
+            '/structuredWriter/basic/mainSecondSurvey/mainSecondSurvey.th2',
         );
         foreach ($expectedFiles as $fl) {
             $this->assertTrue(
@@ -137,6 +158,7 @@ class File_TherionWriterTest extends File_TherionTestBase {
      * Tests some alternative folder structure (each survey in nestes folders with subfolder "therion")
      * 
      * - .../base/therion/index.th                -> all baselevel lines
+     * - .../base/therion/grades.th               -> custom grade definitions
      * - .../base/main/therion/foobase.th         -> first survey level
      * - .../base/main/sub1/therion/sub1.th       -> second survey level
      * - .../base/main/sub1/sub2/therion/sub2.th  -> third survey level
@@ -154,6 +176,9 @@ class File_TherionWriterTest extends File_TherionTestBase {
         
         // add test survey as raw lines
         $testlines = array(
+            "grade testGrade",
+            "  # just a empty test grade",
+            "endgrade testGrade",
             "survey main",
             "  # main survey does not have a scrap.",
             "  survey sub0",
@@ -230,6 +255,7 @@ class File_TherionWriterTest extends File_TherionTestBase {
          */
         $expectedFiles = array(
             '/structuredWriter/nas/therion/index_nas.th',
+            '/structuredWriter/nas/therion/grades.th',
             '/structuredWriter/nas/main/therion/main.th',
             '/structuredWriter/nas/main/sub0/therion/sub0.th',
             '/structuredWriter/nas/main/sub0/therion/sub0.th2',
