@@ -174,6 +174,22 @@ class File_Therion_GradeTest extends File_TherionTestBase {
         
     }
     
+    /**
+     * Test adding grades as array
+     */
+    public function testAddAsArray()
+    {
+        $grade = new File_Therion_Grade('UISv1_3', array('title' => 'Rough magnetic/analogue survey'));
+        $grade->setDefinition(
+                array(
+                    'length'   => new File_Therion_Unit(0.25, 'metres'),
+                    'bearing'  => new File_Therion_Unit(2.50, 'degrees'),
+                    'gradient' => new File_Therion_Unit(15.0, 'degrees')
+                )
+            );
+   
+    }
+    
 
 }
 ?>
