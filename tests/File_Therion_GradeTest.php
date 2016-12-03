@@ -180,14 +180,16 @@ class File_Therion_GradeTest extends File_TherionTestBase {
     public function testAddAsArray()
     {
         $grade = new File_Therion_Grade('UISv1_3', array('title' => 'Rough magnetic/analogue survey'));
-        $grade->setDefinition(
-                array(
-                    'length'   => new File_Therion_Unit(0.25, 'metres'),
-                    'bearing'  => new File_Therion_Unit(2.50, 'degrees'),
-                    'gradient' => new File_Therion_Unit(15.0, 'degrees')
-                )
-            );
-   
+        $grade->setDefinition('length', new File_Therion_Unit(0.25, 'metres'));
+        
+        $grade->setDefinition(array('bearing', 'gradient'), new File_Therion_Unit(15.0, 'degrees'));
+        
+        $grade->setDefinition(array(
+            "x" => new File_Therion_Unit(1.25, "m"),
+            "y" => new File_Therion_Unit(1.25, "m"),
+            "z" => new File_Therion_Unit(1.25, "m"),
+        ));
+        
     }
     
 

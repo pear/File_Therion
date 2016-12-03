@@ -301,11 +301,21 @@ class File_Therion_Grade
      * <code>
      * // 95.44% of compass readings are within +-1.25 degrees (=2.5 =2 S.D.)
      * $grade->setDefinition("bearing", new File_Therion_Unit(1.25, "degrees"));
+     * 
+     * // set length ans position at once:
+     * $grade->setDefinition(array("length", "positioin"), new File_Therion_Unit(1.25, "meter"));
+     * 
+     * // set several as assoc array:
+     * $grade->setDefinition(array(
+     *     "x" => new File_Therion_Unit(1.25, "m"),
+     *     "y" => new File_Therion_Unit(1.25, "m"),
+     *     "z" => new File_Therion_Unit(1.25, "m"),
+     * ));
      * </code>
      * 
      * @param string|array $quantity What to speicify (string or array of keyword strings)
      * @param null|File_Therion_Unit $unit unit and how much of it (NULL clears existing units)
-     * @throws InvalidArgumentException when quantity is not known
+     * @throws InvalidArgumentException when quantity is not known or not a proper array
      * @throws File_Therion_SyntaxException when units mismatch occurs (e.g. 'tape' with angle-unit)
      * @todo implement logical units checking: not all units can be used with "tape" quantity for example
      */
@@ -313,9 +323,26 @@ class File_Therion_Grade
     {
         // When called for several items, add them one by one
         if (is_array($quantity)) {
-            foreach ($quantity as $q => $u) {
-                $this->setDefinition($q, $u);
+            // see what mode to operate in (array keys associative or numeric?)
+            if (count($quantity) == 0) {
+                throw new InvalidArgumentException("quantitys given as array"
+                        ." but it is empty!");
             }
+            if (is_int(array_keys($quantity)[0])) {  // keys are indexed: list
+                // MODE ONE: set same unit for several quantitys
+                // $unit may be null to reset
+                foreach ($quantity as $q) {
+                    $this->setDefinition($q, $unit);
+                }
+            } else {
+                // MODE TWO: invoke several commands in row
+                // $unit must be null here and will be ignored
+                // encapsulated $q may be array too (to switch to mode-1)
+                foreach ($quantity as $q => $u) {
+                    $this->setDefinition($q, $u);
+                }
+            }
+            
             return;
         }
         
