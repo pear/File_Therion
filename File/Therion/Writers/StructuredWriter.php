@@ -139,6 +139,7 @@ class File_Therion_StructuredWriter
      * @param array array with File_Therion_Line objects
      * @param File_Therion $file   the current file context
      * @param array $ctx current object context (path of names)
+     * @bug grade/endgrade definitions nested in surveys stay local, template is ignored!
      */
     public function handleLines(&$lineBuffer, File_Therion $file, $ctx = array()) {
         //print "DBG: handleLines() called ('".basename($file->getFilename())."'; buffer length ".count($lineBuffer).")\n";
@@ -159,36 +160,50 @@ class File_Therion_StructuredWriter
              * - delegate further lines of line buffer to subhandler;
              *   he will return to our level once the context was closed
              */
-            $fp = $this->resolveTemplate($line, $file, $ctx);
-            $fh = $this->getFileInstance($fp);
-            if (!is_null($fh) && $fh !== $file) {
-                // print "DBG: ---CTX SWITCH---".$line->toString();
-                // add the current line to resolved file
-                $fh->addLine($line);
+            
+            // @Bug Workaround for Grades BUG:
+            // when grade command occurs in centerline, it assigns ALL remaining
+            // lines in the central grade file. A check is needed if we are
+            // outside the survey/centerline.
+            // This is not a clean solution and leads to errors if grade/endgrade
+            // is defined in some subcontext: Such lines stay local despite of central template!
+            if ($lineCMD == "grade" && count($ctx) > 0) {
+                // SKIP temlate generation.
+                // grade command will stay local!
+                //print "DBG: handleLines() detected grade command in local context. Skipping templateGeneration!\n";
                 
-                // delegate remaining lines
-                $ctx_cp = $ctx;
-                $ctx_cp[] = $lineArg; // extend contextcopy (eg add survey name)
-                $this->handleLines($lineBuffer, $fh, $ctx_cp);
-                
-                // add 'input' command for file inclusion to local file
-                $previousLineIndent = is_null($previousLine)? '' : $previousLine->getIndent();
-                $file_fn = $file->getFilename();
-                $ifile   = $fh->getFilename($file_fn);
-                $inputcmd = new File_Therion_Line(
-                    'input '.$ifile, '', $previousLineIndent);
-                if (!array_key_exists($file_fn, $this->_inputCMDs)
-                    || !in_array($inputcmd, $this->_inputCMDs[$file_fn])) {
-                    
-                    $file->addLine($inputcmd);
-                    
-                    // store for further comparison used for suppressing dupes
-                    $this->_inputCMDs[$file_fn][] = $inputcmd;
+            } else {
+                $fp = $this->resolveTemplate($line, $file, $ctx);
+                $fh = $this->getFileInstance($fp);
+                if (!is_null($fh) && $fh !== $file) {
+                    // print "DBG: ---CTX SWITCH---".$line->toString();
+                    // add the current line to resolved file
+                    $fh->addLine($line);
+
+                    // delegate remaining lines
+                    $ctx_cp = $ctx;
+                    $ctx_cp[] = $lineArg; // extend contextcopy (eg add survey name)
+                    $this->handleLines($lineBuffer, $fh, $ctx_cp);
+
+                    // add 'input' command for file inclusion to local file
+                    $previousLineIndent = is_null($previousLine)? '' : $previousLine->getIndent();
+                    $file_fn = $file->getFilename();
+                    $ifile   = $fh->getFilename($file_fn);
+                    $inputcmd = new File_Therion_Line(
+                        'input '.$ifile, '', $previousLineIndent);
+                    if (!array_key_exists($file_fn, $this->_inputCMDs)
+                        || !in_array($inputcmd, $this->_inputCMDs[$file_fn])) {
+
+                        $file->addLine($inputcmd);
+
+                        // store for further comparison used for suppressing dupes
+                        $this->_inputCMDs[$file_fn][] = $inputcmd;
+                    }
+
+                    // continue with the following local line
+                    // as the current line was already processed
+                    continue;
                 }
-                
-                // continue with the following local line
-                // as the current line was already processed
-                continue;
             }
             
             
