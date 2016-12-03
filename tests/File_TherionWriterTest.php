@@ -72,7 +72,18 @@ class File_TherionWriterTest extends File_TherionTestBase {
         $th->evalInputCMD();
         $th->addLine(new File_Therion_Line("# Custom test file header"), 'start');
         
+        // add a grade definition as raw lines
+        $gradelines = array(
+            "grade testGrade",
+            "  # just an empty test grade...",
+            "endgrade"
+        );
+        foreach (array_reverse($gradelines) as $l) {
+            $th->addLine(new File_Therion_Line($l), 1);
+        }
+        
         // add another test survey as raw lines
+        // (as subsurvey to rabbit survey!)
         $testlines = array(
             "survey foobar",
             "  # just an empty test survey...",
@@ -84,8 +95,9 @@ class File_TherionWriterTest extends File_TherionTestBase {
             "  # end of scrap data",
             "endsurvey"
         );
+        
         foreach (array_reverse($testlines) as $l) {
-            $th->addLine(new File_Therion_Line($l), 4);
+            $th->addLine(new File_Therion_Line($l), 7);
         }
         
         // test console writer (dumps content to terminal)
@@ -103,6 +115,7 @@ class File_TherionWriterTest extends File_TherionTestBase {
          */
         $expectedFiles = array(
             '/structuredWriter/basic/index.th',
+            '/structuredWriter/basic/grades.th',
             '/structuredWriter/basic/rabbit/',
             '/structuredWriter/basic/rabbit/rabbit.th',
             '/structuredWriter/basic/rabbit/rabbit.th2',
@@ -113,7 +126,7 @@ class File_TherionWriterTest extends File_TherionTestBase {
         foreach ($expectedFiles as $fl) {
             $this->assertTrue(
                 file_exists($this->testdata_base_out.$fl),
-                "file exists: ".$fl);
+                "file exists: ".$this->testdata_base_out.$fl);
         }
         
         $this->markTestIncomplete("TODO: implement content checking");

@@ -30,6 +30,7 @@
  * - each surveys scrap data go into a separate .th2 file per survey
  * - subsurveys are handled like that too, but the files are
  *   linked together with input-commands.
+ * - grade definitions go into a common file 'grades.th' at the root level.
  * 
  * An alternative structure could be one, where you want to introduce
  * another subfolder for therions data, so the therion files do not interfer
@@ -66,7 +67,8 @@ class File_Therion_StructuredWriter
      */
     protected $_fp_tpl = array(
         'File_Therion_Survey'  =>  '$(base)/$(name)/$(name).th',
-        'File_Therion_Scrap'   =>  '$(base)/$(parent).th2'
+        'File_Therion_Scrap'   =>  '$(base)/$(parent).th2',
+        'File_Therion_Grade'   =>  '$(root)/grades.th'
     );
     
     /**
@@ -200,7 +202,7 @@ class File_Therion_StructuredWriter
             /* Conext-close detected
              * - return to uplevel as the closing line was already processed
              */
-            if (preg_match('/^end(survey|scrap)/i', $lineCMD)) {
+            if (preg_match('/^end(survey|scrap|grade)/i', $lineCMD)) {
               //  print "DBG: ---CTX END---".$line->toString();
                 return;
             }
@@ -262,7 +264,8 @@ class File_Therion_StructuredWriter
             // resolve command to class name
             $cmd2type = array(
                 'survey' => 'File_Therion_Survey',
-                'scrap'  => 'File_Therion_Scrap'
+                'scrap'  => 'File_Therion_Scrap',
+                'grade'  => 'File_Therion_Grade'
             );
             
             if (array_key_exists($name, $cmd2type)) {
