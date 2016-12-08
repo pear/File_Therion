@@ -46,6 +46,7 @@ require_once 'File/Therion/Writers/ConsoleWriter.php';
 require_once 'File/Therion/Writers/StructuredWriter.php';
 require_once 'File/Therion/Readers/ReaderInterface.php';
 require_once 'File/Therion/Readers/FileReader.php';
+require_once 'File/Therion/Formatters/FormatterInterface.php';
 
 
 /**
@@ -95,6 +96,7 @@ require_once 'File/Therion/Readers/FileReader.php';
  * $th->setEncoding('UTF-8');     // don't forget to indicate encoding
  * $th->addObject($survey);       // associate therion data model objects
  * $th->updateLines();            // update internal lines using data objects
+ * $th->addFormatter($formatter); // add a custom formatter
  * $th->write();                  // physically write to data target $tgt
  * $th->toString();               // altenatively: fetch  data as string
  * </code>
@@ -124,6 +126,13 @@ class File_Therion implements Countable
     protected $_reader = null;
     
     /**
+     * Registered formatters.
+     * 
+     * @access protected
+     */
+    protected $formatters = array();
+    
+    /**
      * Filename and path of this file.
      * 
      * This represents the real physical adress of the content on the disk.
@@ -132,16 +141,6 @@ class File_Therion implements Countable
      */
     protected $_filename = '';
      
-    /**
-     * Wrapping of the file.
-     * 
-     * This controls the wrapping column when writing
-     * 
-     * @access protected
-     * @var int column to wrap at (0=no wrapping)
-     */
-    protected $_wrapAt = 0;
-    
     /**
      * Encoding of this file.
      * 
@@ -652,6 +651,13 @@ class File_Therion implements Countable
      
     /**
      * Get internal line buffer.
+     * 
+     * The lines will be formatted using the registered formatters
+     * (see {@link addFormatter()}).
+     * 
+     * On each consecutive run of getLines() the formatters will be reapplied.
+     * This may yield strange results. If you want to format just once, 
+     * {link removeFormatters()} after formatting was applied.
      *
      * @return array of File_Therion_Line objects
      */
@@ -673,7 +679,14 @@ class File_Therion implements Countable
             $retLines[] = File_Therion_Line::parse($this->getHeader());
         }
         
-        return array_merge($retLines, $this->_lines);
+        // build final return lines
+        $finalLines = array_merge($retLines, $this->_lines);
+        
+        // finally format the lines using the registered formatters
+        $finalLines = $this->format($finalLines);
+        
+        // go home
+        return $finalLines;
     }
      
      
@@ -902,10 +915,16 @@ class File_Therion implements Countable
      * 
      * Returns the file line content as string, suitable for writing using
      * PHPs fwrite().
-     * The line ending used is depending on the current PHP_EOL constant.
      * 
-     * If wrapping was requested, the file content will be wrapped at the
-     * given column (see {@link setWrapping()}.
+     * The actual content can optionally be formatted by adding
+     * {@link File_Therion_Formatter} instances with {@link addFormatter()}.
+     * This can influence line endings and wrapping for instance.
+     * 
+     * By default, the line ending used is depending on the current PHP_EOL
+     * constant. No wrapping will occur, unless the internal lines have such
+     * wrapping.
+     * 
+     * @see toLines()
      * 
      * @return string The file contents as string
      * @todo Line endings should not depend on Line class implementation
@@ -915,10 +934,6 @@ class File_Therion implements Countable
         // Iterate over line objects composing a string
         $ret = "";
         foreach ($this->getLines() as $line) {
-            if ($this->_wrapAt > 0) {
-                // todo: honor wrapping request by user
-                throw new File_Therion_Exception('WRAPPING FEATURE NOT IMPLEMENTED');
-            }
             $ret .= $line->toString();
         }
         return $ret;
@@ -993,26 +1008,7 @@ class File_Therion implements Countable
     public function getHeader()
     {
         return $this->_header;
-    }
-     
-     
-    /**
-     * Set wrapping column when writing.
-     * 
-     * The wrapping will be carried out using therions data format
-     * (eg. ending the line with backslash and continuing it on the next one).
-     * 
-     * @param int $wrapAt wrap at this column, 0=disable
-     * @throws InvalidArgumentException
-     */
-    public function setWrapping($wrapAt)
-    {
-        if (!is_int($wrapAt)) {
-            throw new InvalidArgumentException('Invalid $wrapAt argument!');
-        }
-        $this->_wrapAt = $wrapAt;
-    }
-     
+    }  
      
     /**
      * Count (wrapped) lines in this file (SPL Countable).
@@ -1460,6 +1456,59 @@ class File_Therion implements Countable
         
         return $orderedLines;
 
+    }
+    
+    
+    /**
+     * Add a formatter.
+     * 
+     * The formatters will be called in the order they were added.
+     * 
+     * @param File_Therion_Formatter|array formatter(s)
+     */
+    public function addFormatter($formatter)
+    {
+        if (is_array($formatter)) {
+            foreach ($formatter as $f) {
+                $this->addFormatter($f);
+            }
+            return;
+        }
+        
+        if (!is_a($formatter, 'File_Therion_Formatter')) {
+            throw new InvalidArgumentException("formatters must implement "
+                    ."interface 'File_Therion_Formatter'");
+        }
+        $this->formatters[] = $formatter;
+    }
+    
+    /**
+     * Remove all formatters.
+     * 
+     * @param File_Therion_Formatter
+     */
+    public function clearFormatters()
+    {
+        $this->formatters = array();
+    }
+    
+    /**
+     * Format lines using registered formatters.
+     * 
+     * @param array File_Therion_Lines to format
+     * @throws InvalidArgumentException if $lines is no array
+     */
+    protected final function format($lines)
+    {
+        if (!is_array($lines)) {
+            throw new InvalidArgumentException(
+                    "\$lines: expected array but '".gettype($lines)."' given!");
+        }
+        
+        foreach ($this->formatters as $formatter) {
+                $lines = $formatter->format($lines);
+        }
+        return $lines;
     }
 }
 

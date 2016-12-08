@@ -74,6 +74,9 @@
                         <file name="DirectWriter.php" role="php" />
                         <file name="StructuredWriter.php" role="php" />
                     </dir>
+                     <dir name="Formatters">
+                        <file name="FormatterInterface.php" role="php" />
+                    </dir>
                 </dir>
             </dir>
             
@@ -96,6 +99,7 @@
                 <file name="File_Therion_ReferenceTest.php" role="test" />
                 <file name="File_TherionTest.php" role="test" />
                 <file name="File_TherionWriterTest.php" role="test" />
+                <file name="File_TherionFormatterTest.php" role="test" />
                 <file name="UseCasesTest.php" role="test" />
                 
                 <dir name="testoutput" >

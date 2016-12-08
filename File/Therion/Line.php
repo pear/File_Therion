@@ -648,6 +648,22 @@ class File_Therion_Line implements Countable
         $this->_content[0]['indent'] = $indent;  // indenting is stored at first line
     }
     
+    /**
+     * Set payload of the line.
+     * 
+     * This reverts the line to consist of a single line with the payload.
+     * The indentation and comment stay intact.
+     * 
+     * @param string $data
+     */
+    public function setContent($data)
+    {
+        $oldindent  = $this->getIndent();
+        $oldcomment = $this->getComment();
+        $this->_content = array();  // reset internal stack
+        $this->addData($oldindent, $data, $oldcomment);
+    }
+    
     
     /**
      * Count (wrapped) lines in this line (SPL Countable).
