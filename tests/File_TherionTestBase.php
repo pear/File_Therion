@@ -20,7 +20,7 @@ require_once 'File/Therion.php';
  * 
  * This holds common vars and functions for all other tests.
  */
-class File_TherionTestBase extends PHPUnit_Framework_TestCase {
+abstract class File_TherionTestBase extends PHPUnit_Framework_TestCase {
 
     /**
      * Base location of test data (therion distribution)
