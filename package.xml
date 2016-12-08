@@ -76,6 +76,7 @@
                     </dir>
                      <dir name="Formatters">
                         <file name="FormatterInterface.php" role="php" />
+                        <file name="BasicFormatter.php" role="php" />
                     </dir>
                 </dir>
             </dir>

@@ -47,6 +47,7 @@ require_once 'File/Therion/Writers/StructuredWriter.php';
 require_once 'File/Therion/Readers/ReaderInterface.php';
 require_once 'File/Therion/Readers/FileReader.php';
 require_once 'File/Therion/Formatters/FormatterInterface.php';
+require_once 'File/Therion/Formatters/BasicFormatter.php';
 
 
 /**

@@ -152,6 +152,64 @@ class File_Therion_FormatterTest extends File_TherionTestBase {
         
        
     }
+    
+    /**
+     * Test BasicFormatter
+     */
+    public function testBasicFormatter()
+    {
+        // some basic data
+        $sampleLines = array(
+            File_Therion_Line::parse('survey test'),
+            File_Therion_Line::parse('  survey foo'),
+            File_Therion_Line::parse('    centreline'),
+            File_Therion_Line::parse('        0 1 200 -5 6.4'),
+            File_Therion_Line::parse('    endcentreline'),
+            File_Therion_Line::parse('  endsurvey foo'),
+            File_Therion_Line::parse('  centreline'),
+            File_Therion_Line::parse('    units compass clino grads'),
+            File_Therion_Line::parse('    data normal from to compass clino tape'),
+            File_Therion_Line::parse('    1.0     1.1   200.32       -50.43      126.4 '),
+            File_Therion_Line::parse('    1.1  1.212 73.1  8.2    5.2 '),
+            File_Therion_Line::parse('    1.212     3    42        0      2.09'),
+            File_Therion_Line::parse('    flags surface'),
+            File_Therion_Line::parse('  endcentreline'),
+            File_Therion_Line::parse('endsurvey'), 
+        );
+        $sample = new File_Therion("in_memory_testfile");
+        foreach ($sampleLines as $l) {
+            $sample->addLine($l);
+        }
+        
+        $testFormatter = new File_Therion_BasicFormatter();
+        $testFormatter->setIndent(".");
+        //$testFormatter->setCenterlineDataTemplate("%1s");
+        $testFormatter->setCenterlineSeparatorTemplate("-");
+        $sample->addFormatter($testFormatter);
+        
+        
+        $this->assertEquals(
+            array(
+                'survey test',
+                '.survey foo',
+                '..centreline',
+                '...     0-     1-   200-    -5-   6.4',
+                '..endcentreline',
+                '.endsurvey foo',
+                '.centreline',
+                '..units compass clino grads',
+                '..data normal from to compass clino tape',
+                '..   1.0-   1.1-200.32--50.43- 126.4',
+                '..   1.1- 1.212-  73.1-   8.2-   5.2',
+                '.. 1.212-     3-    42-     0-  2.09',
+                '..flags surface',
+                '.endcentreline',
+                'endsurvey',
+                ''
+            ),
+            preg_split("/(\\r\\n)|\\r|\\n/", $sample->toString())
+        );
+    }
 
 }
 
