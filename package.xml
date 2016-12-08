@@ -121,6 +121,7 @@
                             <file name="surface.jpg" role="test" />
                             <file name="thconfig" role="test" />
                         </dir>
+                        <file name="grades.th" role="test" />
                         <!-- more therion sample files in GIT
                              but not yet used by tests -->
                     </dir>
