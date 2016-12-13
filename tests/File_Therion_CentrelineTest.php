@@ -930,6 +930,26 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
         );
         
     }
+    
+    /**
+     * test Line generation with copyright notice
+     */
+    public function testCopyright()
+    {
+        // simple example: hull without anything
+        $sample = new File_Therion_Centreline();
+        $sample->setCopyright(2016, "TestCopyRight");
+        $sampleLines = $sample->toLines();
+        $this->assertEquals(3, count(File_Therion_Line::filterNonEmpty($sampleLines)));
+        $this->assertEquals(
+            array(
+                File_Therion_Line::parse('centreline'),
+                File_Therion_Line::parse("\tcopyright 2016 TestCopyRight"),
+                File_Therion_Line::parse('endcentreline'),
+            ),
+            File_Therion_Line::filterNonEmpty($sampleLines)
+        );
+    }
 
 }
 ?>
