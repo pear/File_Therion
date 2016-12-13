@@ -210,6 +210,34 @@ class File_Therion_FormatterTest extends File_TherionTestBase {
             preg_split("/(\\r\\n)|\\r|\\n/", $sample->toString())
         );
     }
+    
+    /**
+     * Test writing with formatter
+     */
+    public function testFormattedWriting()
+    {
+        // read in rabbit cave example
+        $srcFile = $this->testdata_base_therion.'/basics/rabbit.th';
+        $th = File_Therion::parse($srcFile, 0);
+        
+        // prepare out file
+        $tgtFile = $this->testdata_base_out.'/directWriter.basicFormatter.rabbit.th';
+        $th->setFilename($tgtFile);
+        if (file_exists($tgtFile)) unlink($tgtFile); // clean outfile
+        
+        // attach formatter and write to target
+        $formatter=new File_Therion_BasicFormatter();
+        $th->addFormatter($formatter);
+        $th->write();
+        
+        $srcData = file($srcFile);
+        $tgtData = file($tgtFile);
+        
+        // We expect the content to not be the same.
+        // TODO: Way better testing needed than this!
+        $this->assertNotEquals($srcData, $tgtData); // check that content is same
+        
+    }
 
 }
 
