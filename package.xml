@@ -19,7 +19,7 @@
 
 
     <!-- Information for this release -->
-    <date>2016-xx-xx</date>
+    <date>2016-12-13</date>
     <version>
         <release>0.3.0</release>
         <api>0.3.0</api>
@@ -30,8 +30,27 @@
     </stability>
     <license uri="http://www.gnu.org/licenses/lgpl-3.0.en.html">LGPLv3</license>
     <notes>
+        Please note, that this release introduces some API changes that may be incompatible with your code.
         * Implemented File_Therion::updateLines(); its now possible to create data files out of the object model!
-        * Prepared wrapping feature in directWriter (Option can be set now, but still not functional yet!)
+        * Fixed many small bugs
+        * Enhanced syntax checking
+        * Enhanced phpunit test cases
+        * Enhanced StructuredWriter to be able to deal with more file generation variants
+        * Added get*Dimension() functions in accordance with set*Dimensions(); old functions removed!
+        * Better handling for anonymous stations; they always report dash/dot as name regardless of prefix/postfix setting
+        * Fixed bug with generated equate commands, the survey chain was wrong with nested surveys
+        * Added header functionality, now one can specify a global header to be printed to any file
+        * Added basic centreline declination handling
+        * Added cs (coordinate-system) export support
+        * Better handling for default unit printing of units
+        * Fixed a bug with some locale's reporting comma instead of dot on float values (like length)
+        * Added support for grade-definitions
+        * Centerline: Implemented ordering of date/explo-date, team/explo-team commands.
+        * Centerline: RENAMED setDate() and setExploDate() to addDate() and addExploDate().
+        * Added Formatter-Feature: this allows you to add arbitary formatting instructions.
+          Two default formatters exist by now:
+          - File_Therion_BasicFormatter has basic formatting features and may serve as extension platform.
+          - File_Therion_AddLineNumberFormatter as a small demo formatter, usable also for debug purposes.
     </notes>
 
     <contents>
