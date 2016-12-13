@@ -117,18 +117,32 @@ class File_Therion_BasicFormatter implements File_Therion_Formatter
             /**
              * Reformat centerline data items
              */
-            if (preg_match("/cent(re|er)line/", end($ctx))
-             && count($datafields)>0 && is_numeric($datafields[0])
-            ) {
-                $formatStr = "";
-                $fieldTPL = $this->getCenterlineDataTemplate();
-                $sepTPL   = $this->getCenterlineSeparatorTemplate();
-                foreach ($datafields as $f) {
-                    $formatStr .= sprintf($fieldTPL, $f).$sepTPL;
+            if (preg_match("/cent(re|er)line/", end($ctx))) {
+                // see if we have an ordinary command or a data line.
+                // detection is based on known cl commands - this is bruteforce
+                // and probably not very elegant: more thinking needed!
+                $clCommands = array(
+                    "date", "explo-date", "team", "explo-team", "instrument",
+                    "calibrate", "units", "sd", "grade", "declination",
+                    "grid-angle", "infer", "mark", "flags", "station", "cs",
+                    "fix", "equate", "data", "break", "group", "endgroup",
+                    "walls", "vthreshold", "extend", "station-names"
+                );
+
+                if (   count($datafields) > 0
+                    && !in_array($datafields[0], $clCommands)) {
+                    // first datafield is not known amongst commands,
+                    // this must be a data line!
+                    $formatStr = "";
+                    $fieldTPL = $this->getCenterlineDataTemplate();
+                    $sepTPL   = $this->getCenterlineSeparatorTemplate();
+                    foreach ($datafields as $f) {
+                        $formatStr .= sprintf($fieldTPL, $f).$sepTPL;
+                    }
+                    $formatStr= rtrim($formatStr, $sepTPL); // strip last sepTPL
+
+                    $l->setContent($formatStr); // adjust line
                 }
-                $formatStr= rtrim($formatStr, $sepTPL); // strip last sepTPL
-                
-                $l->setContent($formatStr); // adjust line
             }
             
 
