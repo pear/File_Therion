@@ -170,7 +170,7 @@ class File_Therion_FormatterTest extends File_TherionTestBase {
             File_Therion_Line::parse('    units compass clino grads'),
             File_Therion_Line::parse('    data normal from to compass clino tape'),
             File_Therion_Line::parse('    1.0     1.1   200.32       -50.43      126.4 '),
-            File_Therion_Line::parse('    1.1  1.212 73.1  8.2    5.2 '),
+            File_Therion_Line::parse("    1.1  1.212\t73.1  8.2    5.2 "),
             File_Therion_Line::parse('    1.212     3    42        0      2.09'),
             File_Therion_Line::parse('    flags surface'),
             File_Therion_Line::parse('  endcentreline'),
