@@ -252,7 +252,12 @@ class File_Therion_BasicFormatter implements File_Therion_Formatter
      */
     protected function isOpenedCTX($cmd, $ctx)
     {
-        return in_array(strtolower($cmd), $this->contextMark);
+        if (preg_match("/cent(re|er)line/", end($ctx))) {
+            // we are in centerline context: no further subcontext allowed!
+            return false;
+        } else {
+            return in_array(strtolower($cmd), $this->contextMark);
+        }
     }
     
     /**
