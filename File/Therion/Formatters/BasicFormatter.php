@@ -127,7 +127,8 @@ class File_Therion_BasicFormatter implements File_Therion_Formatter
                     "calibrate", "units", "sd", "grade", "declination",
                     "grid-angle", "infer", "mark", "flags", "station", "cs",
                     "fix", "equate", "data", "break", "group", "endgroup",
-                    "walls", "vthreshold", "extend", "station-names"
+                    "walls", "vthreshold", "extend", "station-names",
+                    "copyright"
                 );
 
                 if (   count($datafields) > 0
