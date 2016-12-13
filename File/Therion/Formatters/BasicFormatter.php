@@ -187,7 +187,7 @@ class File_Therion_BasicFormatter implements File_Therion_Formatter
      * prepend this string one more time.
      * 
      * @param string $indent
-     * @see {@link $contextMark} for known contexts
+     * @see $contextMark for known contexts
      */
     public function setIndent($indent)
     {
