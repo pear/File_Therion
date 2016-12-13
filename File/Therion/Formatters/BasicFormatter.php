@@ -122,6 +122,7 @@ class File_Therion_BasicFormatter implements File_Therion_Formatter
                 // detection is based on known cl commands - this is bruteforce
                 // and probably not very elegant: more thinking needed!
                 $clCommands = array(
+                    "centerline", "endcenterline","centreline", "endcentreline",
                     "date", "explo-date", "team", "explo-team", "instrument",
                     "calibrate", "units", "sd", "grade", "declination",
                     "grid-angle", "infer", "mark", "flags", "station", "cs",
