@@ -66,14 +66,25 @@ class File_Therion_StationTest extends File_TherionTestBase {
     }
     
     /**
-     * Test station name aliasing
+     * Test station name aliasing and simple naming schemes
      */
-    public function testStationName()
+    public function testStationNaming()
+    {
+        $testnames = array("1", "1.1", "1/2", "1a", "1.1a", "1a.gds_er2-233");
+        foreach ($testnames as $name) {
+            $station = new File_Therion_Station("1");
+            $this->assertEquals('1', $station->getName(false));
+            $this->assertEquals('1', $station->getName(true));
+            $this->assertEquals('1', $station->getName());
+        }
+    }
+    
+    /**
+     * Tests station-names command
+     */
+    public function testStationNamesUsage()
     {
         $station = new File_Therion_Station("1");
-        $this->assertEquals('1', $station->getName(false));
-        $this->assertEquals('1', $station->getName(true));
-        $this->assertEquals('1', $station->getName());
         
         $station->setStationNames("pre", null);
         $this->assertEquals('1', $station->getName(false));
@@ -112,7 +123,13 @@ class File_Therion_StationTest extends File_TherionTestBase {
         $this->assertEquals('bar1baz', $station->getName(true));
         $this->assertEquals('bar1baz', $station->getName());
         
-        
+    }
+    
+    /**
+     * Tests behavior of anonymous splay stations
+     */
+    public function testAnonStations()
+    {
         $station = new File_Therion_Station("-");
         $this->assertEquals('-', $station->getName(false));
         $this->assertEquals('-', $station->getName(true));

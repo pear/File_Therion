@@ -535,6 +535,8 @@ class File_Therion_LineTest extends File_TherionTestBase
         $this->assertEquals(array('encoding', 'iso8859-2'), $sample->getDatafields());
     }
     
+    
+    
     /**
      * Test basic instantiation using datafields
      */
