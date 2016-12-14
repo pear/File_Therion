@@ -19,10 +19,10 @@
 
 
     <!-- Information for this release -->
-    <date>2017-xx-xx</date>
+    <date>2016-12-14</date>
     <version>
-        <release>0.4.0</release>
-        <api>0.4.0</api>
+        <release>0.3.1</release>
+        <api>0.3.1</api>
     </version>
     <stability>
         <release>alpha</release>
@@ -30,7 +30,10 @@
     </stability>
     <license uri="http://www.gnu.org/licenses/lgpl-3.0.en.html">LGPLv3</license>
     <notes>
-        todo
+        Bug fix release for 0.3.1:
+        Reimplemented Line::getDatafields() with a (hopefully) more robust
+        version, thereby fixing a corner case and a bug with slash in station
+        names.
     </notes>
 
     <contents>
