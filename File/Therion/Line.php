@@ -259,46 +259,86 @@ class File_Therion_Line implements Countable
      * Unescaping will be performed, so each array entry has only valid data
      * suitable for proper processing.
      * 
+     * If the line is empty (ie it has the empty string as content),
+     * an empty array will be returned.
+     * 
      * @see escape() for escaping rules as per therion book
      * @return array
      * @throws File_Therion_SyntaxException in case of quoting errors of this Line
-     * @todo support corner cases such as ""foo"" (which is valid='"foo"')
      */
     public function getDatafields()
     {
-        $c = $this->getContent();
+        // Walk the string char-by-char
+        $fields    = array();
+        $curField  = "";
+        $quoted    = false;
+        $bracketed = false;
         
-        // TODO Known Workarounds for splitting datafields
-        // The quick and dirty pattern below is still insufficient. It fails in 
-        // some cases but currently i lack the time to invent a better one.
-        // Therefore the following workaround introduces a shorthand method for
-        // some known cases where problems have arisen.
-        $r = array();
-        if (preg_match('/(input) (.+)$/', $c, $r)) {
-            return array($r[1], $r[2]);
+        $rawSplit  = preg_split("//", $this->getContent());
+        array_shift($rawSplit); // preg_split always delivers at least two ...
+        array_pop($rawSplit);   // empty strings (string-start and string-end) 
+        
+        if (count($rawSplit) >= 1 ) {
+            for ($i=0; $i<count($rawSplit); $i++) {
+                $ch     =& $rawSplit[$i];
+                $prevCh = (isset($rawSplit[$i-1]))? $rawSplit[$i-1] : "";
+                $nextCh = (isset($rawSplit[$i+1]))? $rawSplit[$i+1] : "";
+                
+                // detect start of quotes/brackets
+                if (!$quoted && $ch == '"') {
+                    $quoted = true;
+                    $curField .= $ch;
+                    continue;
+                }
+                if (!$bracketed && $ch == '[') {
+                    $bracketed = true;
+                    $curField .= $ch;
+                    continue;
+                }
+                
+                // Handle closing quotes/brackets
+                if ($quoted && $ch === '"') {
+                    $curField .= $ch;
+                    $quoted = false;
+                    continue;
+                }
+                if ($bracketed && $ch === ']') {
+                    $curField .= $ch;
+                    $bracketed = false;
+                    continue;
+                }
+                
+                // handle space character:
+                // this splits fields, unless in quote mode
+                if ($ch === " " || $ch === "\t") {
+                    if ($quoted || $bracketed) {
+                        // quote mode is on!
+                        $curField .= $ch; // add space to buffer
+                    } else {
+                        // current field is finished
+                        if (!preg_match("/^\s*$/", $curField)) {
+                            // buffer does not only consist of space signs
+                            $fields[] = File_Therion_Line::unescape($curField);
+                        } else {
+                            // ignore only-blank fields
+                        }
+                        
+                        $curField = ""; // wipe buffer
+                    }
+                    
+                } else {
+                    $curField .= $ch; // add non-space char to buffer
+                } 
+            }
         }
         
-        // this pattern tries to grep all possible non-quoted and quoted
-        // string tokens.
-        // this pattern is still insufficient as it will not get ""foo"" etc,
-        // however it should already grep most of the possible combinations.
-        // Note: Maybe some preg_split() code and postprocessing the results may be easier...
-        $p ='((?:\[[@\s\w\d.\-]+\])|(?:"(?:""|[@\s\w.:-_\-])+")|(?:[@\d\w.:\-_]+)|(?:"")|(?:\[\]))';
-        $r = array();
-        $pr = preg_match_all($p, $c, $r);
-        if ($pr === false) throw new File_Therion_SyntaxException(
-            "error parsing datafields (could not grep tokens)");
- 
-        // apply unescaping to all tokens
-        if (isset($r[0]) && is_array($r[0])) {
-            $rv = array_map('File_Therion_Line::unescape', $r[0]);
-            
-        } else {
-            // empty result at getting tokens or something like that
-            $rv = array();
+        // process last buffer, if any
+        if (!preg_match("/^\s*$/", $curField)) {
+            // buffer does not only consist of space signs
+            $fields[] = File_Therion_Line::unescape($curField);
         }
-    
-        return $rv;
+        
+        return $fields;
     }
     
     /**
