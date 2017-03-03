@@ -273,7 +273,7 @@ class File_Therion_Centreline
                                                 "Wrong declination arg count: "
                                                 .count($lineData));
                                     }
-                                    $this->setDeclination($lineData[0], $lineData[1]);
+                                    $centreline->setDeclination($lineData[0], $lineData[1]);
                                 break;
                                 
                                 case 'team':
