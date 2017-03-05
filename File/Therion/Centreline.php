@@ -1065,8 +1065,8 @@ class File_Therion_Centreline
      * units settings of the centreline (see {@link setUnit()}), but only if
      * the shot does not already have a more specific units setting.
      * 
-     * You need to use {@link File_Therion_Equate}s when you need to set
-     * stations equal.
+     * You need to use {@link File_Therion_Station::addEquate()} when you want
+     * to set stations equal.
      * 
      * @param File_Therion_Shot $shot shot object
      * @todo test for null pointer exception if a shot has no stations
