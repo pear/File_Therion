@@ -1312,6 +1312,10 @@ class File_Therion_Centreline
     /**
      * Generate line content from this object.
      * 
+     * When no shot of this centerline bears LRUD information, LRUD fields will
+     * be ommitted. To produce explicite LRUD output, you may assign a shot
+     * with missing data the explicit missing-data sign "-" as LRUD information.
+     * 
      * @return array File_Therion_Line objects
      * @todo finish implementation, implement proper escaping, implement proper declination handling etc
      */
@@ -1452,6 +1456,20 @@ class File_Therion_Centreline
             );
             
 
+            // Prescan all shots for data definitions of LRUD.
+            // if no shot bears LRUD information, we suppress LRUD alltogether.
+            $lrudGiven = false;
+            foreach ($this->getShots() as $sobj) {
+                foreach ($sobj->getLRUDdata() as $what => $value) {
+                    if (!is_null($value)) {
+                        // At least one shot has LRUD data, either a
+                        // real value or explicite "-" = missing-data value.
+                        $lrudGiven = true;
+                        break;
+                    }
+                }
+            }
+            
             // Generate Lines for all shots:
             foreach ($this->getShots() as $sobj) {
                 // see if station-names changed;
@@ -1470,6 +1488,20 @@ class File_Therion_Centreline
                         .File_Therion_Line::escape($st_namesNew[1]), 
                         "", $baseIndent);
                     $st_names = $st_namesNew;
+                }
+                
+                // LRUD handling:
+                // if no shot of entire centerline has LRUD data, we may
+                // suppress LRUD definition altogether.
+                // This will be restored later.
+                $originalShotOrderDef = $sobj->getOrder();
+                if (!$lrudGiven) {
+                    $sobj->setOrder(
+                        array_diff(
+                            $sobj->getOrder(),
+                            array('left', 'right', 'up', 'down')
+                        )
+                    );
                 }
                 
                 // see if units changed (the case at least at start of loop!)
@@ -1521,6 +1553,13 @@ class File_Therion_Centreline
                 $shotLine = $sobj->toLines();
                 $shotLine->setIndent($baseIndent.$shotLine->getIndent());
                 $lines[] = $shotLine;
+                
+                
+                // Finally restore potentially changed order setting
+                // to previous state.
+                if ($originalShotOrderDef != $sobj->getOrder()) {
+                    $sobj->setOrder($originalShotOrderDef);
+                }
                 
             }
             unset($sobj);

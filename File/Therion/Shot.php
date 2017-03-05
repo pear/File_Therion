@@ -92,10 +92,10 @@ class File_Therion_Shot
         'length'    => 0.0,
         'bearing'   => 0.0,
         'gradient'  => 0.0,
-        'left'      => 0.0,
-        'right'     => 0.0,
-        'up'        => 0.0,
-        'down'      => 0.0,
+        'left'      => null, // possible to have "missing" value for LRUD!
+        'right'     => null,
+        'up'        => null,
+        'down'      => null,
         // more according to thbook
         // Therion book says: station, from, to, tape/length, 
         // [back]compass/[back]bearing, [back]clino/[back]gradient, depth,
@@ -179,8 +179,9 @@ class File_Therion_Shot
             
             if (is_null($value)) {
                 // no such data left:
-                // The use case coming to mind is missing LRUD data.
-                $value = "-"; // survex manual says so!
+                // The use case coming to mind is missing LRUD data;
+                // missing LRUD needs to be stringified to "-" (survex says so!)
+                $value = null;
             }
 
             // Determine parsing action and carry it out
@@ -204,15 +205,19 @@ class File_Therion_Shot
                     
                 // Dimensions need separate method names
                 case 'up':
+                    $value = ($value == "-")? null : $value;
                     $shot->setUpDimension($value);
                     break;
                 case 'down':
+                    $value = ($value == "-")? null : $value;
                     $shot->setDownDimension($value);
                     break;
                 case 'left':
+                    $value = ($value == "-")? null : $value;
                     $shot->setLeftDimension($value);
                     break;
                 case 'right':
+                    $value = ($value == "-")? null : $value;
                     $shot->setRightDimension($value);
                     break;
                     
@@ -547,41 +552,69 @@ class File_Therion_Shot
     /**
      * Get shot left dimensions.
      * 
-     * @return float
+     * Returns either float value or NULL for explicitely (ie "-") or 
+     * implicitely missing data.
+     * 
+     * @return float|null
      */
     public function getLeftDimension()
     {
-        return $this->_data['left'];
+        if ($this->_data['left'] == "-") {
+            return null;
+        } else {
+            return $this->_data['left'];
+        }
     }
     
     /**
      * Get shot right dimensions.
      * 
-     * @return float
+     * Returns either float value or NULL for explicitely (ie "-") or 
+     * implicitely missing data.
+     * 
+     * @return float|null
      */
     public function getRightDimension()
     {
-        return $this->_data['right'];
+        if ($this->_data['right'] == "-") {
+            return null;
+        } else {
+            return $this->_data['right'];
+        }
     }
     
     /**
      * Get shot up (height to ceiling) dimensions.
      * 
-     * @return float
+     * Returns either float value or NULL for explicitely (ie "-") or 
+     * implicitely missing data.
+     * 
+     * @return float|null
      */
     public function getUpDimension()
     {
-        return $this->_data['up'];
+        if ($this->_data['up'] == "-") {
+            return null;
+        } else {
+            return $this->_data['up'];
+        }
     }
     
     /**
-     * Get shot down (hieght to ground) dimensions.
+     * Get shot down (height to ground) dimensions.
      * 
-     * @return float
+     * Returns either float value or NULL for explicitely (ie "-") or 
+     * implicitely missing data.
+     * 
+     * @return float|null
      */
     public function getDownDimension()
     {
-        return $this->_data['down'];
+        if ($this->_data['down'] == "-") {
+            return null;
+        } else {
+            return $this->_data['down'];
+        }
     }
 
     
@@ -728,11 +761,13 @@ class File_Therion_Shot
     /**
      * Set shot left dimensions.
      * 
-     * @param float $left Distance to left wall
+     * Use "-" to indicate missing value.
+     * 
+     * @param floats|tring|null $left Distance to left wall
      */
     public function setLeftDimension($left)
     {
-        if ($left !== "-") {
+        if ($left !== "-" && !is_null($left)) {
             // convert to explicit type
             $left = (is_string($left)||is_int($left))? floatval($left) : $left;
             
@@ -747,11 +782,13 @@ class File_Therion_Shot
     /**
      * Set shot right dimensions.
      * 
-     * @param float $right distance to right wall
+     * Use "-" to indicate missing value or NULL to clear data.
+     * 
+     * @param float|string|null $right distance to right wall
      */
     public function setRightDimension($right)
     {
-        if ($right !== "-") {
+        if ($right !== "-" && !is_null($right)) {
             // convert to explicit type
             $right = (is_string($right)||is_int($right))? floatval($right) : $right;
             
@@ -766,11 +803,13 @@ class File_Therion_Shot
     /**
      * Set shot up (height to ceiling) dimensions.
      * 
-     * @param float $up distance to ceiling.
+     * Use "-" to indicate missing value or NULL to clear data.
+     * 
+     * @param float|string|null $up distance to ceiling.
      */
     public function setUpDimension($up)
     {
-        if ($up !== "-") {
+        if ($up !== "-" && !is_null($up)) {
             // convert to explicit type
             $up = (is_string($up)||is_int($up))? floatval($up) : $up;
             
@@ -785,11 +824,13 @@ class File_Therion_Shot
     /**
      * Set shot down (height to ground) dimensions.
      * 
-     * @param float $down distance to passage ground
+     * Use "-" to indicate missing value or NULL to clear data.
+     * 
+     * @param float|string|null $down distance to passage ground
      */
     public function setDownDimension($down)
     {
-        if ($down !== "-") {
+        if ($down !== "-" && !is_null($down)) {
             // convert to explicit type
             $down = (is_string($down)||is_int($down))? floatval($down) : $down;
             
@@ -824,6 +865,10 @@ class File_Therion_Shot
             if (is_a($od, 'File_Therion_Station')) {
                 // resolve station objects to string names
                 $strItems[] = File_Therion_Line::escape($od->getName($fsn));
+                
+            } elseif (is_null($od)) {
+                // report "missing data" for NULL LRUD fields
+                $strItems[] = '-';
                 
             } else {
                 // correct for locale-issues (some locales print float
@@ -1047,6 +1092,32 @@ class File_Therion_Shot
         return false;
     }
 
+    /**
+     * Get LRUD information compacted.
+     * 
+     * Returns an array containing LRUD information for all directions.
+     * 
+     * The array keys are the keywords 'left', 'right', 'up', 'down'.
+     * 
+     * The value is either:
+     * - float, if real LRUD is there
+     * - string "-", if explicite "missing data" was tagged or
+     * - NULL, if no data was set so far.
+     * 
+     * This differs to the get*Dimension() methods in that you can query
+     * explicitely for "known missing-data" entries.
+     * 
+     * @return boolean
+     */
+    public function getLRUDdata()
+    {
+        return array(
+            'left'  => $this->_data['left'],
+            'right' => $this->_data['right'],
+            'up'    => $this->_data['up'],
+            'down'  => $this->_data['down']
+        );
+    }
 }
 
 ?>

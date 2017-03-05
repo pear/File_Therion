@@ -404,5 +404,81 @@ class File_Therion_ShotTest extends File_TherionTestBase {
         }
     }
     
+    
+    /**
+     * Test LRUD
+     */
+    public function testLRUD()
+    {
+        $shot = new File_Therion_Shot("1","2", 10, 300, 0);
+        $this->assertTrue(null === $shot->getLeftDimension());
+        $this->assertTrue(null === $shot->getRightDimension());
+        $this->assertTrue(null === $shot->getUpDimension());
+        $this->assertTrue(null === $shot->getDownDimension());
+        $this->assertEquals(
+            array(
+                'left'  => null,
+                'right' => null,
+                'up'    => null,
+                'down'  => null,
+            ),
+            $shot->getLRUDdata()
+        );
+        $this->assertEquals(
+                // Note: At this level LRUD is always given!
+                File_Therion_Line::parse("data\tnormal\tfrom\tto\tlength\tbearing\tgradient\tleft\tright\tup\tdown"),
+                $shot->toLinesDataDef()
+        );
+        
+        
+        // Add LRUD data
+        $shot->setLeftDimension(1.2);
+        $this->assertTrue(1.2 === $shot->getLeftDimension());
+        $this->assertTrue(null === $shot->getRightDimension());
+        $this->assertTrue(null === $shot->getUpDimension());
+        $this->assertTrue(null === $shot->getDownDimension());
+        $this->assertEquals(
+            array(
+                'left'  => 1.2,
+                'right' => null,
+                'up'    => null,
+                'down'  => null,
+            ),
+            $shot->getLRUDdata()
+        );
+        
+        // Add "missing-data" data
+        $shot->setRightDimension("-");
+        $this->assertTrue(1.2 === $shot->getLeftDimension());
+        $this->assertTrue(null === $shot->getRightDimension()); // still NULL!
+        $this->assertTrue(null === $shot->getUpDimension());
+        $this->assertTrue(null === $shot->getDownDimension());
+        $this->assertEquals(
+            array(
+                'left'  => 1.2,
+                'right' => "-",  // but indicated here!
+                'up'    => null,
+                'down'  => null,
+            ),
+            $shot->getLRUDdata()
+        );
+        
+        // Reset left dimension to null
+        $shot->setLeftDimension(null);
+        $this->assertTrue(null === $shot->getLeftDimension());
+        $this->assertTrue(null === $shot->getRightDimension()); // still NULL!
+        $this->assertTrue(null === $shot->getUpDimension());
+        $this->assertTrue(null === $shot->getDownDimension());
+        $this->assertEquals(
+            array(
+                'left'  => null,
+                'right' => "-",  // but indicated here!
+                'up'    => null,
+                'down'  => null,
+            ),
+            $shot->getLRUDdata()
+        );
+    }
+    
 }
 ?>

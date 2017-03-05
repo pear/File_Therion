@@ -892,8 +892,8 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
             array(
                 File_Therion_Line::parse('centreline'),
                 File_Therion_Line::parse("\tgrade BCRA5"),
-                File_Therion_Line::parse("\tdata\tnormal\tfrom\tto\tlength\tbearing\tgradient\tleft\tright\tup\tdown"),
-                File_Therion_Line::parse("\t\t\t0\t1\t10\t123\t45\t0\t0\t0\t0"),
+                File_Therion_Line::parse("\tdata\tnormal\tfrom\tto\tlength\tbearing\tgradient"),
+                File_Therion_Line::parse("\t\t\t0\t1\t10\t123\t45"),
                 File_Therion_Line::parse('endcentreline')
             ),
             File_Therion_Line::filterNonEmpty($centreline1->toLines())
@@ -905,8 +905,8 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
         $this->assertEquals(
             array(
                 File_Therion_Line::parse('centreline'),
-                File_Therion_Line::parse("\tdata\tnormal\tfrom\tto\tlength\tbearing\tgradient\tleft\tright\tup\tdown"),
-                File_Therion_Line::parse("\t\t\t0\t1\t10\t123\t45\t0\t0\t0\t0"),
+                File_Therion_Line::parse("\tdata\tnormal\tfrom\tto\tlength\tbearing\tgradient"),
+                File_Therion_Line::parse("\t\t\t0\t1\t10\t123\t45"),
                 File_Therion_Line::parse('endcentreline')
             ),
             File_Therion_Line::filterNonEmpty($centreline1->toLines())
@@ -922,8 +922,8 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
             array(
                 File_Therion_Line::parse('centreline'),
                 File_Therion_Line::parse("\tgrade test"),
-                File_Therion_Line::parse("\tdata\tnormal\tfrom\tto\tlength\tbearing\tgradient\tleft\tright\tup\tdown"),
-                File_Therion_Line::parse("\t\t\t0\t1\t10\t123\t45\t0\t0\t0\t0"),
+                File_Therion_Line::parse("\tdata\tnormal\tfrom\tto\tlength\tbearing\tgradient"),
+                File_Therion_Line::parse("\t\t\t0\t1\t10\t123\t45"),
                 File_Therion_Line::parse('endcentreline')
             ),
             File_Therion_Line::filterNonEmpty($centreline2->toLines())
@@ -950,6 +950,137 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
             File_Therion_Line::filterNonEmpty($sampleLines)
         );
     }
+    
+    /**
+     * Test LRUD handling
+     */
+    public function testLRUD()
+    {
+        
+        /* Test manual LRUD of shot */
+        $shot = new File_Therion_Shot("1","2", 10, 300, 0);
+        $this->assertTrue(null === $shot->getLeftDimension());
+        $this->assertTrue(null === $shot->getRightDimension());
+        $this->assertTrue(null === $shot->getUpDimension());
+        $this->assertTrue(null === $shot->getDownDimension());
+        $centreline = new File_Therion_Centreline();
+        $centreline->addShot($shot);
+        $centreline->addShot(new File_Therion_Shot("2","3", 10, 300, 0));
+        $centreline->addShot(new File_Therion_Shot("3","4", 10, 300, 0));
+        $this->assertTrue(null === $centreline->getShots()[0]->getLeftDimension());
+        $this->assertTrue(null === $centreline->getShots()[0]->getRightDimension());
+        $this->assertTrue(null === $centreline->getShots()[0]->getUpDimension());
+        $this->assertTrue(null === $centreline->getShots()[0]->getDownDimension());
+        $this->assertEquals(
+            array(
+                File_Therion_Line::parse('centreline'),
+                File_Therion_Line::parse("\tdata\tnormal\tfrom\tto\tlength\tbearing\tgradient"),
+                File_Therion_Line::parse("\t\t\t1\t2\t10\t300\t0"),
+                File_Therion_Line::parse("\t\t\t2\t3\t10\t300\t0"),
+                File_Therion_Line::parse("\t\t\t3\t4\t10\t300\t0"),
+                File_Therion_Line::parse('endcentreline')
+            ),
+            File_Therion_Line::filterNonEmpty($centreline->toLines())
+        );
+        
+        /* Test adjusting of one value : now LRUD definition should be output */
+        $shot->setLeftDimension("-"); // explicite "data-missing" (->survex)
+        $this->assertEquals(null, $centreline->getShots()[0]->getLeftDimension());
+        $this->assertEquals(
+            array(
+                File_Therion_Line::parse('centreline'),
+                File_Therion_Line::parse("\tdata\tnormal\tfrom\tto\tlength\tbearing\tgradient\tleft\tright\tup\tdown"),
+                File_Therion_Line::parse("\t\t\t1\t2\t10\t300\t0\t-\t-\t-\t-"),
+                File_Therion_Line::parse("\t\t\t2\t3\t10\t300\t0\t-\t-\t-\t-"),
+                File_Therion_Line::parse("\t\t\t3\t4\t10\t300\t0\t-\t-\t-\t-"),
+                File_Therion_Line::parse('endcentreline')
+            ),
+            File_Therion_Line::filterNonEmpty($centreline->toLines())
+        );
+        
+        // Now change to actualvalue
+        $shot->setLeftDimension(2.5);
+        $this->assertEquals(2.5, $centreline->getShots()[0]->getLeftDimension());
+        $this->assertEquals(
+            array(
+                File_Therion_Line::parse('centreline'),
+                File_Therion_Line::parse("\tdata\tnormal\tfrom\tto\tlength\tbearing\tgradient\tleft\tright\tup\tdown"),
+                File_Therion_Line::parse("\t\t\t1\t2\t10\t300\t0\t2.5\t-\t-\t-"),
+                File_Therion_Line::parse("\t\t\t2\t3\t10\t300\t0\t-\t-\t-\t-"),
+                File_Therion_Line::parse("\t\t\t3\t4\t10\t300\t0\t-\t-\t-\t-"),
+                File_Therion_Line::parse('endcentreline')
+            ),
+            File_Therion_Line::filterNonEmpty($centreline->toLines())
+        );
+        
+    }
+    
+    
+    /**
+     * Test LRUD parsing
+     */
+    public function testParsingLRUD()
+    {
+        /* Test LRUD parsing: no data at all*/
+        $sampleLines = array(
+            File_Therion_Line::parse('centreline'),
+            File_Therion_Line::parse('  data normal from to compass clino tape'),
+            File_Therion_Line::parse('  0  1   301   5  10'),
+            File_Therion_Line::parse('  1  2   302   5  10'),
+            File_Therion_Line::parse('  2  3   303   5  10'),
+            File_Therion_Line::parse('  3  4   304   5  10'),
+            File_Therion_Line::parse('endcentreline'),            
+        );
+        $centreline = File_Therion_Centreline::parse($sampleLines);
+        $this->assertInstanceOf('File_Therion_Centreline', $centreline);
+        $this->assertEquals(4, count($centreline->getShots()));
+        $this->assertTrue(null === $centreline->getShots()[0]->getLeftDimension());
+        $this->assertTrue(null === $centreline->getShots()[3]->getLeftDimension());
+        $this->assertEquals(
+            array(
+                File_Therion_Line::parse('centreline'),
+                File_Therion_Line::parse("\tdata\tnormal\tfrom\tto\tcompass\tclino\ttape"),
+                File_Therion_Line::parse("\t\t\t0\t1\t301\t5\t10"),
+                File_Therion_Line::parse("\t\t\t1\t2\t302\t5\t10"),
+                File_Therion_Line::parse("\t\t\t2\t3\t303\t5\t10"),
+                File_Therion_Line::parse("\t\t\t3\t4\t304\t5\t10"),
+                File_Therion_Line::parse('endcentreline')
+            ),
+            File_Therion_Line::filterNonEmpty($centreline->toLines())
+        );
 
+        
+        
+        
+        /* Test LRUD parsing with partial data*/
+        $sampleLines = array(
+            File_Therion_Line::parse('centreline'),
+            File_Therion_Line::parse('  data normal from to compass clino tape left right up down'),
+            File_Therion_Line::parse('  0  1   301   5  10    1  2  3  4'),  // all here
+            File_Therion_Line::parse('  1  2   302   5  10    1  2  3  -'),  // one missing
+            File_Therion_Line::parse('  2  3   303   5  10    1  2  -  -'),
+            File_Therion_Line::parse('  3  4   304   5  10    -  -  -  -'),  // all missing
+            File_Therion_Line::parse('endcentreline'),            
+        );
+        $centreline = File_Therion_Centreline::parse($sampleLines);
+        $this->assertInstanceOf('File_Therion_Centreline', $centreline);
+        $this->assertEquals(4, count($centreline->getShots()));
+        $this->assertEquals(1, $centreline->getShots()[0]->getLeftDimension());
+        $this->assertEquals(null, $centreline->getShots()[3]->getLeftDimension());
+        $this->assertEquals(
+            array(
+                File_Therion_Line::parse('centreline'),
+                File_Therion_Line::parse("\tdata\tnormal\tfrom\tto\tcompass\tclino\ttape\tleft\tright\tup\tdown"),
+                File_Therion_Line::parse("\t\t\t0\t1\t301\t5\t10\t1\t2\t3\t4"),
+                File_Therion_Line::parse("\t\t\t1\t2\t302\t5\t10\t1\t2\t3\t-"),
+                File_Therion_Line::parse("\t\t\t2\t3\t303\t5\t10\t1\t2\t-\t-"),
+                File_Therion_Line::parse("\t\t\t3\t4\t304\t5\t10\t-\t-\t-\t-"),
+                File_Therion_Line::parse('endcentreline')
+            ),
+            File_Therion_Line::filterNonEmpty($centreline->toLines())
+        );
+        
+        
+    }
 }
 ?>
