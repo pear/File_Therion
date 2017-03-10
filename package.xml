@@ -19,7 +19,7 @@
 
 
     <!-- Information for this release -->
-    <date>2017-xx-xx</date>
+    <date>2017-03-10</date>
     <version>
         <release>0.4.0</release>
         <api>0.4.0</api>
@@ -30,7 +30,8 @@
     </stability>
     <license uri="http://www.gnu.org/licenses/lgpl-3.0.en.html">LGPLv3</license>
     <notes>
-        todo
+        * Bugfix in centreline parsing of declination command.
+        * Added better distinction for LRUD data for "missing data" ("-" according to survex) and really unset data.
     </notes>
 
     <contents>
