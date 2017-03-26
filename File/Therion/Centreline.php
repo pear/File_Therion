@@ -294,7 +294,15 @@ class File_Therion_Centreline
                                 case 'fix':
                                 case 'extend':
                                     // Postpone parsing after centreline is rdy
-                                    $postponeLineParsing[] = $line;
+                                    // (but only if there is statin syntax)
+                                    if (count($lineData) == 1
+                                        && preg_match('/left|right|vertical|normal|reverse|start|ignore|hide/', $lineData[0])) {
+                                        // TODO: Parse extend... see below at postponing section for comments!!!
+                                        //       (most probably the extends setting should be a shot-property!)
+                                    } else {
+                                        // postpone parsing until centerline is fully ready
+                                        $postponeLineParsing[] = $line;
+                                    }
                                 break;
                                 
                                 case 'station-names':
@@ -485,7 +493,7 @@ class File_Therion_Centreline
                         default:
                             throw new File_Therion_SyntaxException(
                                 "Wrong extend arg count "
-                                .count($lineData));
+                                .count($lineData).": '".trim($line->toString())."'");
                     }
                     
                     $centreline->setExtend($spec, $obj);
