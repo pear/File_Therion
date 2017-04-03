@@ -724,7 +724,7 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
             array(
                 File_Therion_Line::parse('centreline'),
                 File_Therion_Line::parse("\tstation 1 \"Small cave\""),
-                File_Therion_Line::parse("\tfix 1 1 2 3 0 0 0"),
+                File_Therion_Line::parse("\tfix 1 1 2 3"),
                 File_Therion_Line::parse('endcentreline'),
             ),
             File_Therion_Line::filterNonEmpty($centreline->toLines())
@@ -739,7 +739,7 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
             array(
                 File_Therion_Line::parse('centreline'),
                 File_Therion_Line::parse("\tstation 1 \"Small cave\""),
-                File_Therion_Line::parse("\tfix 1 1 2 3 0 0 0"),
+                File_Therion_Line::parse("\tfix 1 1 2 3"),
                 File_Therion_Line::parse("\tfix 2 4 5 6 0.5 0.6 0.7"),
                 File_Therion_Line::parse('endcentreline'),
             ),

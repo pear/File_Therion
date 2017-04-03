@@ -422,7 +422,7 @@ class File_Therion_Station implements File_Therion_IReferenceable
      * @param float $stdZ standard deviation for Z
      * @todo: parameter checks
      */
-    public function setFix($x, $y, $z, $stdX=0, $stdY=0, $stdZ=0)
+    public function setFix($x, $y, $z, $stdX=null, $stdY=null, $stdZ=null)
     {
         // convert lat-lon (only when string was given):
         if (is_string($x)) {
@@ -449,13 +449,14 @@ class File_Therion_Station implements File_Therion_IReferenceable
      * 
      * Content is an associative array; the keys are 'coords', 'std' and 'cs':
      * - the value of 'coords' is coordinates array(x,y,z), see {@link setFix()}
-     * - the value of 'std' is standard deviation for the coordinate values
+     * - the value of 'std' is standard deviation for the coordinate values.
+     *   if no standards deviation was supplied, NULL values are returned.
      * 
      * The coordinates are relative to a specified coordinate system that will
      * usually get set at the centreline level.
      * Without centreline context linked to a coordinate system,
      * fixing stations is not meaningful.
-     * Please also look at the therion manual.
+     * Please also look at the therion and survex manual.
      * 
      * @return array like described at {@link $_fixes}
      */
@@ -521,6 +522,12 @@ class File_Therion_Station implements File_Therion_IReferenceable
                         $fixdata[$w]
                 );
             }
+            
+            // filter NULL values from std array
+            $fixdata['std'] = array_filter(
+                    $fixdata['std'],
+                    function($n) { return !is_null($n); }
+            );
 
             // generate return data
             $fixstring = implode(" ", $fixdata['coords']);
