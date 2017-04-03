@@ -528,7 +528,8 @@ class File_TherionTest extends File_TherionTestBase {
         $this->assertEquals(1, count($th->getSurveys()));
         
         // get survey and inspect it
-        $survey = array_shift($th->getSurveys());
+        $srvys = $th->getSurveys();
+        $survey = array_shift($srvys);
         $this->assertInstanceOf('File_Therion_Survey', $survey);
         $this->assertEquals("Rabbit Cave", $survey->getOption('title'));
         $this->assertEquals(0, count($survey->getSurveys()));
@@ -539,7 +540,8 @@ class File_TherionTest extends File_TherionTestBase {
         $this->assertEquals(1, count($survey->getSurfaces()));
 
         // inspect centreline
-        $centreline = array_shift($survey->getCentrelines());
+        $cntrlns = $survey->getCentrelines();
+        $centreline = array_shift($cntrlns);
         $this->assertInstanceOf('File_Therion_Centreline', $centreline);
         $this->assertEquals("1997.08.10", $centreline->getDate()->toString());
         $this->assertEquals(null, $centreline->getExploDate());
@@ -674,7 +676,8 @@ class File_TherionTest extends File_TherionTestBase {
                 
             $this->assertEquals(1, count($th->getSurveys()));
             $this->assertEquals($i, $recursor, "Recursing variable touched!");
-            $survey = array_shift($th->getSurveys());
+            $srvs = $th->getSurveys();
+            $survey = array_shift($srvs);
             $this->assertEquals(
                 $expectedCentrelines, count($survey->getCentrelines()),
                 "Recursor was $recursor, srvy='".$survey->getName()."'"
@@ -684,13 +687,15 @@ class File_TherionTest extends File_TherionTestBase {
         // Recurse endlessly
         $th = File_Therion::parse($this->testdata_base_own.'/recursetest/cave.th');
         $this->assertEquals(1, count($th->getSurveys()));
-        $survey = array_shift($th->getSurveys());
+        $srvs = $th->getSurveys();
+        $survey = array_shift($srvs);
         $this->assertEquals(4, count($survey->getCentrelines()));
         
         // Recurse endlessly (explicitely)
         $th = File_Therion::parse($this->testdata_base_own.'/recursetest/cave.th', null);
         $this->assertEquals(1, count($th->getSurveys()));
-        $survey = array_shift($th->getSurveys());
+        $srvs = $th->getSurveys();
+        $survey = array_shift($srvs);
         $this->assertEquals(4, count($survey->getCentrelines()));
         
     }
@@ -703,7 +708,8 @@ class File_TherionTest extends File_TherionTestBase {
         // Basic parse: no recursion
         $th = File_Therion::parse($this->testdata_base_therion.'/basics/rabbit.th', 0);
         $this->assertEquals(1, count($th->getSurveys()));
-        $survey = array_shift($th->getSurveys());
+        $srvs = $th->getSurveys();
+        $survey = array_shift($srvs);
         $this->assertEquals(1, count($survey->getCentrelines()));
         $this->assertEquals(3, count($survey->getJoins()));
         $this->assertEquals(0, count($survey->getEquates()));
@@ -714,7 +720,8 @@ class File_TherionTest extends File_TherionTestBase {
         // Recursive parse: recurse endlessly
         $th = File_Therion::parse($this->testdata_base_therion.'/basics/rabbit.th');
         $this->assertEquals(1, count($th->getSurveys()));
-        $survey = array_shift($th->getSurveys());
+        $srvs = $th->getSurveys();
+        $survey = array_shift($srvs);
         $this->assertEquals(1, count($survey->getCentrelines()));
         $this->assertEquals(3, count($survey->getJoins()));
         $this->assertEquals(0, count($survey->getEquates()));

@@ -48,6 +48,7 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
         
         
         // wrong invocation
+        /* NOT TESTABLE WITH PHP 7.0.16 (and possibly later ones)
         $exc = null;
         try {
             $sample = new File_Therion_Centreline("foo");
@@ -55,6 +56,7 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
             $exc = $e;
         }
         $this->assertInstanceOf('Exception', $exc);
+        */
     }
     
     /**

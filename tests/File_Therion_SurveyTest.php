@@ -233,8 +233,8 @@ class File_Therion_SurveyTest extends File_TherionTestBase {
         $equatesFile = $this->testdata_base_own.'/parseEquatetest/equates.th';
         $th = File_Therion::parse($equatesFile);
         $this->assertEquals(1, count($th->getSurveys()));
-        $survey = array_shift($th->getSurveys());
-        $subsurvey = array_shift($survey->getSurveys());
+        $survey = $th->getSurveys()[0];
+        $subsurvey = $survey->getSurveys()[0];
         $cl1 = $survey->getCentrelines()[0];
         $cl2 = $subsurvey->getCentrelines()[0];
         

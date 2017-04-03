@@ -46,7 +46,7 @@ class File_TherionUseCaseTest extends File_TherionTestBase {
         
         
         // assert survey data
-        $survey = array_shift($th->getSurveys());
+        $survey = $th->getSurveys()[0];
         $this->assertEquals(1, count($survey->getCentrelines()));
         $this->assertEquals(3, count($survey->getJoins()));
         $this->assertEquals(0, count($survey->getEquates()));
@@ -56,7 +56,7 @@ class File_TherionUseCaseTest extends File_TherionTestBase {
         
         
         // assert the surveys centreline
-        $centreline = array_shift($survey->getCentrelines());
+        $centreline = $survey->getCentrelines()[0];
         
         $date = $centreline->getDate();
         $this->assertEquals(1, count($date));
