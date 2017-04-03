@@ -1084,5 +1084,26 @@ class File_Therion_CentrelineTest extends File_TherionTestBase {
         
         
     }
+    
+    /**
+     * Test declination interface
+     */
+    function testDeclination()
+    {
+        $cl = new File_Therion_Centreline();
+        $this->assertEquals(null, $cl->getDeclination());
+        
+        $cl->setDeclination(10.3);
+        $this->assertEquals(array(10.3, "degrees"), $cl->getDeclination());
+        
+        $cl->setDeclination(5.3, "grad");
+        $this->assertEquals(array(5.3, "grad"), $cl->getDeclination());
+        
+        $cl->setDeclination(null);
+        $this->assertEquals(null, $cl->getDeclination());
+        
+        $cl->setDeclination(null, "degrees");
+        $this->assertEquals(null, $cl->getDeclination());
+    }
 }
 ?>

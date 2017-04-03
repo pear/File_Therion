@@ -510,6 +510,8 @@ class File_Therion_Centreline
 
     /**
      * Set declination of this centreline.
+     * 
+     * Wehn $decl is set to NULL, an existing declination is erased.
      *
      * @param float  $decl Declination angle
      * @param string $unit Unit ("degrees" ...)
@@ -517,7 +519,11 @@ class File_Therion_Centreline
      */
     public function setDeclination($decl, $unit="degrees")
     {
-        $this->setData('declination', array($decl, $unit));
+        if (is_null($decl)) {
+            $this->setData('declination', null);
+        } else {
+            $this->setData('declination', array($decl, $unit));
+        }
     }
 
     /**
