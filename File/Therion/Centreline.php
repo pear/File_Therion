@@ -162,6 +162,7 @@ class File_Therion_Centreline
      * @throws File_Therion_SyntaxException
      * @throws OutOfBoundsException when unknown station is referenced
      * @todo Implement parsing of centreline extending
+     * @todo implement lookup of equated non-local stations
      */
     public static function parse($lines)
     {
@@ -293,6 +294,7 @@ class File_Therion_Centreline
                                 case 'station':
                                 case 'fix':
                                 case 'extend':
+                                case 'equate':
                                     // Postpone parsing after centreline is rdy
                                     // (but only if there is statin syntax)
                                     if (count($lineData) == 1
@@ -499,6 +501,22 @@ class File_Therion_Centreline
                     $centreline->setExtend($spec, $obj);
                     
                 break;
+            
+                case 'equate':
+                    // Equate stations
+                    $srcStationName = array_shift($lineData);
+                    $srcStationObj  = $centreline->getStations($srcStationName);
+                    while ($tgtStationName = array_shift($lineData)) {
+                        try {
+                            $tgtStationObj = $centreline->getStations($tgtStationName);
+                            $srcStationObj->addEquate($tgtStationObj);
+                        } catch (OutOfBoundsException $e) {
+                            // ignore this station, as it is not survey-local
+                            // TODO: try to lookup the station
+                        }
+                    }
+                break;
+                
             }
         }
         
