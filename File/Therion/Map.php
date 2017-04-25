@@ -155,13 +155,16 @@ class File_Therion_Map
                                 default:
                                     // there are no commands. Every line
                                     // is threaten as reference name.
-                                    if (count($lineData) > 0) {
+                                    /* DEV NOTE: The following syntax check is way too strict!
+                                     * if (count($lineData) > 0) {
                                         throw new File_Therion_SyntaxException(
-                                            "too many args for map "
+                                            "too many args (".count($lineData)
+                                            .") for map "
                                             .$map->getName()." reference "
                                             .$command
+                                            .' (args: '.join('; ', $lineData).')'
                                         );
-                                    }
+                                    }*/
                                     $map->addElement($command);
  
                             }
