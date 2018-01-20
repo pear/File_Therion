@@ -19,9 +19,9 @@
 
 
     <!-- Information for this release -->
-    <date>2017-??-??</date>
+    <date>2018-01-20</date>
     <version>
-        <release>0.4.0</release>
+        <release>0.4.1</release>
         <api>0.4.0</api>
     </version>
     <stability>
@@ -30,8 +30,7 @@
     </stability>
     <license uri="http://www.gnu.org/licenses/lgpl-3.0.en.html">LGPLv3</license>
     <notes>
-        * Bugfix in centreline parsing of declination command.
-        * Added better distinction for LRUD data for "missing data" ("-" according to survex) and really unset data.
+        * Missing grade file in sources
     </notes>
 
     <contents>
@@ -55,7 +54,8 @@
                     <file name="Station.php" role="php" />
                     <file name="Surface.php" role="php" />
                     <file name="Survey.php" role="php" />
-                    <file name="Join.php" role="php" />
+		    <file name="Join.php" role="php" />
+                    <file name="Grade.php" role="php" />
                     
                     <dir name="DataTypes">
                         <file name="DataTypeInterface.php" role="php" />
@@ -97,7 +97,8 @@
                 <file name="File_Therion_SurveyTest.php" role="test" />
                 <file name="File_Therion_JoinTest.php" role="test" />
                 <file name="File_Therion_StationTest.php" role="test" />
-                <file name="File_Therion_ReferenceTest.php" role="test" />
+		<file name="File_Therion_ReferenceTest.php" role="test" />
+		<file name="File_Therion_GradeTest.php" role="test" />
                 <file name="File_TherionTest.php" role="test" />
                 <file name="File_TherionWriterTest.php" role="test" />
                 <file name="File_TherionFormatterTest.php" role="test" />
