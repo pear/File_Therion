@@ -15,12 +15,14 @@
 //includepath is loaded by phpUnit from phpunit.xml
 require_once 'File/Therion.php';
 
+use PHPunit\Framework\TestCase;
+
 /**
  * PHPUnit test base class for File_Therion.
  * 
  * This holds common vars and functions for all other tests.
  */
-abstract class File_TherionTestBase extends PHPUnit_Framework_TestCase {
+abstract class File_TherionTestBase extends TestCase {
 
     /**
      * Base location of test data (therion distribution)
