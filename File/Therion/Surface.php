@@ -268,7 +268,7 @@ class File_Therion_Surface
      *
      * @return int number of data elements
      */
-    public function count()
+    public function count(): int
     {
         return count($this->_data['data']);
     }

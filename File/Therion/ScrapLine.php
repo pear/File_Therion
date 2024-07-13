@@ -196,7 +196,7 @@ class File_Therion_ScrapLine
      *
      * @return int number of points
      */
-    public function count()
+    public function count(): int
     {
         return count($this->_points);
     }

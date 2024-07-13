@@ -384,7 +384,7 @@ class File_Therion_Map
      *
      * @return int number of subsurveys
      */
-    public function count()
+    public function count(): int
     {
         return count($this->_data);
     }

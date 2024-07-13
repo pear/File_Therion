@@ -236,7 +236,7 @@ class File_Therion_Centreline
         );
         $lastSeenDatadef     = false;
         $lastSeenStyle       = false;
-        $lastSeenUnits       = false;
+        $lastSeenUnits       = [];
         $postponeLineParsing = array();
         foreach ($orderedData as $type => $data) {
             switch ($type) {
@@ -1335,7 +1335,7 @@ class File_Therion_Centreline
      *
      * @return int number of subsurveys
      */
-    public function count()
+    public function count(): int 
     {
         return count($this->_shots);
     }

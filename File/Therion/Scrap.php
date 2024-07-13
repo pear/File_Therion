@@ -257,7 +257,7 @@ class File_Therion_Scrap
      *
      * @return int number of elements
      */
-    public function count()
+    public function count(): int
     {
         return count($this->_data);
     }

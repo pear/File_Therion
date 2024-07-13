@@ -316,7 +316,7 @@ abstract class File_Therion_BasicObject
             switch (gettype($optval)) {
                 case 'NULL':
                     // ignore silently - default value!
-                    continue;
+                    continue 2;
                 break;
                 
                 case 'string':

@@ -272,7 +272,7 @@ class File_Therion_Join
      *
      * @return int number of argument objects
      */
-    public function count()
+    public function count(): int
     {
         return count($this->_joins);
     }

@@ -404,7 +404,7 @@ class File_Therion_Grade
      * 
      * @return int
      */
-    public function count()
+    public function count(): int
     {
         $c = 0;
         foreach ($this->_data as $k => $v) {

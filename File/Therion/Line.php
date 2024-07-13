@@ -714,7 +714,7 @@ class File_Therion_Line implements Countable
      * 
      * @return int number of raw lines
      */
-    public function count()
+    public function count(): int
     {
         return count($this->_content);
     }

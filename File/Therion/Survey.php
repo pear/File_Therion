@@ -911,7 +911,7 @@ class File_Therion_Survey
      *
      * @return int number of subsurveys
      */
-    public function count()
+    public function count(): int 
     {
         return count($this->_surveys);
     }

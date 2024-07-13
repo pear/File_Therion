@@ -1020,7 +1020,7 @@ class File_Therion implements Countable
      * @param boolean $logical If true, return logical (unwrapped) count
      * @return int number of raw lines
      */
-    public function count($logical=false)
+    public function count($logical=false): int
     {
         if ($logical) {
             return count($this->getLines());  // count line objects
